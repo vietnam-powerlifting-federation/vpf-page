@@ -1,0 +1,198 @@
+@import "tailwindcss";
+@import "tailwindcss-primeui";
+
+/* SVN-CenturyGothic Font Face Declarations */
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-Thin.otf") format("opentype");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-ThinItalic.otf") format("opentype");
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-Light.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-LightItalic.otf") format("opentype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-RegularItalic.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-SemiBold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-SemiBoldItalic.otf") format("opentype");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-BoldItalic.otf") format("opentype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-ExtraBold.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-ExtraBoldItalic.otf") format("opentype");
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-Black.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-BlackItalic.otf") format("opentype");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+body {
+  font-family: "SVN-CenturyGothic", "Century Gothic", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Custom Card Styles */
+.custom-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.custom-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Navigation Styles */
+.nav-link {
+  color: var(--text-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: var(--secondary-color);
+}
+
+/* Hero Section */
+.hero-section {
+  background: linear-gradient(135deg, var(--primary-color) 0%, #2d2d2d 100%);
+  color: white;
+  padding: 80px 0;
+}
+
+/* Section Spacing */
+.section {
+  padding: 60px 0;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.section-subtitle {
+  font-size: 1.25rem;
+  color: #666;
+  margin-bottom: 3rem;
+}
+
+/* Footer */
+.footer {
+  background-color: var(--bg-bg);
+  color: white;
+  padding: 40px 0 20px;
+}
+
+.footer-link {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .section-title {
+    font-size: 2rem;
+  }
+
+  .hero-section {
+    padding: 60px 0;
+  }
+}
+
+
+

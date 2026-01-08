@@ -1,0 +1,75 @@
+{
+  "nav": {
+    "home": "Trang chủ",
+    "about": "Giới thiệu",
+    "membership": "Thành viên",
+    "championships": "Giải đấu",
+    "news": "Tin tức",
+    "contact": "Liên hệ"
+  },
+  "home": {
+    "title": "British Powerlifting",
+    "subtitle": "Cơ quan Quản lý Quốc gia về Powerlifting tại Anh Quốc",
+    "welcome": "Chào mừng đến với British Powerlifting",
+    "description": "British Powerlifting là Cơ quan Quản lý Quốc gia về môn thể thao Powerlifting tại Anh Quốc. Chúng tôi chịu trách nhiệm phát triển, quảng bá và điều hành Powerlifting trên khắp Anh, Scotland và Wales.",
+    "latestNews": "Tin tức mới nhất",
+    "upcomingEvents": "Sự kiện sắp tới",
+    "readMore": "Đọc thêm",
+    "viewAll": "Xem tất cả"
+  },
+  "about": {
+    "title": "Về British Powerlifting",
+    "mission": "Sứ mệnh của chúng tôi",
+    "missionText": "Thúc đẩy và phát triển môn thể thao Powerlifting trên khắp Anh Quốc, đảm bảo cuộc thi công bằng và hỗ trợ vận động viên ở mọi cấp độ.",
+    "vision": "Tầm nhìn của chúng tôi",
+    "visionText": "Trở thành tổ chức Powerlifting hàng đầu tại Anh Quốc, được công nhận về sự xuất sắc, liêm chính và phát triển vận động viên.",
+    "values": "Giá trị của chúng tôi",
+    "integrity": "Liêm chính",
+    "integrityText": "Chúng tôi duy trì các tiêu chuẩn cao nhất về sự công bằng và hành vi đạo đức.",
+    "excellence": "Xuất sắc",
+    "excellenceText": "Chúng tôi phấn đấu đạt được sự xuất sắc trong mọi khía cạnh của tổ chức.",
+    "inclusivity": "Hòa nhập",
+    "inclusivityText": "Chúng tôi chào đón vận động viên từ mọi nền tảng và khả năng."
+  },
+  "membership": {
+    "title": "Thành viên",
+    "description": "Tham gia British Powerlifting và trở thành một phần của cộng đồng vận động viên, huấn luyện viên và người ủng hộ đang phát triển của chúng tôi.",
+    "benefits": "Lợi ích thành viên",
+    "benefit1": "Tham gia các cuộc thi được phê duyệt",
+    "benefit2": "Bảng xếp hạng và kỷ lục chính thức",
+    "benefit3": "Bảo hiểm",
+    "benefit4": "Tài nguyên và hỗ trợ tập luyện",
+    "benefit5": "Sự kiện cộng đồng và kết nối",
+    "joinNow": "Tham gia ngay"
+  },
+  "championships": {
+    "title": "Giải đấu",
+    "description": "British Powerlifting tổ chức nhiều giải đấu khác nhau trong suốt năm cho vận động viên ở mọi cấp độ.",
+    "upcoming": "Giải đấu sắp tới",
+    "past": "Giải đấu đã qua",
+    "register": "Đăng ký ngay"
+  },
+  "news": {
+    "title": "Tin tức & Cập nhật",
+    "description": "Cập nhật tin tức, thông báo và cập nhật mới nhất từ British Powerlifting.",
+    "readMore": "Đọc thêm",
+    "noNews": "Hiện tại không có bài viết tin tức nào."
+  },
+  "contact": {
+    "title": "Liên hệ với chúng tôi",
+    "description": "Liên hệ với British Powerlifting. Chúng tôi sẵn sàng hỗ trợ mọi câu hỏi hoặc thắc mắc.",
+    "name": "Tên",
+    "email": "Email",
+    "message": "Tin nhắn",
+    "send": "Gửi tin nhắn",
+    "address": "Địa chỉ",
+    "phone": "Điện thoại",
+    "emailLabel": "Email"
+  },
+  "footer": {
+    "copyright": "© {year} British Powerlifting. Bảo lưu mọi quyền.",
+    "links": "Liên kết nhanh",
+    "social": "Theo dõi chúng tôi"
+  }
+}
+

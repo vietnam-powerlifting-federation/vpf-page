@@ -1,0 +1,75 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "membership": "Membership",
+    "championships": "Championships",
+    "news": "News",
+    "contact": "Contact"
+  },
+  "home": {
+    "title": "British Powerlifting",
+    "subtitle": "The National Governing Body for Powerlifting in Great Britain",
+    "welcome": "Welcome to British Powerlifting",
+    "description": "British Powerlifting is the National Governing Body for the sport of Powerlifting in Great Britain. We are responsible for the development, promotion, and regulation of Powerlifting throughout England, Scotland, and Wales.",
+    "latestNews": "Latest News",
+    "upcomingEvents": "Upcoming Events",
+    "readMore": "Read More",
+    "viewAll": "View All"
+  },
+  "about": {
+    "title": "About British Powerlifting",
+    "mission": "Our Mission",
+    "missionText": "To promote and develop the sport of Powerlifting throughout Great Britain, ensuring fair competition and supporting athletes at all levels.",
+    "vision": "Our Vision",
+    "visionText": "To be the leading Powerlifting organization in Great Britain, recognized for excellence, integrity, and athlete development.",
+    "values": "Our Values",
+    "integrity": "Integrity",
+    "integrityText": "We maintain the highest standards of fairness and ethical conduct.",
+    "excellence": "Excellence",
+    "excellenceText": "We strive for excellence in all aspects of our organization.",
+    "inclusivity": "Inclusivity",
+    "inclusivityText": "We welcome athletes of all backgrounds and abilities."
+  },
+  "membership": {
+    "title": "Membership",
+    "description": "Join British Powerlifting and become part of our growing community of athletes, coaches, and supporters.",
+    "benefits": "Membership Benefits",
+    "benefit1": "Access to sanctioned competitions",
+    "benefit2": "Official rankings and records",
+    "benefit3": "Insurance coverage",
+    "benefit4": "Training resources and support",
+    "benefit5": "Community events and networking",
+    "joinNow": "Join Now"
+  },
+  "championships": {
+    "title": "Championships",
+    "description": "British Powerlifting hosts a variety of championships throughout the year for athletes of all levels.",
+    "upcoming": "Upcoming Championships",
+    "past": "Past Championships",
+    "register": "Register Now"
+  },
+  "news": {
+    "title": "News & Updates",
+    "description": "Stay up to date with the latest news, announcements, and updates from British Powerlifting.",
+    "readMore": "Read More",
+    "noNews": "No news articles available at this time."
+  },
+  "contact": {
+    "title": "Contact Us",
+    "description": "Get in touch with British Powerlifting. We're here to help with any questions or inquiries.",
+    "name": "Name",
+    "email": "Email",
+    "message": "Message",
+    "send": "Send Message",
+    "address": "Address",
+    "phone": "Phone",
+    "emailLabel": "Email"
+  },
+  "footer": {
+    "copyright": "© {year} British Powerlifting. All rights reserved.",
+    "links": "Quick Links",
+    "social": "Follow Us"
+  }
+}
+
