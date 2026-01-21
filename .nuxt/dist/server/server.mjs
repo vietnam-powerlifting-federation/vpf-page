@@ -1,1 +1,0 @@
-export { default } from "file:///home/whiteou7/vpf-page/node_modules/@nuxt/vite-builder/dist/runtime/vite-node.mjs"

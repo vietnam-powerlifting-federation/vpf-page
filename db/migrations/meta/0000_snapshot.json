@@ -1,0 +1,1003 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "prevId": "",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.teams": {
+      "name": "teams",
+      "schema": "",
+      "columns": {
+        "team_id": {
+          "name": "team_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "team_name": {
+          "name": "team_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "teams_name_key": {
+          "columns": [
+            "team_name"
+          ],
+          "nullsNotDistinct": false,
+          "name": "teams_name_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.members": {
+      "name": "members",
+      "schema": "",
+      "columns": {
+        "vpf_id": {
+          "name": "vpf_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "('VPF'::text || lpad((nextval('vpf_seq'::regclass))::text, 6, '0'::text))"
+        },
+        "full_name": {
+          "name": "full_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nationality": {
+          "name": "nationality",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dob": {
+          "name": "dob",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "national_id": {
+          "name": "national_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone_number": {
+          "name": "phone_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "squat_rack_pin": {
+          "name": "squat_rack_pin",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "bench_rack_pin": {
+          "name": "bench_rack_pin",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "bench_safety_pin": {
+          "name": "bench_safety_pin",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "bench_foot_block": {
+          "name": "bench_foot_block",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "drug_violate": {
+          "name": "drug_violate",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_guest": {
+          "name": "is_guest",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "national_id_image_url": {
+          "name": "national_id_image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "instagram_username": {
+          "name": "instagram_username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "decorator_1": {
+          "name": "decorator_1",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "decorator_2": {
+          "name": "decorator_2",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "members_social_id_image_url_key": {
+          "columns": [
+            "national_id_image_url"
+          ],
+          "nullsNotDistinct": false,
+          "name": "members_social_id_image_url_key"
+        },
+        "members_slug_key": {
+          "columns": [
+            "slug"
+          ],
+          "nullsNotDistinct": false,
+          "name": "members_slug_key"
+        }
+      },
+      "checkConstraints": {
+        "members_dob_check": {
+          "name": "members_dob_check",
+          "value": "(dob >= 1900) AND ((dob)::numeric <= EXTRACT(year FROM CURRENT_DATE))"
+        }
+      },
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.meet_info": {
+      "name": "meet_info",
+      "schema": "",
+      "columns": {
+        "meet_id": {
+          "name": "meet_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "meet_name": {
+          "name": "meet_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "city": {
+          "name": "city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "start_registration": {
+          "name": "start_registration",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "close_registration": {
+          "name": "close_registration",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "host_date": {
+          "name": "host_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "meet_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "media_link": {
+          "name": "media_link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "meet_slug": {
+          "name": "meet_slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "''"
+        },
+        "system_year": {
+          "name": "system_year",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hidden": {
+          "name": "hidden",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.legacy_meet_result": {
+      "name": "legacy_meet_result",
+      "schema": "",
+      "columns": {
+        "meet_id": {
+          "name": "meet_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vpf_id": {
+          "name": "vpf_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sex": {
+          "name": "sex",
+          "type": "sexes",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "weight_class": {
+          "name": "weight_class",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "division": {
+          "name": "division",
+          "type": "division",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body_weight": {
+          "name": "body_weight",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.0'"
+        },
+        "best_squat": {
+          "name": "best_squat",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.0'"
+        },
+        "best_bench": {
+          "name": "best_bench",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.0'"
+        },
+        "best_dead": {
+          "name": "best_dead",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.0'"
+        },
+        "platform": {
+          "name": "platform",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "session": {
+          "name": "session",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flight": {
+          "name": "flight",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "team_score": {
+          "name": "team_score",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "placement": {
+          "name": "placement",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lot": {
+          "name": "lot",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "legacy_meet_result_meet_id_fkey": {
+          "name": "legacy_meet_result_meet_id_fkey",
+          "tableFrom": "legacy_meet_result",
+          "tableTo": "meet_info",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "meet_id"
+          ],
+          "columnsTo": [
+            "meet_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "legacy_meet_result_team_id_fkey": {
+          "name": "legacy_meet_result_team_id_fkey",
+          "tableFrom": "legacy_meet_result",
+          "tableTo": "teams",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "team_id"
+          ],
+          "columnsTo": [
+            "team_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "legacy_meet_result_vpf_id_fkey": {
+          "name": "legacy_meet_result_vpf_id_fkey",
+          "tableFrom": "legacy_meet_result",
+          "tableTo": "members",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "vpf_id"
+          ],
+          "columnsTo": [
+            "vpf_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "legacy_meet_result_pkey": {
+          "name": "legacy_meet_result_pkey",
+          "columns": [
+            "meet_id",
+            "vpf_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "chk_weight_class_sex": {
+          "name": "chk_weight_class_sex",
+          "value": "((sex = 'male'::sexes) AND (weight_class = ANY (ARRAY[53, 59, 66, 74, 83, 93, 105, 120, 999]))) OR ((sex = 'female'::sexes) AND (weight_class = ANY (ARRAY[43, 47, 52, 57, 63, 69, 76, 84, 999]))) OR (sex IS NULL)"
+        }
+      },
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.meet_result": {
+      "name": "meet_result",
+      "schema": "",
+      "columns": {
+        "meet_id": {
+          "name": "meet_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vpf_id": {
+          "name": "vpf_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sex": {
+          "name": "sex",
+          "type": "sexes",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "weight_class": {
+          "name": "weight_class",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "division": {
+          "name": "division",
+          "type": "division",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body_weight": {
+          "name": "body_weight",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.0'"
+        },
+        "squat1": {
+          "name": "squat1",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.0'"
+        },
+        "squat2": {
+          "name": "squat2",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.0'"
+        },
+        "squat3": {
+          "name": "squat3",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.0'"
+        },
+        "bench1": {
+          "name": "bench1",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.0'"
+        },
+        "bench2": {
+          "name": "bench2",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.0'"
+        },
+        "bench3": {
+          "name": "bench3",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.0'"
+        },
+        "dead1": {
+          "name": "dead1",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.0'"
+        },
+        "dead2": {
+          "name": "dead2",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.0'"
+        },
+        "dead3": {
+          "name": "dead3",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.0'"
+        },
+        "platform": {
+          "name": "platform",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "session": {
+          "name": "session",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flight": {
+          "name": "flight",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "team_score": {
+          "name": "team_score",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "placement": {
+          "name": "placement",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lot": {
+          "name": "lot",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "meet_result_meet_id_fkey": {
+          "name": "meet_result_meet_id_fkey",
+          "tableFrom": "meet_result",
+          "tableTo": "meet_info",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "meet_id"
+          ],
+          "columnsTo": [
+            "meet_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "meet_result_team_id_fkey": {
+          "name": "meet_result_team_id_fkey",
+          "tableFrom": "meet_result",
+          "tableTo": "teams",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "team_id"
+          ],
+          "columnsTo": [
+            "team_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "meet_result_vpf_id_fkey": {
+          "name": "meet_result_vpf_id_fkey",
+          "tableFrom": "meet_result",
+          "tableTo": "members",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "vpf_id"
+          ],
+          "columnsTo": [
+            "vpf_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "meet_result_pkey": {
+          "name": "meet_result_pkey",
+          "columns": [
+            "meet_id",
+            "vpf_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "chk_weight_class_sex": {
+          "name": "chk_weight_class_sex",
+          "value": "((sex = 'male'::sexes) AND (weight_class = ANY (ARRAY[53, 59, 66, 74, 83, 93, 105, 120, 999]))) OR ((sex = 'female'::sexes) AND (weight_class = ANY (ARRAY[43, 47, 52, 57, 63, 69, 76, 84, 999]))) OR (sex IS NULL)"
+        }
+      },
+      "policies": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.division": {
+      "name": "division",
+      "values": [
+        "subjr",
+        "jr",
+        "open",
+        "mas1",
+        "mas2",
+        "mas3",
+        "mas4",
+        "guest"
+      ],
+      "schema": "public"
+    },
+    "public.meet_type": {
+      "name": "meet_type",
+      "values": [
+        "national",
+        "amateur",
+        "professional",
+        "national_qualifier",
+        "other"
+      ],
+      "schema": "public"
+    },
+    "public.sexes": {
+      "name": "sexes",
+      "values": [
+        "female",
+        "male"
+      ],
+      "schema": "public"
+    }
+  },
+  "schemas": {},
+  "sequences": {
+    "public.vpf_seq": {
+      "name": "vpf_seq",
+      "schema": "public",
+      "startWith": "889",
+      "minValue": "1",
+      "maxValue": "9223372036854775807",
+      "increment": "1",
+      "cycle": false,
+      "cache": "1"
+    }
+  },
+  "roles": {},
+  "policies": {},
+  "views": {
+    "public.meet_result_detailed": {
+      "name": "meet_result_detailed",
+      "schema": "public",
+      "columns": {
+        "meet_id": {
+          "name": "meet_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vpf_id": {
+          "name": "vpf_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sex": {
+          "name": "sex",
+          "type": "sexes",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "weight_class": {
+          "name": "weight_class",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "division": {
+          "name": "division",
+          "type": "division",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body_weight": {
+          "name": "body_weight",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "squat1": {
+          "name": "squat1",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "squat2": {
+          "name": "squat2",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "squat3": {
+          "name": "squat3",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "best_squat": {
+          "name": "best_squat",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bench1": {
+          "name": "bench1",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bench2": {
+          "name": "bench2",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bench3": {
+          "name": "bench3",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "best_bench": {
+          "name": "best_bench",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dead1": {
+          "name": "dead1",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dead2": {
+          "name": "dead2",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dead3": {
+          "name": "dead3",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "best_dead": {
+          "name": "best_dead",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "platform": {
+          "name": "platform",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "session": {
+          "name": "session",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flight": {
+          "name": "flight",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "team_score": {
+          "name": "team_score",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "full_name": {
+          "name": "full_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "meet_name": {
+          "name": "meet_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "meet_type",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total": {
+          "name": "total",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dots": {
+          "name": "dots",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ipf": {
+          "name": "ipf",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gl": {
+          "name": "gl",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "placement": {
+          "name": "placement",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "meet_slug": {
+          "name": "meet_slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "instagram_username": {
+          "name": "instagram_username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dob": {
+          "name": "dob",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "host_date": {
+          "name": "host_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lot": {
+          "name": "lot",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "system_year": {
+          "name": "system_year",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hidden": {
+          "name": "hidden",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "decorator_1": {
+          "name": "decorator_1",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "decorator_2": {
+          "name": "decorator_2",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT mr.meet_id, mr.vpf_id, mr.sex, mr.weight_class, mr.division, mr.body_weight, mr.squat1, mr.squat2, mr.squat3, GREATEST(mr.squat1, mr.squat2, mr.squat3, 0::numeric) AS best_squat, mr.bench1, mr.bench2, mr.bench3, GREATEST(mr.bench1, mr.bench2, mr.bench3, 0::numeric) AS best_bench, mr.dead1, mr.dead2, mr.dead3, GREATEST(mr.dead1, mr.dead2, mr.dead3, 0::numeric) AS best_dead, mr.platform, mr.session, mr.flight, mr.team_id, mr.team_score, m.full_name, mi.meet_name, mi.type, GREATEST(mr.squat1, mr.squat2, mr.squat3, 0::numeric) + GREATEST(mr.bench1, mr.bench2, mr.bench3, 0::numeric) + GREATEST(mr.dead1, mr.dead2, mr.dead3, 0::numeric) AS total, calculate_dots(GREATEST(mr.squat1, mr.squat2, mr.squat3, 0::numeric) + GREATEST(mr.bench1, mr.bench2, mr.bench3, 0::numeric) + GREATEST(mr.dead1, mr.dead2, mr.dead3, 0::numeric), mr.body_weight, mr.sex) AS dots, calculate_ipf(GREATEST(mr.squat1, mr.squat2, mr.squat3, 0::numeric) + GREATEST(mr.bench1, mr.bench2, mr.bench3, 0::numeric) + GREATEST(mr.dead1, mr.dead2, mr.dead3, 0::numeric), mr.body_weight, mr.sex) AS ipf, calculate_gl(GREATEST(mr.squat1, mr.squat2, mr.squat3, 0::numeric) + GREATEST(mr.bench1, mr.bench2, mr.bench3, 0::numeric) + GREATEST(mr.dead1, mr.dead2, mr.dead3, 0::numeric), mr.body_weight, mr.sex) AS gl, mr.placement, mi.meet_slug, m.instagram_username, m.dob, mi.host_date, m.slug, mr.lot, mi.system_year, mi.hidden, m.decorator_1, m.decorator_2 FROM meet_result mr JOIN members m ON mr.vpf_id = m.vpf_id JOIN meet_info mi ON mi.meet_id = mr.meet_id UNION ALL SELECT lmr.meet_id, lmr.vpf_id, lmr.sex, lmr.weight_class, lmr.division, lmr.body_weight, NULL::numeric AS squat1, NULL::numeric AS squat2, NULL::numeric AS squat3, lmr.best_squat, NULL::numeric AS bench1, NULL::numeric AS bench2, NULL::numeric AS bench3, lmr.best_bench, NULL::numeric AS dead1, NULL::numeric AS dead2, NULL::numeric AS dead3, lmr.best_dead, lmr.platform, lmr.session, lmr.flight, lmr.team_id, lmr.team_score, m.full_name, mi.meet_name, mi.type, COALESCE(lmr.best_squat, 0::numeric) + COALESCE(lmr.best_bench, 0::numeric) + COALESCE(lmr.best_dead, 0::numeric) AS total, calculate_dots(COALESCE(lmr.best_squat, 0::numeric) + COALESCE(lmr.best_bench, 0::numeric) + COALESCE(lmr.best_dead, 0::numeric), lmr.body_weight, lmr.sex) AS dots, calculate_ipf(COALESCE(lmr.best_squat, 0::numeric) + COALESCE(lmr.best_bench, 0::numeric) + COALESCE(lmr.best_dead, 0::numeric), lmr.body_weight, lmr.sex) AS ipf, calculate_gl(COALESCE(lmr.best_squat, 0::numeric) + COALESCE(lmr.best_bench, 0::numeric) + COALESCE(lmr.best_dead, 0::numeric), lmr.body_weight, lmr.sex) AS gl, lmr.placement, mi.meet_slug, m.instagram_username, m.dob, mi.host_date, m.slug, lmr.lot, mi.system_year, mi.hidden, m.decorator_1, m.decorator_2 FROM legacy_meet_result lmr JOIN members m ON lmr.vpf_id = m.vpf_id JOIN meet_info mi ON mi.meet_id = lmr.meet_id",
+      "materialized": true
+    }
+  },
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {
+      "members": {
+        "columns": {
+          "vpf_id": {
+            "isDefaultAnExpression": true
+          }
+        }
+      }
+    }
+  }
+}

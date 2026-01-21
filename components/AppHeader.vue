@@ -91,6 +91,7 @@ const switchLocale = (newLocale) => {
   flex: 1;
   display: flex;
   justify-content: center;
+  overflow-x: scroll;
 }
 
 .nav-list {
