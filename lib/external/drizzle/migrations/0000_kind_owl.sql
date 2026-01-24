@@ -3,8 +3,31 @@
 /*
 CREATE TYPE "public"."division" AS ENUM('subjr', 'jr', 'open', 'mas1', 'mas2', 'mas3', 'mas4', 'guest');--> statement-breakpoint
 CREATE TYPE "public"."meet_type" AS ENUM('national', 'amateur', 'professional', 'national_qualifier', 'other');--> statement-breakpoint
+CREATE TYPE "public"."roles" AS ENUM('user', 'admin');--> statement-breakpoint
 CREATE TYPE "public"."sexes" AS ENUM('female', 'male');--> statement-breakpoint
 CREATE SEQUENCE "public"."vpf_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 889 CACHE 1;--> statement-breakpoint
+CREATE TABLE "meets" (
+	"meet_id" serial PRIMARY KEY NOT NULL,
+	"meet_name" text NOT NULL,
+	"city" text,
+	"start_registration" date,
+	"close_registration" date,
+	"host_date" date,
+	"type" "meet_type",
+	"media_link" text,
+	"meet_slug" text DEFAULT '' NOT NULL,
+	"system_year" smallint,
+	"hidden" boolean DEFAULT false NOT NULL,
+	"allow_spotter_registration" boolean DEFAULT true,
+	"allow_guest_registration" boolean DEFAULT true
+);
+--> statement-breakpoint
+CREATE TABLE "teams" (
+	"team_id" serial PRIMARY KEY NOT NULL,
+	"team_name" text NOT NULL,
+	CONSTRAINT "teams_name_key" UNIQUE("team_name")
+);
+--> statement-breakpoint
 CREATE TABLE "users" (
 	"vpf_id" text PRIMARY KEY DEFAULT ('VPF'::text || lpad((nextval('vpf_seq'::regclass))::text, 6, '0'::text)) NOT NULL,
 	"full_name" text NOT NULL,
@@ -26,31 +49,11 @@ CREATE TABLE "users" (
 	"slug" text,
 	"decorator1" text,
 	"decorator2" text,
-	"ban_level" smallint DEFAULT '0' NOT NULL,
+	"email" text,
+	"role" "roles" DEFAULT 'user' NOT NULL,
 	CONSTRAINT "members_slug_key" UNIQUE("slug"),
+	CONSTRAINT "users_email_key" UNIQUE("email"),
 	CONSTRAINT "members_dob_check" CHECK ((dob >= 1900) AND ((dob)::numeric <= EXTRACT(year FROM CURRENT_DATE)))
-);
---> statement-breakpoint
-CREATE TABLE "meets" (
-	"meet_id" serial PRIMARY KEY NOT NULL,
-	"meet_name" text NOT NULL,
-	"city" text,
-	"start_registration" date,
-	"close_registration" date,
-	"host_date" date,
-	"type" "meet_type",
-	"media_link" text,
-	"meet_slug" text DEFAULT '',
-	"system_year" smallint,
-	"hidden" boolean DEFAULT false NOT NULL,
-	"allow_spotter_registration" boolean DEFAULT true,
-	"allow_guest_registration" boolean DEFAULT true
-);
---> statement-breakpoint
-CREATE TABLE "teams" (
-	"team_id" serial PRIMARY KEY NOT NULL,
-	"team_name" text NOT NULL,
-	CONSTRAINT "teams_name_key" UNIQUE("team_name")
 );
 --> statement-breakpoint
 CREATE TABLE "user_violations" (

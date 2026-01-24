@@ -1,0 +1,1 @@
+ALTER TABLE "meets" ADD COLUMN "legacy" boolean DEFAULT false;

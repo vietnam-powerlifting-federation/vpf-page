@@ -4,6 +4,135 @@
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.meets": {
+      "name": "meets",
+      "schema": "",
+      "columns": {
+        "meet_id": {
+          "name": "meet_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "meet_name": {
+          "name": "meet_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "city": {
+          "name": "city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "start_registration": {
+          "name": "start_registration",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "close_registration": {
+          "name": "close_registration",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "host_date": {
+          "name": "host_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "meet_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "media_link": {
+          "name": "media_link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "meet_slug": {
+          "name": "meet_slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "system_year": {
+          "name": "system_year",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hidden": {
+          "name": "hidden",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "allow_spotter_registration": {
+          "name": "allow_spotter_registration",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "allow_guest_registration": {
+          "name": "allow_guest_registration",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.teams": {
+      "name": "teams",
+      "schema": "",
+      "columns": {
+        "team_id": {
+          "name": "team_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "team_name": {
+          "name": "team_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "teams_name_key": {
+          "columns": [
+            "team_name"
+          ],
+          "nullsNotDistinct": false,
+          "name": "teams_name_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
     "public.users": {
       "name": "users",
       "schema": "",
@@ -135,12 +264,19 @@
           "primaryKey": false,
           "notNull": false
         },
-        "ban_level": {
-          "name": "ban_level",
-          "type": "smallint",
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "role": {
+          "name": "role",
+          "type": "roles",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'0'"
+          "default": "'user'"
         }
       },
       "indexes": {},
@@ -153,6 +289,13 @@
           ],
           "nullsNotDistinct": false,
           "name": "members_slug_key"
+        },
+        "users_email_key": {
+          "columns": [
+            "email"
+          ],
+          "nullsNotDistinct": false,
+          "name": "users_email_key"
         }
       },
       "checkConstraints": {
@@ -161,135 +304,6 @@
           "value": "(dob >= 1900) AND ((dob)::numeric <= EXTRACT(year FROM CURRENT_DATE))"
         }
       },
-      "policies": {},
-      "isRLSEnabled": false
-    },
-    "public.meets": {
-      "name": "meets",
-      "schema": "",
-      "columns": {
-        "meet_id": {
-          "name": "meet_id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "meet_name": {
-          "name": "meet_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "city": {
-          "name": "city",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "start_registration": {
-          "name": "start_registration",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "close_registration": {
-          "name": "close_registration",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "host_date": {
-          "name": "host_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "type": {
-          "name": "type",
-          "type": "meet_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "media_link": {
-          "name": "media_link",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "meet_slug": {
-          "name": "meet_slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "''"
-        },
-        "system_year": {
-          "name": "system_year",
-          "type": "smallint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "hidden": {
-          "name": "hidden",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "allow_spotter_registration": {
-          "name": "allow_spotter_registration",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": true
-        },
-        "allow_guest_registration": {
-          "name": "allow_guest_registration",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {},
-      "policies": {},
-      "isRLSEnabled": false
-    },
-    "public.teams": {
-      "name": "teams",
-      "schema": "",
-      "columns": {
-        "team_id": {
-          "name": "team_id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "team_name": {
-          "name": "team_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "teams_name_key": {
-          "columns": [
-            "team_name"
-          ],
-          "nullsNotDistinct": false,
-          "name": "teams_name_key"
-        }
-      },
-      "checkConstraints": {},
       "policies": {},
       "isRLSEnabled": false
     },
@@ -747,6 +761,14 @@
       ],
       "schema": "public"
     },
+    "public.roles": {
+      "name": "roles",
+      "values": [
+        "user",
+        "admin"
+      ],
+      "schema": "public"
+    },
     "public.sexes": {
       "name": "sexes",
       "values": [
@@ -782,9 +804,6 @@
       "users": {
         "columns": {
           "vpf_id": {
-            "isDefaultAnExpression": true
-          },
-          "ban_level": {
             "isDefaultAnExpression": true
           }
         }
