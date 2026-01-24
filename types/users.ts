@@ -1,6 +1,6 @@
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm"
-import type { members } from "@/db/schema"
-type User = InferSelectModel<typeof members>
-type NewUser = InferInsertModel<typeof members>
+import type { users } from "~/lib/external/drizzle/migrations/schema"
+type User = InferSelectModel<typeof users>
+type NewUser = InferInsertModel<typeof users>
 
 export type { User, NewUser }
