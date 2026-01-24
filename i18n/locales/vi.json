@@ -4,6 +4,7 @@
     "about": "Giới thiệu",
     "membership": "Thành viên",
     "championships": "Giải đấu",
+    "records": "Kỷ lục",
     "news": "Tin tức",
     "contact": "Liên hệ"
   },
@@ -70,6 +71,27 @@
     "copyright": "© {year} Vietnam Powerlifting Federation. Bảo lưu mọi quyền.",
     "links": "Liên kết nhanh",
     "social": "Theo dõi chúng tôi"
+  },
+  "records": {
+    "title": "Kỷ lục",
+    "sportGender": "Môn thể thao / Giới tính",
+    "division": "Hạng",
+    "year": "Năm",
+    "selectGender": "Chọn giới tính",
+    "selectDivision": "Chọn hạng",
+    "selectYear": "Chọn năm",
+    "loading": "Đang tải kỷ lục...",
+    "error": "Lỗi khi tải kỷ lục",
+    "squat": "Squat",
+    "benchPress": "Bench Press",
+    "deadlift": "Deadlift",
+    "total": "Tổng",
+    "weightClass": "Hạng cân",
+    "name": "Tên",
+    "yearOfBirth": "Năm sinh",
+    "bodyWeight": "Cân nặng",
+    "result": "Kết quả",
+    "date": "Ngày"
   }
 }
 
