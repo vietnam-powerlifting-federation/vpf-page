@@ -9,7 +9,7 @@ export const SEX = ["male", "female"]
 
 export const RECORD_CAT_NAME = ["squat", "bench", "deadlift", "total"]
 
-export const RECPRD_DIVISION_OVERRIDE = {
+export const RECORD_DIVISION_OVERRIDE = {
   open: ["open"],
   jr: ["jr", "open"],
   subjr: ["subjr", "jr", "open"],
@@ -19,3 +19,5 @@ export const RECPRD_DIVISION_OVERRIDE = {
   mas3: ["mas3", "mas2", "mas1", "open"],
   mas4: ["mas4", "mas3", "mas2", "mas1", "open"],
 }
+
+export const RECORD_START_YEAR = 2022

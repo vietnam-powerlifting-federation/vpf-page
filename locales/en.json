@@ -4,6 +4,7 @@
     "about": "About",
     "membership": "Membership",
     "championships": "Championships",
+    "records": "Records",
     "news": "News",
     "contact": "Contact"
   },
@@ -70,6 +71,27 @@
     "copyright": "© {year} British Powerlifting. All rights reserved.",
     "links": "Quick Links",
     "social": "Follow Us"
+  },
+  "records": {
+    "title": "Records",
+    "sportGender": "Sport / Gender",
+    "division": "Division",
+    "year": "Year",
+    "selectGender": "Select Gender",
+    "selectDivision": "Select Division",
+    "selectYear": "Select Year",
+    "loading": "Loading records...",
+    "error": "Error loading records",
+    "squat": "Squat",
+    "benchPress": "Bench Press",
+    "deadlift": "Deadlift",
+    "total": "Total",
+    "weightClass": "Weight Class",
+    "name": "Name",
+    "yearOfBirth": "Year Of Birth",
+    "bodyWeight": "Body Weight",
+    "result": "Result",
+    "date": "Date"
   }
 }
 

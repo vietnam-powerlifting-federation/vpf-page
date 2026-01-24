@@ -44,6 +44,7 @@ const menuItems = computed(() => [
   { label: t("nav.about"), to: "/about" },
   { label: t("nav.membership"), to: "/membership" },
   { label: t("nav.championships"), to: "/championships" },
+  { label: t("nav.records"), to: "/records" },
   { label: t("nav.news"), to: "/news" },
   { label: t("nav.contact"), to: "/contact" },
 ])

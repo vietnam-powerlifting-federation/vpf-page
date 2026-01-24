@@ -1,13 +1,13 @@
-import { eq, getTableColumns } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { meets, meetResults, legacyMeetResults, users } from "~/lib/external/drizzle/migrations/schema"
+import { userPublicSelect } from "~/lib/external/drizzle/migrations/queries"
 import { logger } from "~/lib/logger/logger"
 import { addMetadataToMeetResults } from "~/lib/utils/meet-result"
-import { toUserPublic } from "~/lib/utils/user"
 import type { ApiResponse } from "~/types/api"
 import type { MeetPublic } from "~/types/meets"
 import type { Result } from "~/types/results"
-import type { UserPrivate, UserPublic } from "~/types/users"
+import type { UserPublic } from "~/types/users"
 
 type MeetDetailsResponse = {
   meet: MeetPublic
@@ -79,24 +79,23 @@ export default defineEventHandler(async (event): Promise<ApiResponse<MeetDetails
     // Query all users who participated using JOINs based on legacy attribute
     const allAthletes = meet.legacy
       ? await db
-        .select(getTableColumns(users))
+        .select(userPublicSelect)
         .from(legacyMeetResults)
         .innerJoin(users, eq(legacyMeetResults.vpfId, users.vpfId))
         .where(eq(legacyMeetResults.meetId, meetIdNum))
       : await db
-        .select(getTableColumns(users))
+        .select(userPublicSelect)
         .from(meetResults)
         .innerJoin(users, eq(meetResults.vpfId, users.vpfId))
         .where(eq(meetResults.meetId, meetIdNum))
 
     // Get unique users (in case of duplicates)
-    const allAthletesMap = new Map<string, UserPrivate>()
+    const allAthletesMap = new Map<string, UserPublic>()
     for (const user of allAthletes) {
       allAthletesMap.set(user.vpfId, user)
     }
 
-    // Transform to public users
-    const publicAthletes = Array.from(allAthletesMap.values()).map(toUserPublic)
+    const publicAthletes = Array.from(allAthletesMap.values())
 
     return {
       success: true,
