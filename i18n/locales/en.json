@@ -74,6 +74,9 @@
   },
   "records": {
     "title": "Records",
+    "viewMode": "View Mode",
+    "currentRecords": "Current Records",
+    "recordHistory": "Record History",
     "sportGender": "Sport / Gender",
     "division": "Division",
     "year": "Year",
@@ -91,7 +94,13 @@
     "yearOfBirth": "Year Of Birth",
     "bodyWeight": "Body Weight",
     "result": "Result",
-    "date": "Date"
+    "date": "Date",
+    "noHistoryFound": "No record history found for the specified year",
+    "historyDescription": "View records broken during a specific year's national meet",
+    "attempt": "Attempt",
+    "previousRecord": "Previous Record",
+    "newRecord": "New Record",
+    "improvement": "Improvement"
   }
 }
 

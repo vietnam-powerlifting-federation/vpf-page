@@ -74,6 +74,9 @@
   },
   "records": {
     "title": "Kỷ lục",
+    "viewMode": "Chế độ xem",
+    "currentRecords": "Kỷ lục hiện tại",
+    "recordHistory": "Lịch sử kỷ lục",
     "sportGender": "Môn thể thao / Giới tính",
     "division": "Hạng",
     "year": "Năm",
@@ -91,7 +94,13 @@
     "yearOfBirth": "Năm sinh",
     "bodyWeight": "Cân nặng",
     "result": "Kết quả",
-    "date": "Ngày"
+    "date": "Ngày",
+    "noHistoryFound": "Không tìm thấy lịch sử kỷ lục cho năm được chỉ định",
+    "historyDescription": "Xem các kỷ lục được thiết lập trong giải quốc gia của một năm cụ thể",
+    "attempt": "Lần thử",
+    "previousRecord": "Kỷ lục trước",
+    "newRecord": "Kỷ lục mới",
+    "improvement": "Cải thiện"
   }
 }
 

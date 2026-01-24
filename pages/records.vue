@@ -4,6 +4,39 @@
       <div class="container mx-auto px-4">
         <h1 class="text-3xl md:text-4xl font-bold mb-8 text-center text-primary">{{ $t("records.title") }}</h1>
 
+        <!-- View Mode Toggle -->
+        <div class="max-w-5xl mx-auto mb-6">
+          <div class="flex gap-4 justify-center">
+            <Button
+              v-if="viewMode === 'current'"
+              @click="viewMode = 'current'"
+            >
+              {{ $t("records.currentRecords") }}
+            </Button>
+            <SecondaryButton
+              v-else
+              @click="viewMode = 'current'"
+            >
+              {{ $t("records.currentRecords") }}
+            </SecondaryButton>
+            <Button
+              v-if="viewMode === 'history'"
+              @click="viewMode = 'history'"
+            >
+              {{ $t("records.recordHistory") }}
+            </Button>
+            <SecondaryButton
+              v-else
+              @click="viewMode = 'history'"
+            >
+              {{ $t("records.recordHistory") }}
+            </SecondaryButton>
+          </div>
+          <p v-if="viewMode === 'history'" class="text-sm text-gray-600 dark:text-gray-400 text-center mt-2">
+            {{ $t("records.historyDescription") }}
+          </p>
+        </div>
+
         <!-- Filters -->
         <div class="max-w-5xl mx-auto mb-8">
           <div class="flex flex-wrap gap-4 items-end">
@@ -53,61 +86,81 @@
         </div>
 
         <!-- Loading State -->
-        <div v-if="pending" class="max-w-5xl mx-auto text-center py-12">
+        <div v-if="displayPending" class="max-w-5xl mx-auto text-center py-12">
           <ProgressSpinner />
           <p class="mt-4 text-gray-600">{{ $t("records.loading") }}</p>
         </div>
 
         <!-- Error State -->
-        <div v-else-if="error" class="max-w-5xl mx-auto text-center py-12">
+        <div v-else-if="displayError" class="max-w-5xl mx-auto text-center py-12">
           <p class="text-red-600">{{ $t("records.error") }}</p>
         </div>
 
         <!-- Records Tables -->
-        <div v-else-if="data?.data" class="max-w-5xl mx-auto">
+        <div v-else-if="displayData" class="max-w-5xl mx-auto">
+          <!-- History Mode: Show meet info if available -->
+          <div v-if="viewMode === 'history' && historyData?.data?.meet" class="mb-8 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+            <h3 class="text-lg font-semibold mb-2">{{ historyData.data.meet.meetName }}</h3>
+            <p v-if="historyData.data.meet.hostDate" class="text-sm text-gray-600 dark:text-gray-400">
+              {{ $t("records.date") }}: {{ formatDate(historyData.data.meet.hostDate) }}
+            </p>
+          </div>
+
+          <!-- No records message for history -->
+          <div v-if="viewMode === 'history' && (!historyData?.data?.records || historyData.data.records.length === 0)" class="text-center py-12">
+            <p class="text-gray-600 dark:text-gray-400">{{ $t("records.noHistoryFound") }}</p>
+          </div>
+
+          <!-- History Mode: Show list view -->
+          <div v-if="viewMode === 'history' && historyData?.data?.records && historyData.data.records.length > 0">
+            <RecordsHistoryList
+              :records="filteredHistoryRecords"
+              :athletes="displayAthletes"
+              :previous-records-map="previousRecordsMap"
+            />
+          </div>
+
+          <!-- Current Records Mode: Show table view -->
           <!-- Squat Records -->
-          <div class="mb-12">
+          <div v-if="viewMode === 'current' && displayRecords.squat.length > 0" class="mb-12">
             <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("records.squat") }}</h2>
             <RecordsTable
-              :records="filteredRecords.squat"
-              :athletes="data.data.athletes"
-              :meets="data.data.meet"
+              :records="displayRecords.squat"
+              :athletes="displayAthletes"
+              :meets="displayMeets"
               :weight-classes="weightClasses"
             />
           </div>
 
           <!-- Bench Press Records -->
-          <div class="mb-12">
+          <div v-if="viewMode === 'current' && displayRecords.bench.length > 0" class="mb-12">
             <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("records.benchPress") }}</h2>
             <RecordsTable
-              :records="filteredRecords.bench"
-              :athletes="data.data.athletes"
-              :meets="data.data.meet"
-              :results="data.data.records"
+              :records="displayRecords.bench"
+              :athletes="displayAthletes"
+              :meets="displayMeets"
               :weight-classes="weightClasses"
             />
           </div>
 
           <!-- Deadlift Records -->
-          <div class="mb-12">
+          <div v-if="viewMode === 'current' && displayRecords.deadlift.length > 0" class="mb-12">
             <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("records.deadlift") }}</h2>
             <RecordsTable
-              :records="filteredRecords.deadlift"
-              :athletes="data.data.athletes"
-              :meets="data.data.meet"
-              :results="data.data.records"
+              :records="displayRecords.deadlift"
+              :athletes="displayAthletes"
+              :meets="displayMeets"
               :weight-classes="weightClasses"
             />
           </div>
 
           <!-- Total Records -->
-          <div class="mb-12">
+          <div v-if="viewMode === 'current' && displayRecords.total.length > 0" class="mb-12">
             <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("records.total") }}</h2>
             <RecordsTable
-              :records="filteredRecords.total"
-              :athletes="data.data.athletes"
-              :meets="data.data.meet"
-              :results="data.data.records"
+              :records="displayRecords.total"
+              :athletes="displayAthletes"
+              :meets="displayMeets"
               :weight-classes="weightClasses"
             />
           </div>
@@ -122,7 +175,10 @@ import { ref, computed, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Select from "@/components/volt/Select.vue"
 import ProgressSpinner from "@/components/volt/ProgressSpinner.vue"
+import Button from "@/components/volt/Button.vue"
+import SecondaryButton from "@/components/volt/SecondaryButton.vue"
 import RecordsTable from "@/components/RecordsTable.vue"
+import RecordsHistoryList from "@/components/RecordsHistoryList.vue"
 import { WEIGHT_CLASS_MALE, WEIGHT_CLASS_FEMALE, RECORD_START_YEAR } from "~/lib/constants/constants"
 import type { LiftRecord } from "~/types/records"
 import type { UserPublic } from "~/types/users"
@@ -131,6 +187,10 @@ import type { Sex, Division } from "~/types/union-types"
 
 const route = useRoute()
 const router = useRouter()
+
+// View mode: 'current' or 'history'
+const initialViewMode = (route.query.mode as "current" | "history") || "current"
+const viewMode = ref<"current" | "history">(initialViewMode)
 
 // Filter states
 const selectedSex = ref<Sex | null>((route.query.sex as Sex) || "male")
@@ -173,7 +233,7 @@ const weightClasses = computed(() => {
   return selectedSex.value === "female" ? WEIGHT_CLASS_FEMALE : WEIGHT_CLASS_MALE
 })
 
-// Fetch records data
+// Fetch current records data
 const { data, pending, error, refresh } = await useFetch<{
   success: boolean
   data: {
@@ -193,11 +253,97 @@ const { data, pending, error, refresh } = await useFetch<{
     }
     return query
   }),
+  immediate: initialViewMode === "current",
+})
+
+// Fetch history records data
+const { data: historyData, pending: historyPending, error: historyError, refresh: refreshHistory } = await useFetch<{
+  success: boolean
+  data: {
+    records: LiftRecord[]
+    meet: MeetPublic | null
+    athletes: UserPublic[]
+  } | null
+  message: {
+    en: string
+    vi: string
+  }
+}>("/api/records/history", {
+  query: computed(() => {
+    const query: Record<string, string | number | undefined> = {}
+    if (selectedYear.value !== null) {
+      query.year = selectedYear.value
+    }
+    return query
+  }),
+  immediate: initialViewMode === "history",
+})
+
+// Fetch previous year records for history view (to show previous record values)
+const { data: previousYearRecords } = await useFetch<{
+  success: boolean
+  data: {
+    records: LiftRecord[]
+    meet: MeetPublic[]
+    athletes: UserPublic[]
+  } | null
+}>("/api/records", {
+  query: computed(() => {
+    const query: Record<string, string | number | undefined> = {}
+    if (selectedYear.value !== null && viewMode.value === "history") {
+      query.year = selectedYear.value - 1
+    }
+    return query
+  }),
+  immediate: initialViewMode === "history" && selectedYear.value !== null,
+})
+
+// Create a map of previous records for history view
+const previousRecordsMap = computed(() => {
+  const map = new Map<string, number>()
+  if (previousYearRecords.value?.data?.records) {
+    for (const record of previousYearRecords.value.data.records) {
+      const key = `${record.sex}-${record.recordDivision}-${record.weightClass}-${record.lift}`
+      const currentBest = map.get(key) ?? 0
+      if (record.recordWeight > currentBest) {
+        map.set(key, record.recordWeight)
+      }
+    }
+  }
+  return map
+})
+
+// Computed properties for display
+const displayData = computed(() => {
+  if (viewMode.value === "history") {
+    return historyData.value?.data
+  }
+  return data.value?.data
+})
+
+const displayPending = computed(() => {
+  return viewMode.value === "history" ? historyPending.value : pending.value
+})
+
+const displayError = computed(() => {
+  return viewMode.value === "history" ? historyError.value : error.value
+})
+
+const displayAthletes = computed(() => {
+  return displayData.value?.athletes ?? []
+})
+
+const displayMeets = computed(() => {
+  if (viewMode.value === "history") {
+    const meet = historyData.value?.data?.meet
+    return meet ? [meet] : []
+  }
+  return data.value?.data?.meet ?? []
 })
 
 // Filter and group records using the API's pre-calculated records
 const filteredRecords = computed(() => {
-  if (!data.value?.data) {
+  if (!displayData.value) {
     return {
       squat: [],
       bench: [],
@@ -206,9 +352,9 @@ const filteredRecords = computed(() => {
     }
   }
 
-  const records = data.value.data.records
-  const meets = data.value.data.meet
-  const athletes = data.value.data.athletes
+  const records = displayData.value.records
+  const meets = displayMeets.value
+  const athletes = displayAthletes.value
   const weightClassesList = weightClasses.value
 
   // Create maps for quick lookup
@@ -351,22 +497,96 @@ const filteredRecords = computed(() => {
   return grouped
 })
 
+// Display records (same as filteredRecords but with better naming)
+const displayRecords = computed(() => filteredRecords.value)
+
+// Filter history records by sex and division
+const filteredHistoryRecords = computed(() => {
+  if (!historyData.value?.data?.records) {
+    return []
+  }
+
+  const records = historyData.value.data.records
+
+  // Division promotion logic: younger divisions can compete in older ones
+  const RECPRD_DIVISION_OVERRIDE: Record<string, Division[]> = {
+    open: ["open"],
+    jr: ["jr", "open"],
+    subjr: ["subjr", "jr", "open"],
+    mas1: ["mas1", "open"],
+    mas2: ["mas2", "mas1", "open"],
+    mas3: ["mas3", "mas2", "mas1", "open"],
+    mas4: ["mas4", "mas3", "mas2", "mas1", "open"],
+  }
+
+  return records.filter((record) => {
+    // Filter by sex
+    if (record.sex !== selectedSex.value) return false
+
+    // Filter by division (with promotion logic)
+    if (selectedDivision.value) {
+      const divisionsThatCanCompete: Division[] = []
+      for (const [div, allowed] of Object.entries(RECPRD_DIVISION_OVERRIDE)) {
+        if (allowed.includes(selectedDivision.value)) {
+          divisionsThatCanCompete.push(div as Division)
+        }
+      }
+      if (!divisionsThatCanCompete.includes(record.recordDivision)) return false
+    }
+
+    return true
+  })
+})
+
 // Handle filter changes
 const handleFilterChange = () => {
   // Update URL query params
   const query: Record<string, string | number> = {}
+  query.mode = viewMode.value
   if (selectedSex.value) query.sex = selectedSex.value
   if (selectedDivision.value) query.division = selectedDivision.value
   if (selectedYear.value) query.year = selectedYear.value
 
   router.push({ query })
-  refresh()
+  
+  if (viewMode.value === "current") {
+    refresh()
+  } else {
+    refreshHistory()
+  }
+}
+
+// Watch view mode changes
+watch(viewMode, () => {
+  handleFilterChange()
+})
+
+// Watch for viewMode and selectedYear changes to fetch previous year records
+watch([viewMode, selectedYear], ([newMode, newYear]) => {
+  if (newMode === "history" && newYear !== null) {
+    // The query will automatically update and trigger a fetch
+  }
+})
+
+// Format date helper
+const formatDate = (date: string | null | undefined): string => {
+  if (!date) return "-"
+  try {
+    const d = new Date(date)
+    const day = String(d.getDate()).padStart(2, "0")
+    const month = String(d.getMonth() + 1).padStart(2, "0")
+    const year = d.getFullYear()
+    return `${day}/${month}/${year}`
+  } catch {
+    return date
+  }
 }
 
 // Watch for route changes
 watch(
   () => route.query,
   (newQuery) => {
+    if (newQuery.mode) viewMode.value = newQuery.mode as "current" | "history"
     if (newQuery.sex) selectedSex.value = newQuery.sex as Sex
     if (newQuery.division) selectedDivision.value = newQuery.division as Division
     if (newQuery.year) selectedYear.value = parseInt(newQuery.year as string, 10)
