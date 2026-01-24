@@ -364,35 +364,10 @@ const filteredRecords = computed(() => {
   const athletesMap = new Map<string, UserPublic>()
   athletes.forEach((a) => athletesMap.set(a.vpfId, a))
 
-  // Division promotion logic: younger divisions can compete in older ones
-  const RECPRD_DIVISION_OVERRIDE: Record<string, Division[]> = {
-    open: ["open"],
-    jr: ["jr", "open"],
-    subjr: ["subjr", "jr", "open"],
-    mas1: ["mas1", "open"],
-    mas2: ["mas2", "mas1", "open"],
-    mas3: ["mas3", "mas2", "mas1", "open"],
-    mas4: ["mas4", "mas3", "mas2", "mas1", "open"],
-  }
-
   // Filter records by sex and division
   const filteredRecordsWithMetadata = records
     .filter((record) => {
-      // Filter by sex
-      if (record.sex !== selectedSex.value) return false
-
-      // Filter by division (with promotion logic)
-      if (selectedDivision.value) {
-        const divisionsThatCanCompete: Division[] = []
-        for (const [div, allowed] of Object.entries(RECPRD_DIVISION_OVERRIDE)) {
-          if (allowed.includes(selectedDivision.value)) {
-            divisionsThatCanCompete.push(div as Division)
-          }
-        }
-        if (!divisionsThatCanCompete.includes(record.recordDivision)) return false
-      }
-
-      return true
+      return selectedSex.value == record.sex && selectedDivision.value === record.recordDivision
     })
 
   // Type for record row (matches RecordsTable's RecordRow interface)
@@ -508,33 +483,8 @@ const filteredHistoryRecords = computed(() => {
 
   const records = historyData.value.data.records
 
-  // Division promotion logic: younger divisions can compete in older ones
-  const RECPRD_DIVISION_OVERRIDE: Record<string, Division[]> = {
-    open: ["open"],
-    jr: ["jr", "open"],
-    subjr: ["subjr", "jr", "open"],
-    mas1: ["mas1", "open"],
-    mas2: ["mas2", "mas1", "open"],
-    mas3: ["mas3", "mas2", "mas1", "open"],
-    mas4: ["mas4", "mas3", "mas2", "mas1", "open"],
-  }
-
   return records.filter((record) => {
-    // Filter by sex
-    if (record.sex !== selectedSex.value) return false
-
-    // Filter by division (with promotion logic)
-    if (selectedDivision.value) {
-      const divisionsThatCanCompete: Division[] = []
-      for (const [div, allowed] of Object.entries(RECPRD_DIVISION_OVERRIDE)) {
-        if (allowed.includes(selectedDivision.value)) {
-          divisionsThatCanCompete.push(div as Division)
-        }
-      }
-      if (!divisionsThatCanCompete.includes(record.recordDivision)) return false
-    }
-
-    return true
+    return selectedSex.value == record.sex && selectedDivision.value === record.recordDivision
   })
 })
 
