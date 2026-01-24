@@ -6,12 +6,12 @@ import { addMetadataToMeetResults } from "~/lib/utils/meet-result"
 import { toUserPublic } from "~/lib/utils/user"
 import type { ApiResponse } from "~/types/api"
 import type { MeetPublic } from "~/types/meets"
-import type { MeetResult } from "~/types/meet-results"
+import type { Result } from "~/types/results"
 import type { UserPrivate, UserPublic } from "~/types/users"
 
 type MeetDetailsResponse = {
   meet: MeetPublic
-  results: MeetResult[]
+  results: Result[]
   athletes: UserPublic[]
 }
 

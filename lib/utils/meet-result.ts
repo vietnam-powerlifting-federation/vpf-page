@@ -1,5 +1,5 @@
 import type { Sex } from "~/types/union-types"
-import type { MeetResult, MeetResultRaw, LegacyMeetResultRaw } from "~/types/meet-results"
+import type { Result, ResultRaw, LegacyResultRaw } from "~/types/results"
 import { DISQUALIFIED, WEIGHT_CLASS_MALE, WEIGHT_CLASS_FEMALE } from "~/lib/constants/constants"
 
 // Calculate best lift from 3 attempts
@@ -70,9 +70,9 @@ export function calculateGLPointsRaw(totalKg: number, bodyweightKg: number, sex:
   )
 }
 
-export function addMetadataToMeetResults(rawResults: (MeetResultRaw | LegacyMeetResultRaw)[]): MeetResult[] {
+export function addMetadataToMeetResults(rawResults: (ResultRaw | LegacyResultRaw)[]): Result[] {
   // Step 1: Calculate best lifts and totals for each result
-  const resultsWithTotals = rawResults.map((raw): MeetResult => {
+  const resultsWithTotals = rawResults.map((raw): Result => {
     // Check if it's legacy format (has bestSquat, bestBench, bestDeadlift)
     const isLegacy = "bestSquat" in raw && raw.bestSquat !== undefined
     
@@ -81,10 +81,10 @@ export function addMetadataToMeetResults(rawResults: (MeetResultRaw | LegacyMeet
     let bestDeadlift: number | null
     
     // Build the base result with all required fields
-    const baseResult: Partial<MeetResult> = { ...raw }
+    const baseResult: Partial<Result> = { ...raw }
     
     if (isLegacy) {
-      const legacy = raw as LegacyMeetResultRaw
+      const legacy = raw as LegacyResultRaw
       bestSquat = legacy.bestSquat
       bestBench = legacy.bestBench
       bestDeadlift = legacy.bestDeadlift
@@ -100,7 +100,7 @@ export function addMetadataToMeetResults(rawResults: (MeetResultRaw | LegacyMeet
       baseResult.deadlift2 = null
       baseResult.deadlift3 = null
     } else {
-      const modern = raw as MeetResultRaw
+      const modern = raw as ResultRaw
       bestSquat = calculateBestLift(modern.squat1, modern.squat2, modern.squat3)
       bestBench = calculateBestLift(modern.bench1, modern.bench2, modern.bench3)
       bestDeadlift = calculateBestLift(modern.deadlift1, modern.deadlift2, modern.deadlift3)
@@ -129,7 +129,7 @@ export function addMetadataToMeetResults(rawResults: (MeetResultRaw | LegacyMeet
       total,
       gl,
       placement: 0 // Will be calculated in next step
-    } as MeetResult
+    } as Result
   })
   
   // Step 2: Group by meet, sex, weight class, division and calculate placements
