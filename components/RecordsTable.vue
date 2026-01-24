@@ -79,7 +79,6 @@ defineProps<{
   records: RecordRow[]
   athletes: UserPublic[]
   meets: MeetPublic[]
-  results: any[]
   weightClasses: number[]
 }>()
 

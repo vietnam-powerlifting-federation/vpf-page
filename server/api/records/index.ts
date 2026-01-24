@@ -8,18 +8,16 @@ import {
 } from "~/lib/constants/constants"
 import { addMetadataToMeetResults } from "~/lib/utils/meet-result"
 import type { ApiResponse } from "~/types/api"
-import type { Record } from "~/types/records"
+import type { LiftRecord } from "~/types/records"
 import type { MeetPublic } from "~/types/meets"
 import type { UserPublic } from "~/types/users"
-import type { Result } from "~/types/results"
 import type { Division } from "~/types/union-types"
 import { eq, lte, gte, and, inArray } from "drizzle-orm"
 
 type RecordsResponse = {
-  records: Record[]
+  records: LiftRecord[]
   meet: MeetPublic[]
   athletes: UserPublic[]
-  results: Result[]
 }
 
 function getDivisionFromAge(age: number): Division {
@@ -81,7 +79,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<RecordsResp
           records: [],
           meet: [],
           athletes: [],
-          results: [],
         },
         message: {
           en: "No meets found",
@@ -121,17 +118,8 @@ export default defineEventHandler(async (event): Promise<ApiResponse<RecordsResp
     // Group results by sex, division, weight class, and lift
     // Format: "sex-division-weightClass-lift"
     type GroupKey = string
-    type GroupResult = {
-      vpfId: string
-      meetId: number
-      weight: number
-      attempt?: 1 | 2 | 3
-      systemYear: number | null
-      dob: number | null
-      lot: number | null
-    }
 
-    const groupedResults = new Map<GroupKey, GroupResult[]>()
+    const groupedResults = new Map<GroupKey, LiftRecord[]>()
 
     // Process results
     for (const result of results) {
@@ -168,27 +156,26 @@ export default defineEventHandler(async (event): Promise<ApiResponse<RecordsResp
           }
 
           groupedResults.get(key)!.push({
-            vpfId: result.vpfId,
-            meetId: result.meetId,
-            weight: best.weight,
+            ...result,
+            recordWeight: best.weight,
             attempt: "attempt" in best ? best.attempt : undefined,
-            systemYear,
-            dob,
-            lot: result.lot
+            lift,
+            recordDivision: targetDiv
           })
         }
       }
     }
 
     // Find top record for each group
-    const records: Record[] = []
+    const records: LiftRecord[] = []
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const [key, groupResults] of groupedResults.entries()) {
       if (groupResults.length === 0) continue
 
       // Sort by weight (desc), then by attempt (asc), then by lot (asc) for tie-breaking
       groupResults.sort((a, b) => {
-        if (b.weight !== a.weight) return b.weight - a.weight
+        if (b.recordWeight !== a.recordWeight) return b.recordWeight - a.recordWeight
         // Tie-breaking: smaller attempt number wins
         const attemptA = a.attempt ?? 999
         const attemptB = b.attempt ?? 999
@@ -200,24 +187,8 @@ export default defineEventHandler(async (event): Promise<ApiResponse<RecordsResp
       })
 
       const topResult = groupResults[0]
-      const [, , , lift] = key.split("-")
       
-      if (lift === "total") {
-        records.push({
-          vpfId: topResult.vpfId,
-          meetId: topResult.meetId,
-          lift: "total",
-          weight: topResult.weight,
-        })
-      } else {
-        records.push({
-          vpfId: topResult.vpfId,
-          meetId: topResult.meetId,
-          lift: lift as "squat" | "bench" | "deadlift",
-          attempt: topResult.attempt ?? 1,
-          weight: topResult.weight,
-        })
-      }
+      records.push({ ...topResult })
     }
 
     setHeader(event, "Cache-Control", "public, max-age=86400, s-maxage=86400")
@@ -229,7 +200,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<RecordsResp
         records,
         meet: allMeets,
         athletes: Array.from(usersMap.values()),
-        results: results,
       },
       message: {
         en: "Records retrieved successfully",

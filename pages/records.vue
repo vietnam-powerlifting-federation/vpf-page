@@ -14,11 +14,11 @@
               <Select
                 v-model="selectedSex"
                 :options="sexOptions"
-                optionLabel="label"
-                optionValue="value"
+                option-label="label"
+                option-value="value"
                 :placeholder="$t('records.selectGender')"
                 class="w-full"
-                @update:modelValue="handleFilterChange"
+                @update:model-value="handleFilterChange"
               />
             </div>
             <div class="flex-1 min-w-[200px]">
@@ -28,11 +28,11 @@
               <Select
                 v-model="selectedDivision"
                 :options="divisionOptions"
-                optionLabel="label"
-                optionValue="value"
+                option-label="label"
+                option-value="value"
                 :placeholder="$t('records.selectDivision')"
                 class="w-full"
-                @update:modelValue="handleFilterChange"
+                @update:model-value="handleFilterChange"
               />
             </div>
             <div class="flex-1 min-w-[200px]">
@@ -42,11 +42,11 @@
               <Select
                 v-model="selectedYear"
                 :options="yearOptions"
-                optionLabel="label"
-                optionValue="value"
+                option-label="label"
+                option-value="value"
                 :placeholder="$t('records.selectYear')"
                 class="w-full"
-                @update:modelValue="handleFilterChange"
+                @update:model-value="handleFilterChange"
               />
             </div>
           </div>
@@ -72,7 +72,6 @@
               :records="filteredRecords.squat"
               :athletes="data.data.athletes"
               :meets="data.data.meet"
-              :results="data.data.results"
               :weight-classes="weightClasses"
             />
           </div>
@@ -84,7 +83,7 @@
               :records="filteredRecords.bench"
               :athletes="data.data.athletes"
               :meets="data.data.meet"
-              :results="data.data.results"
+              :results="data.data.records"
               :weight-classes="weightClasses"
             />
           </div>
@@ -96,7 +95,7 @@
               :records="filteredRecords.deadlift"
               :athletes="data.data.athletes"
               :meets="data.data.meet"
-              :results="data.data.results"
+              :results="data.data.records"
               :weight-classes="weightClasses"
             />
           </div>
@@ -108,7 +107,7 @@
               :records="filteredRecords.total"
               :athletes="data.data.athletes"
               :meets="data.data.meet"
-              :results="data.data.results"
+              :results="data.data.records"
               :weight-classes="weightClasses"
             />
           </div>
@@ -124,11 +123,10 @@ import { useRoute, useRouter } from "vue-router"
 import Select from "@/components/volt/Select.vue"
 import ProgressSpinner from "@/components/volt/ProgressSpinner.vue"
 import RecordsTable from "@/components/RecordsTable.vue"
-import { WEIGHT_CLASS_MALE, WEIGHT_CLASS_FEMALE, DIVISION, RECORD_START_YEAR } from "~/lib/constants/constants"
-import type { Record } from "~/types/records"
+import { WEIGHT_CLASS_MALE, WEIGHT_CLASS_FEMALE, RECORD_START_YEAR } from "~/lib/constants/constants"
+import type { LiftRecord } from "~/types/records"
 import type { UserPublic } from "~/types/users"
 import type { MeetPublic } from "~/types/meets"
-import type { Result } from "~/types/results"
 import type { Sex, Division } from "~/types/union-types"
 
 const route = useRoute()
@@ -179,10 +177,9 @@ const weightClasses = computed(() => {
 const { data, pending, error, refresh } = await useFetch<{
   success: boolean
   data: {
-    records: Record[]
+    records: LiftRecord[]
     meet: MeetPublic[]
     athletes: UserPublic[]
-    results: Result[]
   } | null
   message: {
     en: string
@@ -198,7 +195,7 @@ const { data, pending, error, refresh } = await useFetch<{
   }),
 })
 
-// Filter and group records by matching with results
+// Filter and group records using the API's pre-calculated records
 const filteredRecords = computed(() => {
   if (!data.value?.data) {
     return {
@@ -209,12 +206,18 @@ const filteredRecords = computed(() => {
     }
   }
 
-  const results = data.value.data.results
+  const records = data.value.data.records
   const meets = data.value.data.meet
   const athletes = data.value.data.athletes
   const weightClassesList = weightClasses.value
 
-  // Filter results by selected sex and division
+  // Create maps for quick lookup
+  const meetsMap = new Map<number, MeetPublic>()
+  meets.forEach((m) => meetsMap.set(m.meetId, m))
+
+  const athletesMap = new Map<string, UserPublic>()
+  athletes.forEach((a) => athletesMap.set(a.vpfId, a))
+
   // Division promotion logic: younger divisions can compete in older ones
   const RECPRD_DIVISION_OVERRIDE: Record<string, Division[]> = {
     open: ["open"],
@@ -226,30 +229,43 @@ const filteredRecords = computed(() => {
     mas4: ["mas4", "mas3", "mas2", "mas1", "open"],
   }
 
-  const filteredResults = results.filter((r) => {
-    if (r.sex !== selectedSex.value) return false
-    
-    if (selectedDivision.value) {
-      // Find all divisions that can compete in the selected division
-      const divisionsThatCanCompete: Division[] = []
-      for (const [div, allowed] of Object.entries(RECPRD_DIVISION_OVERRIDE)) {
-        if (allowed.includes(selectedDivision.value)) {
-          divisionsThatCanCompete.push(div as Division)
-        }
-      }
-      
-      // Include result if its division can compete in the selected division
-      if (!divisionsThatCanCompete.includes(r.division)) return false
-    }
-    
-    return true
-  })
+  // Filter records by sex and division
+  const filteredRecordsWithMetadata = records
+    .filter((record) => {
+      // Filter by sex
+      if (record.sex !== selectedSex.value) return false
 
+      // Filter by division (with promotion logic)
+      if (selectedDivision.value) {
+        const divisionsThatCanCompete: Division[] = []
+        for (const [div, allowed] of Object.entries(RECPRD_DIVISION_OVERRIDE)) {
+          if (allowed.includes(selectedDivision.value)) {
+            divisionsThatCanCompete.push(div as Division)
+          }
+        }
+        if (!divisionsThatCanCompete.includes(record.recordDivision)) return false
+      }
+
+      return true
+    })
+
+  // Type for record row (matches RecordsTable's RecordRow interface)
+  type RecordRow = {
+    weightClass: number
+    weight: number | null
+    athlete?: UserPublic
+    meet?: MeetPublic
+    bodyWeight?: number | null
+    vpfId?: string
+    meetId?: number
+  }
+
+  // Group records by lift type and weight class
   const grouped: {
-    squat: any[]
-    bench: any[]
-    deadlift: any[]
-    total: any[]
+    squat: RecordRow[]
+    bench: RecordRow[]
+    deadlift: RecordRow[]
+    total: RecordRow[]
   } = {
     squat: [],
     bench: [],
@@ -257,83 +273,77 @@ const filteredRecords = computed(() => {
     total: [],
   }
 
-  // For each weight class, find the best record
+  // For each weight class, find the matching record
   for (const weightClass of weightClassesList) {
-    const weightClassResults = filteredResults.filter((r) => r.weightClass === weightClass)
-
     // Squat
-    const squatResults = weightClassResults
-      .filter((r) => r.bestSquat && r.bestSquat > 0)
-      .sort((a, b) => (b.bestSquat || 0) - (a.bestSquat || 0))
-    const bestSquat = squatResults[0]
+    const squatRecord = filteredRecordsWithMetadata.find(
+      (record) => record.lift === "squat" && record.weightClass === weightClass
+    )
     grouped.squat.push(
-      bestSquat
+      squatRecord
         ? {
-            weightClass,
-            weight: bestSquat.bestSquat,
-            athlete: athletes.find((a) => a.vpfId === bestSquat.vpfId),
-            meet: meets.find((m) => m.meetId === bestSquat.meetId),
-            bodyWeight: bestSquat.bodyWeight,
-            vpfId: bestSquat.vpfId,
-            meetId: bestSquat.meetId,
-          }
+          weightClass,
+          weight: squatRecord.recordWeight,
+          athlete: athletesMap.get(squatRecord.vpfId),
+          meet: meetsMap.get(squatRecord.meetId),
+          bodyWeight: squatRecord.bodyWeight,
+          vpfId: squatRecord.vpfId,
+          meetId: squatRecord.meetId,
+        }
         : { weightClass, weight: null }
     )
 
     // Bench
-    const benchResults = weightClassResults
-      .filter((r) => r.bestBench && r.bestBench > 0)
-      .sort((a, b) => (b.bestBench || 0) - (a.bestBench || 0))
-    const bestBench = benchResults[0]
+    const benchRecord = filteredRecordsWithMetadata.find(
+      (record) => record.lift === "bench" && record.weightClass === weightClass
+    )
     grouped.bench.push(
-      bestBench
+      benchRecord
         ? {
-            weightClass,
-            weight: bestBench.bestBench,
-            athlete: athletes.find((a) => a.vpfId === bestBench.vpfId),
-            meet: meets.find((m) => m.meetId === bestBench.meetId),
-            bodyWeight: bestBench.bodyWeight,
-            vpfId: bestBench.vpfId,
-            meetId: bestBench.meetId,
-          }
+          weightClass,
+          weight: benchRecord.recordWeight,
+          athlete: athletesMap.get(benchRecord.vpfId),
+          meet: meetsMap.get(benchRecord.meetId),
+          bodyWeight: benchRecord.bodyWeight,
+          vpfId: benchRecord.vpfId,
+          meetId: benchRecord.meetId,
+        }
         : { weightClass, weight: null }
     )
 
     // Deadlift
-    const deadliftResults = weightClassResults
-      .filter((r) => r.bestDeadlift && r.bestDeadlift > 0)
-      .sort((a, b) => (b.bestDeadlift || 0) - (a.bestDeadlift || 0))
-    const bestDeadlift = deadliftResults[0]
+    const deadliftRecord = filteredRecordsWithMetadata.find(
+      (record) => record.lift === "deadlift" && record.weightClass === weightClass
+    )
     grouped.deadlift.push(
-      bestDeadlift
+      deadliftRecord
         ? {
-            weightClass,
-            weight: bestDeadlift.bestDeadlift,
-            athlete: athletes.find((a) => a.vpfId === bestDeadlift.vpfId),
-            meet: meets.find((m) => m.meetId === bestDeadlift.meetId),
-            bodyWeight: bestDeadlift.bodyWeight,
-            vpfId: bestDeadlift.vpfId,
-            meetId: bestDeadlift.meetId,
-          }
+          weightClass,
+          weight: deadliftRecord.recordWeight,
+          athlete: athletesMap.get(deadliftRecord.vpfId),
+          meet: meetsMap.get(deadliftRecord.meetId),
+          bodyWeight: deadliftRecord.bodyWeight,
+          vpfId: deadliftRecord.vpfId,
+          meetId: deadliftRecord.meetId,
+        }
         : { weightClass, weight: null }
     )
 
     // Total
-    const totalResults = weightClassResults
-      .filter((r) => r.total && r.total > 0)
-      .sort((a, b) => (b.total || 0) - (a.total || 0))
-    const bestTotal = totalResults[0]
+    const totalRecord = filteredRecordsWithMetadata.find(
+      (record) => record.lift === "total" && record.weightClass === weightClass
+    )
     grouped.total.push(
-      bestTotal
+      totalRecord
         ? {
-            weightClass,
-            weight: bestTotal.total,
-            athlete: athletes.find((a) => a.vpfId === bestTotal.vpfId),
-            meet: meets.find((m) => m.meetId === bestTotal.meetId),
-            bodyWeight: bestTotal.bodyWeight,
-            vpfId: bestTotal.vpfId,
-            meetId: bestTotal.meetId,
-          }
+          weightClass,
+          weight: totalRecord.recordWeight,
+          athlete: athletesMap.get(totalRecord.vpfId),
+          meet: meetsMap.get(totalRecord.meetId),
+          bodyWeight: totalRecord.bodyWeight,
+          vpfId: totalRecord.vpfId,
+          meetId: totalRecord.meetId,
+        }
         : { weightClass, weight: null }
     )
   }
@@ -363,4 +373,3 @@ watch(
   }
 )
 </script>
-
