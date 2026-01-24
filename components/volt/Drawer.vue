@@ -2,12 +2,12 @@
     <Drawer
         unstyled
         :pt="theme"
-        :ptOptions="{
+        :pt-options="{
             mergeProps: ptViewMerge
         }"
     >
         <template #closebutton="{ closeCallback }">
-            <SecondaryButton variant="text" rounded @click="closeCallback" autofocus>
+            <SecondaryButton variant="text" rounded autofocus @click="closeCallback">
                 <template #icon>
                     <TimesIcon />
                 </template>
@@ -20,17 +20,17 @@
 </template>
 
 <script setup lang="ts">
-import TimesIcon from '@primevue/icons/times';
-import Drawer, { type DrawerPassThroughOptions, type DrawerProps } from 'primevue/drawer';
-import { ref } from 'vue';
-import SecondaryButton from './SecondaryButton.vue';
-import { ptViewMerge } from './utils';
+import TimesIcon from "@primevue/icons/times"
+import Drawer, { type DrawerPassThroughOptions, type DrawerProps } from "primevue/drawer"
+import { ref } from "vue"
+import SecondaryButton from "./SecondaryButton.vue"
+import { ptViewMerge } from "./utils"
 
 interface Props extends /* @vue-ignore */ DrawerProps {}
-defineProps<Props>();
+defineProps<Props>()
 
 const theme = ref<DrawerPassThroughOptions>({
-    root: `flex flex-col pointer-events-auto relative
+  root: `flex flex-col pointer-events-auto relative
         border-surface-200 dark:border-surface-700
         bg-surface-0 dark:bg-surface-900
         text-surface-700 dark:text-surface-0 
@@ -40,16 +40,16 @@ const theme = ref<DrawerPassThroughOptions>({
         p-top:h-40 p-top:w-full p-top:border-b
         p-bottom:h-40 p-bottom:w-full p-bottom:border-t
         p-full-screen:transition-opacity p-full-screen:transform-none p-full-screen:w-screen p-full-screen:h-screen p-full-screen:max-h-full p-full-screen:top-0 p-full-screen:left-0`,
-    header: `flex items-center justify-between flex-shrink-0 p-5`,
-    title: `font-semibold text-2xl`,
-    content: `overflow-y-auto flex-grow pt-0 pb-5 px-5`,
-    footer: `p-5`,
-    mask: `p-modal:bg-black/50`,
-    transition: {
-        enterFromClass: `p-left:-translate-x-full p-right:translate-x-full p-top:-translate-y-full p-bottom:translate-y-full p-full-screen:opacity-0`,
-        enterActiveClass: `transition-transform duration-400 ease-out p-full-screen:transition-opacity`,
-        leaveActiveClass: `transition-transform duration-200 ease-in p-full-screen:transition-opacity`,
-        leaveToClass: `p-left:-translate-x-full p-right:translate-x-full p-top:-translate-y-full p-bottom:translate-y-full p-full-screen:opacity-0`
-    }
-});
+  header: "flex items-center justify-between flex-shrink-0 p-5",
+  title: "font-semibold text-2xl",
+  content: "overflow-y-auto flex-grow pt-0 pb-5 px-5",
+  footer: "p-5",
+  mask: "p-modal:bg-black/50",
+  transition: {
+    enterFromClass: "p-left:-translate-x-full p-right:translate-x-full p-top:-translate-y-full p-bottom:translate-y-full p-full-screen:opacity-0",
+    enterActiveClass: "transition-transform duration-400 ease-out p-full-screen:transition-opacity",
+    leaveActiveClass: "transition-transform duration-200 ease-in p-full-screen:transition-opacity",
+    leaveToClass: "p-left:-translate-x-full p-right:translate-x-full p-top:-translate-y-full p-bottom:translate-y-full p-full-screen:opacity-0"
+  }
+})
 </script>

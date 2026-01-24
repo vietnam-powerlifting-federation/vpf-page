@@ -40,7 +40,7 @@
                 <div class="flex flex-col gap-6">
                   <div class="flex flex-col gap-2">
                     <strong class="text-primary text-lg">{{ $t("contact.address") }}:</strong>
-                    <p class="m-0 text-text" v-html="formattedAddress"></p>
+                    <p class="m-0 text-text" v-html="formattedAddress"/>
                   </div>
                   <div class="flex flex-col gap-2">
                     <strong class="text-primary text-lg">{{ $t("contact.phone") }}:</strong>

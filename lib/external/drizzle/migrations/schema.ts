@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm"
 
 export const division = pgEnum("division", ["subjr", "jr", "open", "mas1", "mas2", "mas3", "mas4", "guest"])
 export const meetType = pgEnum("meet_type", ["national", "amateur", "professional", "national_qualifier", "other"])
+export const roles = pgEnum("roles", ["user", "admin"])
 export const sexes = pgEnum("sexes", ["female", "male"])
 
 export const vpfSeq = pgSequence("vpf_seq", { startWith: "889", increment: "1", minValue: "1", maxValue: "9223372036854775807", cache: "1", cycle: false })
@@ -51,8 +52,8 @@ export const users = pgTable("users", {
   slug: text(),
   decorator1: text(),
   decorator2: text(),
-  banLevel: smallint("ban_level").default(sql`'0'`).notNull(),
   email: text(),
+  role: roles().default("user").notNull(),
 }, (table) => [
   unique("members_slug_key").on(table.slug),
   unique("users_email_key").on(table.email),

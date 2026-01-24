@@ -2,23 +2,23 @@
     <Accordion
         unstyled
         :pt="theme"
-        :ptOptions="{
+        :pt-options="{
             mergeProps: ptViewMerge
         }"
     >
-        <slot></slot>
+        <slot/>
     </Accordion>
 </template>
 
 <script setup lang="ts">
-import Accordion, { type AccordionPassThroughOptions, type AccordionProps } from 'primevue/accordion';
-import { ref } from 'vue';
-import { ptViewMerge } from './utils';
+import Accordion, { type AccordionPassThroughOptions, type AccordionProps } from "primevue/accordion"
+import { ref } from "vue"
+import { ptViewMerge } from "./utils"
 
 interface Props extends /* @vue-ignore */ AccordionProps {}
-defineProps<Props>();
+defineProps<Props>()
 
 const theme = ref<AccordionPassThroughOptions>({
-    root: ``
-});
+  root: ""
+})
 </script>

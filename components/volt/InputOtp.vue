@@ -2,7 +2,7 @@
     <InputOtp
         unstyled
         :pt="theme"
-        :ptOptions="{
+        :pt-options="{
             mergeProps: ptViewMerge
         }"
     >
@@ -13,17 +13,17 @@
 </template>
 
 <script setup lang="ts">
-import InputOtp, { type InputOtpPassThroughOptions, type InputOtpProps } from 'primevue/inputotp';
-import { ref } from 'vue';
-import { ptViewMerge } from './utils';
+import InputOtp, { type InputOtpPassThroughOptions, type InputOtpProps } from "primevue/inputotp"
+import { ref } from "vue"
+import { ptViewMerge } from "./utils"
 
 interface Props extends /* @vue-ignore */ InputOtpProps {}
-defineProps<Props>();
+defineProps<Props>()
 
 const theme = ref<InputOtpPassThroughOptions>({
-    root: `flex items-center gap-2`,
-    pcInputText: {
-        root: `text-center w-12 h-12
+  root: "flex items-center gap-2",
+  pcInputText: {
+    root: `text-center w-12 h-12
             appearance-none rounded-md outline-hidden
             bg-surface-0 dark:bg-surface-950
             p-filled:bg-surface-50 dark:p-filled:bg-surface-800
@@ -40,6 +40,6 @@ const theme = ref<InputOtpPassThroughOptions>({
             p-small:text-sm p-small:px-[0.625rem] p-small:py-[0.375rem] p-small:w-10 p-small:h-10
             p-large:text-xl p-large:px-[0.875rem] p-large:py-[0.625rem] p-large:w-14 p-large:h-14
             transition-colors duration-200 shadow-[0_1px_2px_0_rgba(18,18,23,0.05)]`
-    }
-});
+  }
+})
 </script>

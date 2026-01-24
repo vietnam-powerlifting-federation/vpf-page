@@ -3,23 +3,23 @@
         :value="props.value"
         unstyled
         :pt="theme"
-        :ptOptions="{
+        :pt-options="{
             mergeProps: ptViewMerge
         }"
     >
-        <slot></slot>
+        <slot/>
     </Tabs>
 </template>
 
 <script setup lang="ts">
-import Tabs, { type TabsPassThroughOptions, type TabsProps } from 'primevue/tabs';
-import { ref } from 'vue';
-import { ptViewMerge } from './utils';
+import Tabs, { type TabsPassThroughOptions, type TabsProps } from "primevue/tabs"
+import { ref } from "vue"
+import { ptViewMerge } from "./utils"
 
 interface Props extends /* @vue-ignore */ TabsProps {}
-const props = defineProps<Props>();
+const props = defineProps<Props>()
 
 const theme = ref<TabsPassThroughOptions>({
-    root: `flex flex-col`
-});
+  root: "flex flex-col"
+})
 </script>

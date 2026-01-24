@@ -2,7 +2,7 @@
     <Badge
         unstyled
         :pt="theme"
-        :ptOptions="{
+        :pt-options="{
             mergeProps: ptViewMerge
         }"
     >
@@ -13,15 +13,15 @@
 </template>
 
 <script setup lang="ts">
-import Badge, { type BadgePassThroughOptions, type BadgeProps } from 'primevue/badge';
-import { ref } from 'vue';
-import { ptViewMerge } from './utils';
+import Badge, { type BadgePassThroughOptions, type BadgeProps } from "primevue/badge"
+import { ref } from "vue"
+import { ptViewMerge } from "./utils"
 
 interface Props extends /* @vue-ignore */ BadgeProps {}
-defineProps<Props>();
+defineProps<Props>()
 
 const theme = ref<BadgePassThroughOptions>({
-    root: `inline-flex items-center justify-center rounded-md
+  root: `inline-flex items-center justify-center rounded-md
         py-0 px-2 text-xs font-bold min-w-6 h-6
         bg-primary text-primary-contrast
         p-empty:min-w-2 p-empty:h-2 p-empty:rounded-full p-empty:p-0
@@ -35,5 +35,5 @@ const theme = ref<BadgePassThroughOptions>({
         p-small:text-[0.625rem] p-small:min-w-5 p-small:h-5
         p-large:text-sm p-large:min-w-7 p-large:h-7
         p-xlarge:text-base p-xlarge:min-w-8 p-xlarge:h-8`
-});
+})
 </script>

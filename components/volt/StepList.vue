@@ -2,23 +2,23 @@
     <StepList
         unstyled
         :pt="theme"
-        :ptOptions="{
+        :pt-options="{
             mergeProps: ptViewMerge
         }"
     >
-        <slot></slot>
+        <slot/>
     </StepList>
 </template>
 
 <script setup lang="ts">
-import StepList, { type StepListPassThroughOptions, type StepListProps } from 'primevue/steplist';
-import { ref } from 'vue';
-import { ptViewMerge } from './utils';
+import StepList, { type StepListPassThroughOptions, type StepListProps } from "primevue/steplist"
+import { ref } from "vue"
+import { ptViewMerge } from "./utils"
 
 interface Props extends /* @vue-ignore */ StepListProps {}
-defineProps<Props>();
+defineProps<Props>()
 
 const theme = ref<StepListPassThroughOptions>({
-    root: `relative flex justify-between items-center m-0 p-0 list-none overflow-x-auto`
-});
+  root: "relative flex justify-between items-center m-0 p-0 list-none overflow-x-auto"
+})
 </script>
