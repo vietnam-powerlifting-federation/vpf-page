@@ -2,9 +2,9 @@ import { eq } from "drizzle-orm"
 import bcrypt from "bcryptjs"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { users } from "~/lib/external/drizzle/migrations/schema"
+import { userPublicSelect } from "~/lib/external/drizzle/migrations/queries"
 import { logger } from "~/lib/logger/logger"
 import { signToken } from "~/lib/utils/jwt"
-import { toUserPublic } from "~/lib/utils/user"
 import type { ApiResponse, LoginResponse } from "~/types/api"
 
 export default defineEventHandler(async (event): Promise<ApiResponse<LoginResponse>> => {
@@ -58,8 +58,14 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
       }
     }
 
+    // Query user with password for verification
     const user = await db
-      .select()
+      .select({
+        vpfId: users.vpfId,
+        email: users.email,
+        password: users.password,
+        role: users.role,
+      })
       .from(users)
       .where(whereCondition)
       .limit(1)
@@ -108,8 +114,25 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
       }
     }
 
-    // Convert to UserPublic (removes sensitive fields)
-    const userPublic = toUserPublic(user)
+    // Query user again with public select for response
+    const [userPublic] = await db
+      .select(userPublicSelect)
+      .from(users)
+      .where(eq(users.vpfId, user.vpfId))
+      .limit(1)
+
+    if (!userPublic) {
+      logger.error("Failed to fetch user public data after login", { vpfId: user.vpfId })
+      setResponseStatus(event, 500)
+      return {
+        success: false,
+        data: null,
+        message: {
+          en: "An error occurred during login",
+          vi: "Đã xảy ra lỗi khi đăng nhập",
+        },
+      }
+    }
 
     // Generate JWT token
     const token = signToken({
