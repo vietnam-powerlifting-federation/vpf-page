@@ -9,7 +9,6 @@ export default defineNuxtConfig({
     "@nuxtjs/color-mode",
     "nuxt-link-checker",
     "@primevue/nuxt-module",
-    "@nuxtjs/google-fonts",
   ],
   i18n: {
     locales: [
