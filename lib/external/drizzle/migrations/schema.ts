@@ -18,7 +18,7 @@ export const meets = pgTable("meets", {
   type: meetType(),
   mediaLink: text("media_link"),
   meetSlug: text("meet_slug").notNull(),
-  systemYear: smallint("system_year"),
+  systemYear: smallint("system_year").notNull(),
   hidden: boolean().default(false).notNull(),
   allowSpotterRegistration: boolean("allow_spotter_registration").default(true),
   allowGuestRegistration: boolean("allow_guest_registration").default(true),
