@@ -6,6 +6,7 @@ export default {
         sans: ["SVN-CenturyGothic", "Century Gothic", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
       },
       colors: {
+        primary: "var(--primary)",
         secondary: "var(--p-primary-400)",
         bg: "var(--p-surface-800)",
         text: "var(--gray-800)",

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center py-12 px-4">
+  <div class="flex items-center justify-center py-12 px-4">
     <div class="w-full max-w-md space-y-6">
       <h1 class="text-3xl font-bold text-center" style="color: var(--p-primary-color)">{{ $t("login.title") }}</h1>
 

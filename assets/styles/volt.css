@@ -1,16 +1,22 @@
 /* Primary and Surface Palettes */
 :root {
-    --p-primary-50:  #fde8e8;  /* very light red, not white */
-    --p-primary-100: #fbd5d5;
-    --p-primary-200: #f8b4b4;
-    --p-primary-300: #f98080;
-    --p-primary-400: #f05252;
-    --p-primary-500: #e02424;  /* true red */
-    --p-primary-600: #c81e1e;
-    --p-primary-700: #9b1c1c;
-    --p-primary-800: #771d1d;
-    --p-primary-900: #5c1212;
-    --p-primary-950: #3f0a0a;  /* very high / intense red */
+    --primary: #e24545;
+    /* lighter tints (mix with white) */
+    --p-primary-50:  color-mix(in srgb, var(--primary) 5%,  white);
+    --p-primary-100: color-mix(in srgb, var(--primary) 15%, white);
+    --p-primary-200: color-mix(in srgb, var(--primary) 30%, white);
+    --p-primary-300: color-mix(in srgb, var(--primary) 50%, white);
+    --p-primary-400: color-mix(in srgb, var(--primary) 75%, white);
+  
+    /* base */
+    --p-primary-500: var(--primary);
+  
+    /* darker shades (mix with black) */
+    --p-primary-600: color-mix(in srgb, var(--primary) 85%, black);
+    --p-primary-700: color-mix(in srgb, var(--primary) 70%, black);
+    --p-primary-800: color-mix(in srgb, var(--primary) 55%, black);
+    --p-primary-900: color-mix(in srgb, var(--primary) 40%, black);
+    --p-primary-950: color-mix(in srgb, var(--primary) 25%, black);
 
     --p-surface-0: #ffffff;
     --p-surface-50: #fafafa;
