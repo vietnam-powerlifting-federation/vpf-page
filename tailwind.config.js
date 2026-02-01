@@ -8,6 +8,7 @@ export default {
       colors: {
         secondary: "var(--p-primary-400)",
         bg: "var(--p-surface-800)",
+        text: "var(--gray-800)",
       },
     },
   },

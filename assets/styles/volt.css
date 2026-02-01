@@ -54,6 +54,7 @@
   * should match to;
   * :root[class="app-dark"]
   */
+  /* Disable dark mode for now
   @media (prefers-color-scheme: dark) {
     :root {
         --p-primary-color: var(--p-primary-400);
@@ -73,3 +74,4 @@
         --p-text-hover-muted-color: var(--p-surface-300);
     }
   }
+  */

@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tailwindcss-primeui";
 
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
 /* SVN-CenturyGothic Font Face Declarations */
 @font-face {
   font-family: "SVN-CenturyGothic";
