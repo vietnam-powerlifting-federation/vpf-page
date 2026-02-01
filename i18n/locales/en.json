@@ -101,6 +101,22 @@
     "previousRecord": "Previous Record",
     "newRecord": "New Record",
     "improvement": "Improvement"
+  },
+  "login": {
+    "title": "Login",
+    "vpfIdOrEmail": "VPF ID or Email",
+    "password": "Password",
+    "loginButton": "Login",
+    "register": "Register",
+    "forgotPassword": "Forgot Password?",
+    "noticeTitle": "Notice for athletes registered to compete at VPF",
+    "noticeContent": "Notice content will be updated later.",
+    "loading": "Logging in...",
+    "error": "Login failed",
+    "invalidCredentials": "Invalid login credentials",
+    "passwordRequired": "Please enter your password",
+    "vpfIdOrEmailRequired": "Please enter your VPF ID or Email",
+    "close": "Close"
   }
 }
 

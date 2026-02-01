@@ -101,6 +101,22 @@
     "previousRecord": "Kỷ lục trước",
     "newRecord": "Kỷ lục mới",
     "improvement": "Cải thiện"
+  },
+  "login": {
+    "title": "Đăng nhập",
+    "vpfIdOrEmail": "VPF ID hoặc Email",
+    "password": "Mật khẩu",
+    "loginButton": "Đăng nhập",
+    "register": "Đăng ký",
+    "forgotPassword": "Quên mật khẩu?",
+    "noticeTitle": "Lưu ý cho vận động viên đã đăng ký thi đấu tại VPF",
+    "noticeContent": "Nội dung thông báo sẽ được cập nhật sau.",
+    "loading": "Đang đăng nhập...",
+    "error": "Đăng nhập thất bại",
+    "invalidCredentials": "Thông tin đăng nhập không hợp lệ",
+    "passwordRequired": "Vui lòng nhập mật khẩu",
+    "vpfIdOrEmailRequired": "Vui lòng nhập VPF ID hoặc Email",
+    "close": "Đóng"
   }
 }
 
