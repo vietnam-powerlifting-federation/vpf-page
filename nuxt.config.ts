@@ -23,6 +23,10 @@ export default defineNuxtConfig({
       unstyled: true,
     }
   },
+  app: {
+    pageTransition: { name: "page", mode: "out-in" },
+
+  },
   vite: {
     plugins: [
       tailwindcss(),

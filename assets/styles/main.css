@@ -196,5 +196,28 @@ body {
   }
 }
 
+.bold-link {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
 
+.bold-link:hover {
+  color: var(--color-text);
+}
+
+/* Page Transition Styles */
+.page-enter-active,
+.page-leave-active {
+  transition: transform 0.1s ease;
+}
+
+.page-enter-from {
+  transform: translateX(100%);
+}
+
+.page-leave-to {
+  transform: translateX(-100%);
+}
 

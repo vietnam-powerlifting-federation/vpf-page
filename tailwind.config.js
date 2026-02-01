@@ -7,7 +7,7 @@ export default {
       },
       colors: {
         primary: "var(--primary)",
-        secondary: "var(--p-primary-400)",
+        secondary: "var(--secondary)",
         bg: "var(--p-surface-800)",
         text: "var(--gray-800)",
       },

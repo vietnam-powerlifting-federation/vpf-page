@@ -1,16 +1,13 @@
 <template>
   <div class="flex items-center justify-center py-12 px-4">
     <div class="w-full max-w-md space-y-6">
-      <h1 class="text-3xl font-bold text-center" style="color: var(--p-primary-color)">{{ $t("login.title") }}</h1>
+      <h1 class="text-3xl font-bold text-center text-text">{{ $t("login.title") }}</h1>
 
       <!-- Notice Section -->
-      <div class="p-4 rounded-lg border" style="background-color: var(--p-highlight-background); border-color: var(--p-content-border-color);">
+      <div class="p-4 rounded-lg border bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
         <button
-          class="w-full text-left font-medium underline"
-          style="color: var(--p-highlight-color);"
+          class="w-full text-left underline text-text hover:text-primary transition-colors"
           @click="showNoticeModal = true"
-          @mouseenter="$event.target.style.color = 'var(--p-highlight-focus-color)'"
-          @mouseleave="$event.target.style.color = 'var(--p-highlight-color)'"
         >
           {{ $t("login.noticeTitle") }}
         </button>
@@ -20,7 +17,7 @@
       <form class="space-y-6" @submit.prevent="handleLogin">
         <!-- VPF ID or Email Input -->
         <div>
-          <label for="vpfIdOrEmail" class="block mb-2 text-sm font-medium" style="color: var(--p-text-color)">
+          <label for="vpfIdOrEmail" class="block mb-2 text-sm font-medium text-text">
             {{ $t("login.vpfIdOrEmail") }}
           </label>
           <InputText
@@ -36,7 +33,7 @@
 
         <!-- Password Input -->
         <div>
-          <label for="password" class="block mb-2 text-sm font-medium" style="color: var(--p-text-color)">
+          <label for="password" class="block mb-2 text-sm font-medium text-text">
             {{ $t("login.password") }}
           </label>
           <Password
@@ -53,8 +50,8 @@
         </div>
 
         <!-- Error Message -->
-        <div v-if="loginError" class="p-4 rounded-lg border" style="background-color: var(--p-primary-50); border-color: var(--p-primary-200);">
-          <p class="text-sm" style="color: var(--p-primary-700)">{{ loginError }}</p>
+        <div v-if="loginError" class="p-4 rounded-lg border bg-primary/10 border-primary/20">
+          <p class="text-sm text-primary-700 dark:text-primary-300">{{ loginError }}</p>
         </div>
 
         <!-- Login Button -->
@@ -68,24 +65,18 @@
 
         <!-- Links -->
         <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4">
-          <NuxtLink
-            to="/register"
-            class="text-sm font-medium transition-colors"
-            style="color: var(--p-primary-color);"
-            @mouseenter="$event.target.style.color = 'var(--p-primary-hover-color)'"
-            @mouseleave="$event.target.style.color = 'var(--p-primary-color)'"
+          <a
+            href="/register"
+            class="text-text font-semibold transition-colors hover:text-primary underline"
           >
             {{ $t("login.register") }}
-          </NuxtLink>
-          <NuxtLink
-            to="/forgot-password"
-            class="text-sm font-medium transition-colors"
-            style="color: var(--p-primary-color);"
-            @mouseenter="$event.target.style.color = 'var(--p-primary-hover-color)'"
-            @mouseleave="$event.target.style.color = 'var(--p-primary-color)'"
+          </a>
+          <a
+            href="/forgot-password"
+            class="text-text font-semibold transition-colors hover:text-primary underline"
           >
             {{ $t("login.forgotPassword") }}
-          </NuxtLink>
+          </a>
         </div>
       </form>
     </div>
@@ -96,10 +87,10 @@
       :header="$t('login.noticeTitle')"
       :modal="true"
       :closable="true"
-      class="w-full max-w-2xl"
+      class="max-w-2xl"
     >
       <div class="p-4">
-        <p style="color: var(--p-text-color)">{{ $t("login.noticeContent") }}</p>
+        <p class="text-text">{{ $t("login.noticeContent") }}</p>
       </div>
       <template #footer>
         <Button :label="$t('login.close')" @click="showNoticeModal = false" />

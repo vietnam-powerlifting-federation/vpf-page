@@ -54,6 +54,14 @@ import { useToast } from "primevue/usetoast"
 const { t } = useI18n()
 const toast = useToast()
 
+definePageMeta({
+  layout: "with-footer",
+  pageTransition: {
+    name: "page",
+    mode: "out-in"
+  }
+})
+
 const benefits = [
   t("membership.benefit1"),
   t("membership.benefit2"),

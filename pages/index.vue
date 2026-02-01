@@ -47,7 +47,7 @@
               <p>{{ newsItem.excerpt }}</p>
             </template>
             <template #footer>
-              <Button :label="$t('home.readMore')" class="p-button-text" />
+              <a class="bold-link">{{ $t('home.readMore') }} >></a>
             </template>
           </Card>
         </div>
@@ -85,6 +85,14 @@ import Button from "@/components/volt/Button.vue"
 import SecondaryButton from "@/components/volt/SecondaryButton.vue"
 import Card from "@/components/volt/Card.vue"
 import heroBg from "~/assets/img/hero-bg.jpg"
+
+definePageMeta({
+  layout: "with-footer",
+  pageTransition: {
+    name: "page",
+    mode: "out-in"
+  }
+})
 
 const newsItems = [
   {

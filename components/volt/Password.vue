@@ -1,10 +1,11 @@
 <template>
     <Password
         unstyled
-        :pt="theme"
+        :pt="computedTheme"
         :pt-options="{
             mergeProps: ptViewMerge
         }"
+        v-bind="$attrs"
     >
         <template #maskicon="{ toggleCallback }">
             <EyeSlashIcon class="end-3 text-surface-500 dark:text-surface-400 absolute top-1/2 -mt-2 w-4 h-4" @click="toggleCallback" />
@@ -22,13 +23,15 @@
 import EyeIcon from "@primevue/icons/eye"
 import EyeSlashIcon from "@primevue/icons/eyeslash"
 import Password, { type PasswordPassThroughOptions, type PasswordProps } from "primevue/password"
-import { ref } from "vue"
+import { computed, useAttrs } from "vue"
 import { ptViewMerge } from "./utils"
 
 interface Props extends /* @vue-ignore */ PasswordProps {}
 defineProps<Props>()
 
-const theme = ref<PasswordPassThroughOptions>({
+const attrs = useAttrs()
+
+const baseTheme: PasswordPassThroughOptions = {
   root: "inline-flex relative p-fluid:flex",
   pcInputText: {
     root: `appearance-none rounded-md outline-hidden
@@ -65,6 +68,56 @@ const theme = ref<PasswordPassThroughOptions>({
     enterActiveClass: "transition duration-120 ease-[cubic-bezier(0,0,0.2,1)]",
     leaveActiveClass: "transition-opacity duration-100 ease-linear",
     leaveToClass: "opacity-0"
+  }
+}
+
+const computedTheme = computed<PasswordPassThroughOptions>(() => {
+  const classValue = attrs.class
+  let classString = ''
+  
+  if (classValue) {
+    if (typeof classValue === 'string') {
+      classString = classValue
+    } else if (Array.isArray(classValue)) {
+      classString = classValue.join(' ')
+    } else if (typeof classValue === 'object' && classValue !== null) {
+      classString = Object.keys(classValue).filter(k => (classValue as Record<string, unknown>)[k]).join(' ')
+    }
+  }
+  
+  const hasWFull = classString.includes('w-full')
+  
+  // If w-full is in the class, change inline-flex to block in root for simpler width handling
+  let rootClass = typeof baseTheme.root === 'string' ? baseTheme.root : 'inline-flex relative p-fluid:flex'
+  if (hasWFull) {
+    // Change to block but keep relative for icon positioning
+    rootClass = rootClass.replace('inline-flex', 'block').replace('p-fluid:flex', '').replace('relative', '').trim() + ' relative'
+  }
+  
+  const finalRootClass = classString 
+    ? `${rootClass} ${classString}`
+    : rootClass
+  
+  // If w-full is in the class, ensure the input also gets w-full
+  let inputClass = typeof baseTheme.pcInputText?.root === 'string' 
+    ? baseTheme.pcInputText.root 
+    : ''
+  if (hasWFull) {
+    // Remove p-fluid:w-full and add w-full
+    inputClass = inputClass.replace(/\bp-fluid:w-full\b/g, '')
+    // Add w-full if not already present
+    if (!inputClass.includes('w-full')) {
+      inputClass = `${inputClass} w-full`.trim()
+    }
+  }
+  
+  return {
+    ...baseTheme,
+    root: finalRootClass,
+    pcInputText: {
+      ...baseTheme.pcInputText,
+      root: inputClass || baseTheme.pcInputText?.root
+    }
   }
 })
 </script>
