@@ -326,11 +326,11 @@ const handleSubmit = async () => {
     // Do nothing if user didn't edit anything
     if (Object.keys(payload).length === 0) return
     
-    const response = await $fetch<ApiResponse<UserPrivate>>("/api/users/self", {
+    const response = await $fetch("/api/users/self", {
       method: "PATCH",
       body: payload,
       ignoreResponseError: true,
-    })
+    }) as ApiResponse<UserPrivate>
 
     if (response.success) {
       toast.add({
