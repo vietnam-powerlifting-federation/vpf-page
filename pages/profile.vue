@@ -250,7 +250,7 @@ const isSubmitting = ref(false)
 type FormData = Required<z.infer<typeof UserSelfPatchSchema>>
 
 // Fetch user profile data
-const { data, pending, error, refresh } = await useFetch<ApiResponse<UserPrivate>>("/api/users/self", {
+const { data, pending, error } = await useFetch<ApiResponse<UserPrivate>>("/api/users/self", {
   immediate: true,
 })
 

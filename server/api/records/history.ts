@@ -210,7 +210,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
     setResponseStatus(event, 500)
     return {
       success: false,
-      data: { records: [], meet: null, athletes: [] },
+      data: null,
       message: {
         en: "Internal server error",
         vi: "Lỗi máy chủ",
