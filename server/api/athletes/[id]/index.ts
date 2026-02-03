@@ -1,13 +1,13 @@
 import { eq } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
-import { users, meetResults, legacyMeetResults } from "~/lib/external/drizzle/migrations/schema"
-import { userPrivateSelect, userPublicSelect } from "~/lib/external/drizzle/migrations/queries"
+import { users } from "~/lib/external/drizzle/migrations/schema"
+import { userPrivateSelect, userPublicSelect } from "~/lib/utils/queries/users"
 import { logger } from "~/lib/logger/logger"
-import { addMetadataToMeetResults } from "~/lib/utils/meet-result"
+import { getResultsForAthlete } from "~/lib/utils/queries/results"
 import type { ApiResponse } from "~/types/api"
 import type { UserPrivate, UserPublic } from "~/types/users"
 import type { Attempt } from "~/types/attempts"
-import type { Result, ResultRaw, LegacyResultRaw } from "~/types/results"
+import type { Result } from "~/types/results"
 
 type AthleteDetailsResponse = {
   athlete: UserPrivate | UserPublic
@@ -17,17 +17,8 @@ type AthleteDetailsResponse = {
 
 // Find personal best attempts for an athlete
 async function getPersonalBests(vpfId: string): Promise<Attempt[]> {
-  // Query all modern meet results
-  const modernResults = await db
-    .select()
-    .from(meetResults)
-    .where(eq(meetResults.vpfId, vpfId))
-
-  // Query all legacy meet results
-  const legacyResults = await db
-    .select()
-    .from(legacyMeetResults)
-    .where(eq(legacyMeetResults.vpfId, vpfId))
+  // Get all results for the athlete
+  const allResults = await getResultsForAthlete(vpfId)
 
   const personalBests: Attempt[] = []
   
@@ -36,72 +27,76 @@ async function getPersonalBests(vpfId: string): Promise<Attempt[]> {
   let bestBench: { weight: number; meetId: number; attempt: 1 | 2 | 3 } | null = null
   let bestDeadlift: { weight: number; meetId: number; attempt: 1 | 2 | 3 } | null = null
 
-  // Process modern results
-  for (const result of modernResults) {
-    // Check squat attempts
-    const squatAttempts = [
-      { weight: result.squat1, attempt: 1 as const },
-      { weight: result.squat2, attempt: 2 as const },
-      { weight: result.squat3, attempt: 3 as const },
-    ]
-    
-    for (const { weight, attempt } of squatAttempts) {
-      if (weight !== null && weight > 0) {
-        if (!bestSquat || weight > bestSquat.weight) {
-          bestSquat = { weight, meetId: result.meetId, attempt }
+  // Process all results
+  for (const result of allResults) {
+    // Check if this is a modern result (has individual attempts)
+    const hasIndividualAttempts = result.squat1 !== null || result.squat2 !== null || result.squat3 !== null
+
+    if (hasIndividualAttempts) {
+      // Process modern results with individual attempts
+      // Check squat attempts
+      const squatAttempts = [
+        { weight: result.squat1, attempt: 1 as const },
+        { weight: result.squat2, attempt: 2 as const },
+        { weight: result.squat3, attempt: 3 as const },
+      ]
+      
+      for (const { weight, attempt } of squatAttempts) {
+        if (weight !== null && weight > 0) {
+          if (!bestSquat || weight > bestSquat.weight) {
+            bestSquat = { weight, meetId: result.meetId, attempt }
+          }
         }
       }
-    }
 
-    // Check bench attempts
-    const benchAttempts = [
-      { weight: result.bench1, attempt: 1 as const },
-      { weight: result.bench2, attempt: 2 as const },
-      { weight: result.bench3, attempt: 3 as const },
-    ]
-    
-    for (const { weight, attempt } of benchAttempts) {
-      if (weight !== null && weight > 0) {
-        if (!bestBench || weight > bestBench.weight) {
-          bestBench = { weight, meetId: result.meetId, attempt }
+      // Check bench attempts
+      const benchAttempts = [
+        { weight: result.bench1, attempt: 1 as const },
+        { weight: result.bench2, attempt: 2 as const },
+        { weight: result.bench3, attempt: 3 as const },
+      ]
+      
+      for (const { weight, attempt } of benchAttempts) {
+        if (weight !== null && weight > 0) {
+          if (!bestBench || weight > bestBench.weight) {
+            bestBench = { weight, meetId: result.meetId, attempt }
+          }
         }
       }
-    }
 
-    // Check deadlift attempts
-    const deadliftAttempts = [
-      { weight: result.deadlift1, attempt: 1 as const },
-      { weight: result.deadlift2, attempt: 2 as const },
-      { weight: result.deadlift3, attempt: 3 as const },
-    ]
-    
-    for (const { weight, attempt } of deadliftAttempts) {
-      if (weight !== null && weight > 0) {
-        if (!bestDeadlift || weight > bestDeadlift.weight) {
-          bestDeadlift = { weight, meetId: result.meetId, attempt }
+      // Check deadlift attempts
+      const deadliftAttempts = [
+        { weight: result.deadlift1, attempt: 1 as const },
+        { weight: result.deadlift2, attempt: 2 as const },
+        { weight: result.deadlift3, attempt: 3 as const },
+      ]
+      
+      for (const { weight, attempt } of deadliftAttempts) {
+        if (weight !== null && weight > 0) {
+          if (!bestDeadlift || weight > bestDeadlift.weight) {
+            bestDeadlift = { weight, meetId: result.meetId, attempt }
+          }
         }
       }
-    }
-  }
-
-  // Process legacy results (they only have best lifts, not individual attempts)
-  for (const result of legacyResults) {
-    if (result.bestSquat !== null && result.bestSquat > 0) {
-      if (!bestSquat || result.bestSquat > bestSquat.weight) {
-        // For legacy, we don't know which attempt, so use attempt 1
-        bestSquat = { weight: result.bestSquat, meetId: result.meetId, attempt: 1 }
+    } else {
+      // Process legacy results (they only have best lifts, not individual attempts)
+      if (result.bestSquat !== null && result.bestSquat > 0) {
+        if (!bestSquat || result.bestSquat > bestSquat.weight) {
+          // For legacy, we don't know which attempt, so use attempt 1
+          bestSquat = { weight: result.bestSquat, meetId: result.meetId, attempt: 1 }
+        }
       }
-    }
 
-    if (result.bestBench !== null && result.bestBench > 0) {
-      if (!bestBench || result.bestBench > bestBench.weight) {
-        bestBench = { weight: result.bestBench, meetId: result.meetId, attempt: 1 }
+      if (result.bestBench !== null && result.bestBench > 0) {
+        if (!bestBench || result.bestBench > bestBench.weight) {
+          bestBench = { weight: result.bestBench, meetId: result.meetId, attempt: 1 }
+        }
       }
-    }
 
-    if (result.bestDeadlift !== null && result.bestDeadlift > 0) {
-      if (!bestDeadlift || result.bestDeadlift > bestDeadlift.weight) {
-        bestDeadlift = { weight: result.bestDeadlift, meetId: result.meetId, attempt: 1 }
+      if (result.bestDeadlift !== null && result.bestDeadlift > 0) {
+        if (!bestDeadlift || result.bestDeadlift > bestDeadlift.weight) {
+          bestDeadlift = { weight: result.bestDeadlift, meetId: result.meetId, attempt: 1 }
+        }
       }
     }
   }
@@ -142,26 +137,8 @@ async function getPersonalBests(vpfId: string): Promise<Attempt[]> {
 
 // Get competition history for an athlete
 async function getCompetitionHistory(vpfId: string): Promise<Result[]> {
-  // Query all modern meet results
-  const modernResults = await db
-    .select()
-    .from(meetResults)
-    .where(eq(meetResults.vpfId, vpfId))
-
-  // Query all legacy meet results
-  const legacyResults = await db
-    .select()
-    .from(legacyMeetResults)
-    .where(eq(legacyMeetResults.vpfId, vpfId))
-
-  // Combine and transform results
-  const allRawResults: (ResultRaw | LegacyResultRaw)[] = [
-    ...modernResults,
-    ...legacyResults,
-  ]
-
-  // Transform results with metadata
-  const transformedResults = addMetadataToMeetResults(allRawResults)
+  // Get all results for the athlete
+  const transformedResults = await getResultsForAthlete(vpfId)
 
   // Sort by meet date (most recent first)
   // We need to join with meets to get the date, but for now we'll sort by meetId

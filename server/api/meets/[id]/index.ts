@@ -1,13 +1,9 @@
-import { eq } from "drizzle-orm"
-import { db } from "~/lib/external/drizzle/drizzle"
-import { meets } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
 import type { ApiResponse } from "~/types/api"
 import type { MeetPublic } from "~/types/meets"
 import type { Result } from "~/types/results"
 import type { UserPublic } from "~/types/users"
-import { getUsersJoinMeets } from "~/lib/utils/queries/users"
-import { getResultsForMeets } from "~/lib/utils/queries/results"
+import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 
 type MeetDetailsResponse = {
   meet: MeetPublic
@@ -44,11 +40,12 @@ export default defineEventHandler(async (event): Promise<ApiResponse<MeetDetails
       }
     }
 
-    // Query the meet
-    const [meet] = await db
-      .select()
-      .from(meets)
-      .where(eq(meets.meetId, meetIdNum))
+    // Query meet, results, and athletes in a single optimized query
+    const { meets, results: transformedResults, athletes: publicAthletes } = await getMeetsAndResultsAndAthletes({
+      meetIds: [meetIdNum],
+    })
+
+    const meet = meets[0] || null
 
     if (!meet) {
       setResponseStatus(event, 404)
@@ -62,16 +59,10 @@ export default defineEventHandler(async (event): Promise<ApiResponse<MeetDetails
       }
     }
 
-    // Query results for the meet
-    const transformedResults = await getResultsForMeets([meet])
-
-    // Query all users who participated 
-    const publicAthletes = await getUsersJoinMeets([meet])
-
     return {
       success: true,
       data: {
-        meet: meet,
+        meet,
         results: transformedResults,
         athletes: publicAthletes,
       },

@@ -1,16 +1,15 @@
 import { db } from "~/lib/external/drizzle/drizzle"
-import { meets, meetResults, users } from "~/lib/external/drizzle/migrations/schema"
-import { userPublicSelect } from "~/lib/external/drizzle/migrations/queries"
+import { meets } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
 import { RECORD_DIVISION_OVERRIDE } from "~/lib/constants/constants"
-import { addMetadataToMeetResults } from "~/lib/utils/meet-result"
 import { fetchRecordsForYear, getDivisionFromAge } from "~/lib/utils/queries/records"
+import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import type { ApiResponse } from "~/types/api"
 import type { LiftRecord } from "~/types/records"
 import type { MeetPublic } from "~/types/meets"
 import type { UserPublic } from "~/types/users"
 import type { RankedDivision } from "~/types/union-types"
-import { eq, and, sql, inArray } from "drizzle-orm"
+import { eq, and, sql } from "drizzle-orm"
 import type { Result } from "~/types/results"
 
 type HistoryResponse = {
@@ -55,16 +54,16 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
       )
     }
 
-    const [meet] = await db
-      .select()
-      .from(meets)
-      .where(and(
-        eq(meets.type, "national"),
-        eq(meets.systemYear, year),
-        eq(meets.legacy, false),
-        eq(meets.hidden, false)
-      ))
-      .limit(1)
+    // Query meet, results, and athletes in a single optimized query
+    const { meets: returnedMeets, results, athletes } = await getMeetsAndResultsAndAthletes({
+      meetType: ["national"],
+      legacy: false,
+      hidden: false,
+      minYear: year,
+      maxYear: year,
+    })
+
+    const meet = returnedMeets[0] || null
 
     if (!meet) {
       return {
@@ -77,21 +76,8 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
       }
     }
 
-    const resultsRaw = await db
-      .select()
-      .from(meetResults)
-      .where(eq(meetResults.meetId, meet.meetId))
-
-    const results = addMetadataToMeetResults(resultsRaw)
-
-    const vpfIds = [...new Set(results.map(r => r.vpfId))]
-    const usersList = await db
-      .select(userPublicSelect)
-      .from(users)
-      .where(inArray(users.vpfId, vpfIds))
-
     const usersMap = new Map<string, UserPublic>()
-    usersList.forEach(u => usersMap.set(u.vpfId, u))
+    athletes.forEach(u => usersMap.set(u.vpfId, u))
 
     // ---------- BUILD ATTEMPT TIMELINE ----------
 

@@ -65,9 +65,10 @@ export function calculateGLPointsRaw(totalKg: number, bodyweightKg: number, sex:
   
   const { a, b, c } = coeffs[sex]
   
-  return (
+  const value =
     100 * totalKg / (a - b * Math.exp(-c * bodyweightKg))
-  )
+
+  return Math.round(value * 100) / 100
 }
 
 export function addMetadataToMeetResults(rawResults: (ResultRaw | LegacyResultRaw)[]): Result[] {

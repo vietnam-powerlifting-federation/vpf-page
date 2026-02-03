@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { users } from "~/lib/external/drizzle/migrations/schema"
-import { userPrivateSelect } from "~/lib/external/drizzle/migrations/queries"
+import { userPrivateSelect } from "~/lib/utils/queries/users"
 import { logger } from "~/lib/logger/logger"
 import { UserSelfPatchSchema, UserRequiredSchema } from "~/lib/zod/schemas/users.schema"
 import type { ApiResponse } from "~/types/api"

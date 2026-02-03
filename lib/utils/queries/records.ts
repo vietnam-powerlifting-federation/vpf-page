@@ -1,13 +1,9 @@
-import { db } from "~/lib/external/drizzle/drizzle"
-import { meets, meetResults, users } from "~/lib/external/drizzle/migrations/schema"
-import { userPublicSelect } from "~/lib/external/drizzle/migrations/queries"
 import { RECORD_DIVISION_OVERRIDE, RECORD_START_YEAR } from "~/lib/constants/constants"
-import { addMetadataToMeetResults } from "~/lib/utils/meet-result"
+import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import type { LiftRecord } from "~/types/records"
 import type { MeetPublic } from "~/types/meets"
 import type { UserPublic } from "~/types/users"
 import type { RankedDivision } from "~/types/union-types"
-import { eq, and, inArray, gte, lte } from "drizzle-orm"
 
 export function getDivisionFromAge(age: number): RankedDivision {
   if (age >= 14 && age <= 18) return "subjr"
@@ -55,23 +51,14 @@ export async function fetchRecordsForYear(
 }> {
   const { maxYear = null, minYear = RECORD_START_YEAR } = options
 
-  // Build meet filter
-  const meetConditions = [
-    eq(meets.type, "national"),
-    eq(meets.legacy, false),
-    eq(meets.hidden, false),
-    gte(meets.systemYear, minYear),
-  ]
-  
-  if (maxYear !== null && !isNaN(maxYear)) {
-    meetConditions.push(lte(meets.systemYear, maxYear))
-  }
-
-  // Query meets
-  const allMeets = await db
-    .select()
-    .from(meets)
-    .where(and(...meetConditions))
+  // Query meets, results, and athletes in a single optimized query
+  const { meets: allMeets, results, athletes } = await getMeetsAndResultsAndAthletes({
+    meetType: ["national"],
+    legacy: false,
+    hidden: false,
+    minYear,
+    maxYear: maxYear !== null && !isNaN(maxYear) ? maxYear : undefined,
+  })
 
   if (allMeets.length === 0) {
     return {
@@ -81,33 +68,12 @@ export async function fetchRecordsForYear(
     }
   }
 
-  const meetIds = allMeets.map(m => m.meetId)
-
-  // Query meet results
-  const resultsRaw = await db
-    .select()
-    .from(meetResults)
-    .where(inArray(meetResults.meetId, meetIds))
-
-  // Get all unique vpfIds from results
-  const allVpfIds = new Set<string>()
-  resultsRaw.forEach(r => allVpfIds.add(r.vpfId))
-
-  // Query users
-  const allUsers = await db
-    .select(userPublicSelect)
-    .from(users)
-    .where(inArray(users.vpfId, Array.from(allVpfIds)))
-
   const usersMap = new Map<string, UserPublic>()
-  allUsers.forEach(u => usersMap.set(u.vpfId, u))
+  athletes.forEach(u => usersMap.set(u.vpfId, u))
 
   // Create a map of meetId -> meet
   const meetsMap = new Map<number, MeetPublic>()
   allMeets.forEach(m => meetsMap.set(m.meetId, m))
-
-  // Combine and transform all results
-  const results = addMetadataToMeetResults(resultsRaw)
 
   // Group results by sex, division, weight class, and lift
   // Format: "sex-division-weightClass-lift"
