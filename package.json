@@ -27,6 +27,7 @@
     "dotenv": "^16.6.1",
     "drizzle-kit": "^0.31.8",
     "drizzle-orm": "^0.45.1",
+    "drizzle-zod": "^0.8.3",
     "eslint": "^9.29.0",
     "humps": "^2.0.1",
     "jsonwebtoken": "^9.0.3",
@@ -43,7 +44,8 @@
     "vue": "^3.5.16",
     "vue-picture-cropper": "^0.7.0",
     "vue-router": "^4.5.1",
-    "winston": "^3.19.0"
+    "winston": "^3.19.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@mdi/font": "^7.4.47",

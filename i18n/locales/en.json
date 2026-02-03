@@ -117,6 +117,47 @@
     "passwordRequired": "Please enter your password",
     "vpfIdOrEmailRequired": "Please enter your VPF ID or Email",
     "close": "Close"
+  },
+  "profile": {
+    "title": "My Profile",
+    "loading": "Loading profile...",
+    "error": "Error loading profile",
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "email": "Email",
+    "nationality": "Nationality",
+    "dob": "Date of Birth (Year)",
+    "address": "Address",
+    "phoneNumber": "Phone Number",
+    "squatRackPin": "Squat Rack Pin",
+    "benchRackPin": "Bench Rack Pin",
+    "benchSafetyPin": "Bench Safety Pin",
+    "benchFootBlock": "Bench Foot Block",
+    "instagramUsername": "Instagram Username",
+    "enterEmail": "Enter email",
+    "enterNationality": "Enter nationality",
+    "enterDob": "Enter year of birth",
+    "enterAddress": "Enter address",
+    "enterPhoneNumber": "Enter phone number",
+    "enterSquatRackPin": "Enter squat rack pin",
+    "enterBenchRackPin": "Enter bench rack pin",
+    "enterBenchSafetyPin": "Enter bench safety pin",
+    "enterBenchFootBlock": "Enter bench foot block",
+    "enterInstagramUsername": "Enter Instagram username",
+    "success": "Success",
+    "updateError": "Failed to update profile",
+    "validationError": "Please fix the validation errors",
+    "tabs": {
+      "generalInfo": "General Info",
+      "competitionSettings": "Competition Settings"
+    },
+    "competition": {
+      "bestWeight": "Best Weight",
+      "attempt": "Attempt",
+      "meetId": "Meet ID",
+      "noData": "No competition data available"
+    }
   }
 }
 

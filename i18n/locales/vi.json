@@ -117,6 +117,47 @@
     "passwordRequired": "Vui lòng nhập mật khẩu",
     "vpfIdOrEmailRequired": "Vui lòng nhập VPF ID hoặc Email",
     "close": "Đóng"
+  },
+  "profile": {
+    "title": "Hồ sơ của tôi",
+    "loading": "Đang tải hồ sơ...",
+    "error": "Lỗi khi tải hồ sơ",
+    "save": "Lưu thay đổi",
+    "cancel": "Hủy",
+    "edit": "Chỉnh sửa",
+    "email": "Email",
+    "nationality": "Quốc tịch",
+    "dob": "Năm sinh",
+    "address": "Địa chỉ",
+    "phoneNumber": "Số điện thoại",
+    "squatRackPin": "Squat Rack Pin",
+    "benchRackPin": "Bench Rack Pin",
+    "benchSafetyPin": "Bench Safety Pin",
+    "benchFootBlock": "Bench Foot Block",
+    "instagramUsername": "Tên người dùng Instagram",
+    "enterEmail": "Nhập email",
+    "enterNationality": "Nhập quốc tịch",
+    "enterDob": "Nhập năm sinh",
+    "enterAddress": "Nhập địa chỉ",
+    "enterPhoneNumber": "Nhập số điện thoại",
+    "enterSquatRackPin": "Nhập squat rack pin",
+    "enterBenchRackPin": "Nhập bench rack pin",
+    "enterBenchSafetyPin": "Nhập bench safety pin",
+    "enterBenchFootBlock": "Nhập bench foot block",
+    "enterInstagramUsername": "Nhập tên người dùng Instagram",
+    "success": "Thành công",
+    "updateError": "Cập nhật hồ sơ thất bại",
+    "validationError": "Vui lòng sửa các lỗi xác thực",
+    "tabs": {
+      "generalInfo": "Thông tin chung",
+      "competitionSettings": "Cài đặt thi đấu"
+    },
+    "competition": {
+      "bestWeight": "Trọng lượng tốt nhất",
+      "attempt": "Lần thử",
+      "meetId": "ID Giải đấu",
+      "noData": "Không có dữ liệu thi đấu"
+    }
   }
 }
 

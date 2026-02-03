@@ -106,11 +106,9 @@ import InputText from "@/components/volt/InputText.vue"
 import Password from "@/components/volt/Password.vue"
 import Button from "@/components/volt/Button.vue"
 import Dialog from "@/components/volt/Dialog.vue"
-import { useToast } from "primevue/usetoast"
 import type { ApiResponse, LoginResponse } from "~/types/api"
 
 const router = useRouter()
-const toast = useToast()
 const { t, locale } = useI18n()
 
 // Form state
@@ -179,36 +177,26 @@ const handleLogin = async () => {
     const response = await $fetch<ApiResponse<LoginResponse>>("/api/auth/login", {
       method: "POST",
       body: loginData,
+      ignoreResponseError: true,
     })
 
-    if (response.success && response.data) {
-      // Store token (you may want to use a cookie or localStorage)
-      // For now, we'll just show success and redirect
-      toast.add({
-        severity: "success",
-        summary: t("login.title"),
-        detail: response.message[locale.value as "en" | "vi"] || response.message.en,
-        life: 3000,
+    if (response.success) {
+      // Store JWT token in cookie
+      const authToken = useCookie("auth-token", {
+        maxAge: 60 * 60 * 24 * 7, // 7 days (matching JWT expiration)
+        secure: true,
+        sameSite: "strict",
+        httpOnly: false, // Must be false for client-side access
       })
+      authToken.value = response.data.token
 
       // Redirect to home or dashboard
       await router.push("/")
     } else {
       loginError.value = response.message[locale.value as "en" | "vi"] || response.message.en || t("login.error")
     }
-  } catch (error: unknown) {
-    console.error("Login error:", error)
-    if (error && typeof error === "object" && "data" in error) {
-      const errorData = error.data as { message?: { en?: string; vi?: string } }
-      if (errorData?.message) {
-        const message = errorData.message
-        loginError.value = message[locale.value as "en" | "vi"] || message.en || t("login.error")
-      } else {
-        loginError.value = t("login.error")
-      }
-    } else {
-      loginError.value = t("login.error")
-    }
+  } catch (error) {
+    loginError.value = error instanceof Error ? error.message : t("login.error")
   } finally {
     isLoading.value = false
   }
@@ -217,5 +205,13 @@ const handleLogin = async () => {
 // Set page meta
 useHead({
   title: t("login.title"),
+})
+
+definePageMeta({
+  layout: "with-footer",
+  pageTransition: {
+    name: "page",
+    mode: "out-in"
+  }
 })
 </script>

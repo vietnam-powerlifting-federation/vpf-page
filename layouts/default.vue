@@ -9,6 +9,7 @@
 </template>
 
 <script setup>
+import Toast from "@/components/volt/Toast.vue"
 </script>
 
 <style scoped>

@@ -1,0 +1,21 @@
+---
+alwaysApply: true
+---
+
+This rule provides standards for general code:
+
+Prioritize writing simple code that is easy to understand and maintain
+
+This rule provides standards for frontend components:
+
+When working in components directory:
+
+Always use Tailwind for styling
+Follow component naming conventions
+Follow code conventions and structure from other files in the components directory
+
+This rule enforces validation for API endpoints:
+
+In API directory:
+
+Follow code conventions and structure from other files in the API directory
