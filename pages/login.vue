@@ -191,12 +191,12 @@ const handleLogin = async () => {
       authToken.value = response.data.token
 
       // Redirect to home or dashboard
-      await router.push("/")
+      router.push("/")
     } else {
-      loginError.value = response.message[locale.value as "en" | "vi"] || response.message.en || t("login.error")
+      loginError.value = response.message[locale.value as "en" | "vi"] || response.message.en || t("general.error")
     }
   } catch (error) {
-    loginError.value = error instanceof Error ? error.message : t("login.error")
+    loginError.value = error instanceof Error ? error.message : t("general.error")
   } finally {
     isLoading.value = false
   }

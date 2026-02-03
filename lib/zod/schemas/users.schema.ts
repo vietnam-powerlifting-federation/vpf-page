@@ -4,7 +4,7 @@ import { z } from "zod"
 import { users } from "~/lib/external/drizzle/migrations/schema"
 
 export const UserSelfPatchSchema = createSelectSchema(users, {
-  email: z.email()
+  email: z.email().nullable()
 }).partial().pick({
   email: true,
   nationality: true,
@@ -19,7 +19,7 @@ export const UserSelfPatchSchema = createSelectSchema(users, {
 })
 
 export const UserRequiredSchema = createSelectSchema(users, {
-  email: z.email()
+  email: z.email().nullable()
 }).pick({
   email: true,
   nationality: true,

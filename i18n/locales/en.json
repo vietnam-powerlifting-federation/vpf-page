@@ -8,6 +8,13 @@
     "news": "News",
     "contact": "Contact"
   },
+  "general": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "updateError": "Failed to update",
+    "validationError": "Please fix the validation errors"
+  },
   "home": {
     "title": "Vietnam Powerlifting Federation",
     "subtitle": "The National Governing Body for Powerlifting in Vietnam",
@@ -83,8 +90,6 @@
     "selectGender": "Select Gender",
     "selectDivision": "Select Division",
     "selectYear": "Select Year",
-    "loading": "Loading records...",
-    "error": "Error loading records",
     "squat": "Squat",
     "benchPress": "Bench Press",
     "deadlift": "Deadlift",
@@ -111,8 +116,6 @@
     "forgotPassword": "Forgot Password?",
     "noticeTitle": "Notice for athletes registered to compete at VPF",
     "noticeContent": "Notice content will be updated later.",
-    "loading": "Logging in...",
-    "error": "Login failed",
     "invalidCredentials": "Invalid login credentials",
     "passwordRequired": "Please enter your password",
     "vpfIdOrEmailRequired": "Please enter your VPF ID or Email",
@@ -120,8 +123,6 @@
   },
   "profile": {
     "title": "My Profile",
-    "loading": "Loading profile...",
-    "error": "Error loading profile",
     "save": "Save Changes",
     "cancel": "Cancel",
     "edit": "Edit",
@@ -145,9 +146,6 @@
     "enterBenchSafetyPin": "Enter bench safety pin",
     "enterBenchFootBlock": "Enter bench foot block",
     "enterInstagramUsername": "Enter Instagram username",
-    "success": "Success",
-    "updateError": "Failed to update profile",
-    "validationError": "Please fix the validation errors",
     "tabs": {
       "generalInfo": "General Info",
       "competitionSettings": "Competition Settings"

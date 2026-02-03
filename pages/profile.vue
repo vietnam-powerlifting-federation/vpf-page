@@ -7,17 +7,16 @@
         <!-- Loading State -->
         <div v-if="pending" class="max-w-4xl mx-auto text-center py-12">
           <ProgressSpinner />
-          <p class="mt-4 text-gray-600 dark:text-gray-400">{{ $t("profile.loading") }}</p>
+          <p class="mt-4 text-gray-600 dark:text-gray-400">{{ $t("general.loading") }}</p>
         </div>
 
         <!-- Error State -->
         <div v-else-if="error" class="max-w-4xl mx-auto text-center py-12">
-          <p class="text-red-600 dark:text-red-400">{{ $t("profile.error") }}</p>
+          <p class="text-red-600 dark:text-red-400">{{ $t("general.error") }}</p>
         </div>
 
         <!-- Profile Form -->
         <div v-else-if="userData" class="max-w-4xl mx-auto">
-          <TestButton/>
           <Card>
             <template #content>
               <form class="space-y-6" @submit.prevent="handleSubmit">
@@ -238,11 +237,17 @@ import SecondaryButton from "@/components/volt/SecondaryButton.vue"
 import ProgressSpinner from "@/components/volt/ProgressSpinner.vue"
 import type { ApiResponse } from "~/types/api"
 import type { UserPrivate } from "~/types/users"
+import type { UserSelfPatchSchema } from "~/lib/zod/schemas/users.schema"
+import type { z } from "zod"
+import { buildPatchPayload } from "~/lib/utils/client"
 
 const toast = useToast()
 const { t, locale } = useI18n()
 const activeTab = ref("general")
 const isSubmitting = ref(false)
+
+// Infer form data type from Zod schema
+type FormData = Required<z.infer<typeof UserSelfPatchSchema>>
 
 // Fetch user profile data
 const { data, pending, error, refresh } = await useFetch<ApiResponse<UserPrivate>>("/api/users/self", {
@@ -252,19 +257,8 @@ const { data, pending, error, refresh } = await useFetch<ApiResponse<UserPrivate
 // User data
 const userData = computed(() => data.value?.data)
 
-// Form data - initialize with user data
-const formData = ref<{
-  email: string | null
-  nationality: string | null
-  dob: number | null
-  address: string | null
-  phoneNumber: string | null
-  squatRackPin: number | null
-  benchRackPin: number | null
-  benchSafetyPin: number | null
-  benchFootBlock: number | null
-  instagramUsername: string | null
-}>({
+// Form data
+const formData = ref<FormData>({
   email: null,
   nationality: null,
   dob: null,
@@ -283,16 +277,16 @@ watch(
   (newUserData) => {
     if (newUserData) {
       formData.value = {
-        email: newUserData.email ?? null,
-        nationality: newUserData.nationality ?? null,
-        dob: newUserData.dob ?? null,
-        address: newUserData.address ?? null,
-        phoneNumber: newUserData.phoneNumber ?? null,
-        squatRackPin: newUserData.squatRackPin ?? null,
-        benchRackPin: newUserData.benchRackPin ?? null,
-        benchSafetyPin: newUserData.benchSafetyPin ?? null,
-        benchFootBlock: newUserData.benchFootBlock ?? null,
-        instagramUsername: newUserData.instagramUsername ?? null,
+        email: newUserData.email,
+        nationality: newUserData.nationality,
+        dob: newUserData.dob,
+        address: newUserData.address,
+        phoneNumber: newUserData.phoneNumber,
+        squatRackPin: newUserData.squatRackPin,
+        benchRackPin: newUserData.benchRackPin,
+        benchSafetyPin: newUserData.benchSafetyPin,
+        benchFootBlock: newUserData.benchFootBlock,
+        instagramUsername: newUserData.instagramUsername,
       }
     }
   },
@@ -303,16 +297,16 @@ watch(
 const resetForm = () => {
   if (userData.value) {
     formData.value = {
-      email: userData.value.email ?? null,
-      nationality: userData.value.nationality ?? null,
-      dob: userData.value.dob ?? null,
-      address: userData.value.address ?? null,
-      phoneNumber: userData.value.phoneNumber ?? null,
-      squatRackPin: userData.value.squatRackPin ?? null,
-      benchRackPin: userData.value.benchRackPin ?? null,
-      benchSafetyPin: userData.value.benchSafetyPin ?? null,
-      benchFootBlock: userData.value.benchFootBlock ?? null,
-      instagramUsername: userData.value.instagramUsername ?? null,
+      email: userData.value.email,
+      nationality: userData.value.nationality,
+      dob: userData.value.dob,
+      address: userData.value.address,
+      phoneNumber: userData.value.phoneNumber,
+      squatRackPin: userData.value.squatRackPin,
+      benchRackPin: userData.value.benchRackPin,
+      benchSafetyPin: userData.value.benchSafetyPin,
+      benchFootBlock: userData.value.benchFootBlock,
+      instagramUsername: userData.value.instagramUsername,
     }
   }
 }
@@ -322,32 +316,16 @@ const handleSubmit = async () => {
   isSubmitting.value = true
 
   try {
-    // Prepare payload - only include fields that are editable
-    const payload: Partial<{
-      email: string | null
-      nationality: string | null
-      dob: number | null
-      address: string | null
-      phoneNumber: string | null
-      squatRackPin: number | null
-      benchRackPin: number | null
-      benchSafetyPin: number | null
-      benchFootBlock: number | null
-      instagramUsername: string | null
-    }> = {}
+    if (!userData.value) return 
 
-    // Only include fields that have changed or are not null
-    if (formData.value.email !== null) payload.email = formData.value.email
-    if (formData.value.nationality !== null) payload.nationality = formData.value.nationality
-    if (formData.value.dob !== null) payload.dob = formData.value.dob
-    if (formData.value.address !== null) payload.address = formData.value.address
-    if (formData.value.phoneNumber !== null) payload.phoneNumber = formData.value.phoneNumber
-    if (formData.value.squatRackPin !== null) payload.squatRackPin = formData.value.squatRackPin
-    if (formData.value.benchRackPin !== null) payload.benchRackPin = formData.value.benchRackPin
-    if (formData.value.benchSafetyPin !== null) payload.benchSafetyPin = formData.value.benchSafetyPin
-    if (formData.value.benchFootBlock !== null) payload.benchFootBlock = formData.value.benchFootBlock
-    if (formData.value.instagramUsername !== null) payload.instagramUsername = formData.value.instagramUsername
+    const payload = buildPatchPayload<FormData>(
+      formData.value,
+      userData.value
+    )
 
+    // Do nothing if user didn't edit anything
+    if (Object.keys(payload).length === 0) return
+    
     const response = await $fetch<ApiResponse<UserPrivate>>("/api/users/self", {
       method: "PATCH",
       body: payload,
@@ -355,28 +333,25 @@ const handleSubmit = async () => {
     })
 
     if (response.success) {
-      // Refresh user data
-      await refresh()
-
       toast.add({
         severity: "success",
-        summary: t("profile.success"),
+        summary: t("general.success"),
         detail: response.message[locale.value as "en" | "vi"] || response.message.en,
         life: 3000,
       })
     } else {
       toast.add({
         severity: "error",
-        summary: t("profile.updateError"),
-        detail: response.message[locale.value as "en" | "vi"] || response.message.en || t("profile.validationError"),
+        summary: t("general.updateError"),
+        detail: response.message[locale.value as "en" | "vi"] || response.message.en || t("general.validationError"),
         life: 5000,
       })
     }
   } catch (err) {
     toast.add({
       severity: "error",
-      summary: t("profile.updateError"),
-      detail: err instanceof Error ? err.message : t("profile.validationError"),
+      summary: t("general.updateError"),
+      detail: err instanceof Error ? err.message : t("general.validationError"),
       life: 5000,
     })
   } finally {

@@ -88,12 +88,12 @@
         <!-- Loading State -->
         <div v-if="displayPending" class="max-w-5xl mx-auto text-center py-12">
           <ProgressSpinner />
-          <p class="mt-4 text-gray-600">{{ $t("records.loading") }}</p>
+          <p class="mt-4 text-gray-600">{{ $t("general.loading") }}</p>
         </div>
 
         <!-- Error State -->
         <div v-else-if="displayError" class="max-w-5xl mx-auto text-center py-12">
-          <p class="text-red-600">{{ $t("records.error") }}</p>
+          <p class="text-red-600">{{ $t("general.error") }}</p>
         </div>
 
         <!-- Records Tables -->

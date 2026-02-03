@@ -8,6 +8,13 @@
     "news": "Tin tức",
     "contact": "Liên hệ"
   },
+  "general": {
+    "loading": "Đang tải...",
+    "error": "Đã xảy ra lỗi",
+    "success": "Thành công",
+    "updateError": "Cập nhật thất bại",
+    "validationError": "Vui lòng sửa các lỗi xác thực"
+  },
   "home": {
     "title": "Vietnam Powerlifting Federation",
     "subtitle": "Liên đoàn trực thuộc IPF tại Việt Nam",
@@ -83,8 +90,6 @@
     "selectGender": "Chọn giới tính",
     "selectDivision": "Chọn hạng",
     "selectYear": "Chọn năm",
-    "loading": "Đang tải kỷ lục...",
-    "error": "Lỗi khi tải kỷ lục",
     "squat": "Squat",
     "benchPress": "Bench Press",
     "deadlift": "Deadlift",
@@ -111,8 +116,6 @@
     "forgotPassword": "Quên mật khẩu?",
     "noticeTitle": "Lưu ý cho vận động viên đã đăng ký thi đấu tại VPF",
     "noticeContent": "Nội dung thông báo sẽ được cập nhật sau.",
-    "loading": "Đang đăng nhập...",
-    "error": "Đăng nhập thất bại",
     "invalidCredentials": "Thông tin đăng nhập không hợp lệ",
     "passwordRequired": "Vui lòng nhập mật khẩu",
     "vpfIdOrEmailRequired": "Vui lòng nhập VPF ID hoặc Email",
@@ -120,8 +123,6 @@
   },
   "profile": {
     "title": "Hồ sơ của tôi",
-    "loading": "Đang tải hồ sơ...",
-    "error": "Lỗi khi tải hồ sơ",
     "save": "Lưu thay đổi",
     "cancel": "Hủy",
     "edit": "Chỉnh sửa",
@@ -145,9 +146,6 @@
     "enterBenchSafetyPin": "Nhập bench safety pin",
     "enterBenchFootBlock": "Nhập bench foot block",
     "enterInstagramUsername": "Nhập tên người dùng Instagram",
-    "success": "Thành công",
-    "updateError": "Cập nhật hồ sơ thất bại",
-    "validationError": "Vui lòng sửa các lỗi xác thực",
     "tabs": {
       "generalInfo": "Thông tin chung",
       "competitionSettings": "Cài đặt thi đấu"

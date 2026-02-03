@@ -126,4 +126,3 @@ export default defineEventHandler(async (event): Promise<ApiResponse<UserPrivate
     }
   }
 })
-
