@@ -10,7 +10,6 @@ export default {
         secondary: "var(--secondary)",
         bg: "var(--p-surface-0)",
         fg: "var(--p-surface-300)",
-        text: "var(--gray-800)",
         error: "var(--red-400)"
       },
     },

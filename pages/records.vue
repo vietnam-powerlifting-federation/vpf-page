@@ -129,6 +129,7 @@
               :athletes="displayAthletes"
               :meets="displayMeets"
               :weight-classes="weightClasses"
+              :sex="selectedSex"
             />
           </div>
 
@@ -140,6 +141,7 @@
               :athletes="displayAthletes"
               :meets="displayMeets"
               :weight-classes="weightClasses"
+              :sex="selectedSex"
             />
           </div>
 
@@ -151,6 +153,7 @@
               :athletes="displayAthletes"
               :meets="displayMeets"
               :weight-classes="weightClasses"
+              :sex="selectedSex"
             />
           </div>
 
@@ -162,6 +165,7 @@
               :athletes="displayAthletes"
               :meets="displayMeets"
               :weight-classes="weightClasses"
+              :sex="selectedSex"
             />
           </div>
         </div>

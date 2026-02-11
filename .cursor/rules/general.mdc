@@ -14,7 +14,6 @@ Always use Tailwind for styling
 Follow component naming conventions
 Follow code conventions and structure from other files in the components directory
 Prioritize using declared tailwind color instead of hardcoded ones
-Text uses "text" color by default
 
 This rule enforces validation for API endpoints:
 

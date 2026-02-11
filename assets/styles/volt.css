@@ -19,7 +19,7 @@
     --p-primary-950: color-mix(in srgb, var(--primary) 25%, black);
 
     --p-surface-0: #ffffff;
-    --p-surface-50: #fafafa;
+    --p-surface-50: #f4f4f5;
     --p-surface-100: #f4f4f5;
     --p-surface-200: #e4e4e7;
     --p-surface-300: #d4d4d8;

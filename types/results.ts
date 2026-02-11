@@ -13,3 +13,8 @@ export type Result = ResultRaw & LegacyResultRaw & {
   gl: number | null
   placement: number
 }
+
+// include rank for ranking page
+export type ResultRanked = Result & {
+  rank: number
+}

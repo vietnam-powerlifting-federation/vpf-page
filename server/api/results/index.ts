@@ -2,13 +2,13 @@ import { applyDistinctFilter, type SortKey, type MeetType } from "~/lib/utils/qu
 import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import { logger } from "~/lib/logger/logger"
 import type { ApiResponse } from "~/types/api"
-import type { Result } from "~/types/results"
+import type { ResultRanked } from "~/types/results"
 import type { MeetPublic } from "~/types/meets"
 import type { UserPublic } from "~/types/users"
 import type { Sex, Division } from "~/types/union-types"
 
 type ResultsResponse = {
-  results: Result[]
+  results: ResultRanked[]
   meets: MeetPublic[]
   athletes: UserPublic[]
 }
@@ -51,10 +51,15 @@ export default defineEventHandler(async (event): Promise<ApiResponse<ResultsResp
     // Apply distinct filter if needed
     const results = distinct ? applyDistinctFilter(initialResults, sortKey) : initialResults
 
+    const rankedResults = results.map((result, index) => ({
+      ...result,
+      rank: index + 1,
+    })) as ResultRanked[]
+
     return {
       success: true,
       data: {
-        results,
+        results: rankedResults,
         meets,
         athletes,
       },

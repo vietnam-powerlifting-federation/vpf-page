@@ -30,7 +30,7 @@
           class="hover:bg-gray-50 dark:hover:bg-gray-900"
         >
           <td class="border border-gray-300 dark:border-gray-700 px-4 py-2">
-            {{ formatWeightClass(record.weightClass) }}
+            {{ formatWeightClass(record.weightClass, props.sex) }}
           </td>
           <td class="border border-gray-300 dark:border-gray-700 px-4 py-2">
             <template v-if="record.athlete">
@@ -64,6 +64,8 @@
 <script setup lang="ts">
 import type { UserPublic } from "~/types/users"
 import type { MeetPublic } from "~/types/meets"
+import type { Sex } from "~/types/union-types"
+import { formatWeightClass } from "@/lib/utils/client"
 
 interface RecordRow {
   weightClass: number
@@ -75,18 +77,13 @@ interface RecordRow {
   meetId?: number
 }
 
-defineProps<{
+const props = defineProps<{
   records: RecordRow[]
   athletes: UserPublic[]
   meets: MeetPublic[]
   weightClasses: number[]
+  sex?: Sex | null
 }>()
-
-const formatWeightClass = (weightClass: number | null | undefined): string => {
-  if (!weightClass) return "-"
-  if (weightClass === 999) return "120+kg"
-  return `${weightClass}kg`
-}
 
 const formatWeight = (weight: number | null | undefined): string => {
   if (weight === null || weight === undefined) return "-"

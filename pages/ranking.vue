@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl md:text-4xl font-bold mb-8 text-center text">Athlete Rankings</h1>
+    <h1 class="text-3xl md:text-4xl font-bold mb-8 text-center">Athlete Rankings</h1>
     
     <!-- Filters -->
     <AthletesRankingFilter
@@ -14,18 +14,16 @@
     />
 
     <!-- Data Table -->
-    <div class="bg-surface-0 dark:bg-surface-900 rounded-lg border border-surface-200 dark:border-surface-700 overflow-hidden">
+    <div class="overflow-hidden">
       <ClientOnly>
         <DataTable
           :value="finalRankedResults"
-          :loading="loading"
           :paginator="true"
           :rows="50"
           :rows-per-page-options="[25, 50, 100]"
-          :sort-field="sortField"
-          :sort-order="sortOrder"
           striped-rows
           class="w-full"
+          showGridlines
         >
           <Column field="rank" header="#" :sortable="false" style="width: 5rem">
             <template #body="{ data }">
@@ -38,7 +36,7 @@
               <NuxtLink
                 v-if="data.athlete"
                 :to="`/athletes/${data.athlete.vpfId}`"
-                class="text-primary hover:underline"
+                class="hover:text-primary"
               >
                 {{ data.athlete.fullName }}
               </NuxtLink>
@@ -48,7 +46,7 @@
           
           <Column field="weightClass" header="Class" :sortable="false" align="right" style="width: 8rem">
             <template #body="{ data }">
-              {{ formatWeightClass(data.weightClass) }}
+              {{ formatWeightClass(data.weightClass, data.sex) }}
             </template>
           </Column>
           
@@ -64,31 +62,31 @@
             </template>
           </Column>
           
-          <Column field="bestSquat" header="Squat" :sortable="true" align="right" style="width: 8rem">
+          <Column field="bestSquat" header="Squat" :sortable="false" align="right" style="width: 8rem">
             <template #body="{ data }">
               {{ formatWeight(data.bestSquat) }}
             </template>
           </Column>
           
-          <Column field="bestBench" header="Bench" :sortable="true" align="right" style="width: 8rem">
+          <Column field="bestBench" header="Bench" :sortable="false" align="right" style="width: 8rem">
             <template #body="{ data }">
               {{ formatWeight(data.bestBench) }}
             </template>
           </Column>
           
-          <Column field="bestDeadlift" header="Deadlift" :sortable="true" align="right" style="width: 8rem">
+          <Column field="bestDeadlift" header="Deadlift" :sortable="false" align="right" style="width: 8rem">
             <template #body="{ data }">
               {{ formatWeight(data.bestDeadlift) }}
             </template>
           </Column>
           
-          <Column field="total" header="Total" :sortable="true" align="right" style="width: 8rem">
+          <Column field="total" header="Total" :sortable="false" align="right" style="width: 8rem">
             <template #body="{ data }">
               {{ formatWeight(data.total) }}
             </template>
           </Column>
           
-          <Column field="gl" header="GL" :sortable="true" align="right" style="width: 8rem">
+          <Column field="gl" header="GL" :sortable="false" align="right" style="width: 8rem">
             <template #body="{ data }">
               {{ formatGL(data.gl) }}
             </template>
@@ -108,14 +106,16 @@
 </template>
 
 <script setup lang="ts">
-import DataTable from "@/components/volt/DataTable.vue"
+import DataTable from "primevue/datatable"
 import Column from "primevue/column"
 import AthletesRankingFilter from "@/components/AthletesRankingFilter.vue"
 import { useRankingFilters } from "@/composables/useRankingFilters"
-import type { Result } from "~/types/results"
+import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL } from "@/lib/utils/client"
+import type { ResultRanked } from "~/types/results"
 import type { UserPublic } from "~/types/users"
 import type { ApiResponse } from "~/types/api"
 import type { Sex, Division, MeetType } from "~/types/union-types"
+import type { MeetPublic } from "~/types/meets"
 
 definePageMeta({
   layout: "with-footer",
@@ -134,9 +134,6 @@ useSeoMeta({
 
 const filters = useRankingFilters()
 const loading = ref(true)
-const sortField = ref<string>("gl")
-const sortOrder = ref<-1 | 0 | 1>(-1)
-
 // Computed properties for v-model bindings
 const searchValue = computed({
   get: () => filters.search.value,
@@ -167,47 +164,6 @@ const meetTypeValue = computed({
   get: () => filters.meetType.value,
   set: (val: MeetType | null) => { filters.meetType.value = val }
 })
-
-// Format weight class
-const formatWeightClass = (weightClass: number | null | undefined): string => {
-  if (!weightClass) return "-"
-  if (weightClass === 999) return "120+kg"
-  return `${weightClass}kg`
-}
-
-// Format sex
-const formatSex = (sex: string | null | undefined): string => {
-  if (!sex) return "-"
-  return sex.charAt(0).toUpperCase() + sex.slice(1)
-}
-
-// Format division
-const formatDivision = (division: string | null | undefined): string => {
-  if (!division) return "-"
-  const divisionMap: Record<string, string> = {
-    open: "Open",
-    jr: "Junior",
-    subjr: "Sub-Junior",
-    mas1: "Master I",
-    mas2: "Master II",
-    mas3: "Master III",
-    mas4: "Master IV",
-    guest: "Guest"
-  }
-  return divisionMap[division] || division
-}
-
-// Format weight
-const formatWeight = (weight: number | null | undefined): string => {
-  if (weight === null || weight === undefined) return "-"
-  return weight.toFixed(2)
-}
-
-// Format GL points
-const formatGL = (gl: number | null | undefined): string => {
-  if (gl === null || gl === undefined) return "-"
-  return gl.toFixed(2)
-}
 
 // Reactive query parameters for useFetch
 const queryParams = computed(() => {
@@ -240,8 +196,8 @@ const queryParams = computed(() => {
 
 // Fetch results using useFetch with reactive query parameters
 const { data: response, pending } = useFetch<ApiResponse<{
-  results: Result[]
-  meets: unknown[]
+  results: ResultRanked[]
+  meets: MeetPublic[]
   athletes: UserPublic[]
 }>>("/api/results", {
   query: queryParams
@@ -262,36 +218,34 @@ const results = computed(() => {
 
 const athletes = computed(() => {
   if (response.value?.success && response.value.data) {
-    const athletesMap = new Map<string, UserPublic>()
-    for (const athlete of response.value.data.athletes) {
-      athletesMap.set(athlete.vpfId, athlete)
-    }
-    return athletesMap
+    return response.value.data.athletes
   }
-  return new Map<string, UserPublic>()
+  return []
 })
 
-// Computed: Ranked results with athlete data
-const rankedResults = computed(() => {
-  return results.value.map((result, index) => ({
+// Results with athlete data
+const resultsWithAthletes = computed(() => {
+  return results.value.map(result => ({
     ...result,
-    rank: index + 1,
-    athlete: athletes.value.get(result.vpfId)
+    athlete: athletes.value.find(athlete => athlete.vpfId === result.vpfId)
   }))
 })
 
 // Final ranked results with search filtering
 const finalRankedResults = computed(() => {
-  if (!filters.search.value) {
-    return rankedResults.value
+  let filtered = resultsWithAthletes.value
+  console.log(filtered)
+  
+  if (filters.search.value) {
+    const searchLower = filters.search.value.toLowerCase()
+    filtered = filtered.filter(result => {
+      const athlete = result.athlete
+      if (!athlete) return false
+      return athlete.fullName?.toLowerCase().includes(searchLower) ||
+             athlete.vpfId?.toLowerCase().includes(searchLower)
+    })
   }
   
-  const searchLower = filters.search.value.toLowerCase()
-  return rankedResults.value.filter(result => {
-    const athlete = result.athlete
-    if (!athlete) return false
-    return athlete.fullName?.toLowerCase().includes(searchLower) ||
-           athlete.vpfId?.toLowerCase().includes(searchLower)
-  })
+  return filtered.sort((a, b) => a.rank - b.rank)
 })
 </script>

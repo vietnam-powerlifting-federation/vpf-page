@@ -9,7 +9,7 @@
         <div v-for="group in getGroupedRecords(liftType)" :key="group.key" class="mb-6">
           <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4">
             <h3 class="text-lg font-semibold mb-2">
-              {{ formatWeightClass(group.weightClass) }} - {{ formatDivision(group.division) }} 
+              {{ formatWeightClass(group.weightClass, group.sex) }} - {{ formatDivision(group.division) }} 
               ({{ group.sex === 'male' ? 'Male' : 'Female' }})
             </h3>
             
@@ -74,6 +74,7 @@ import { computed } from "vue"
 import type { LiftRecord } from "~/types/records"
 import type { UserPublic } from "~/types/users"
 import type { Sex, Division } from "~/types/union-types"
+import { formatWeightClass } from "@/lib/utils/client"
 
 const { t } = useI18n()
 
@@ -169,12 +170,6 @@ const getLiftName = (lift: typeof liftTypes[number]): string => {
     total: "Total"
   }
   return names[lift]
-}
-
-const formatWeightClass = (weightClass: number | null | undefined): string => {
-  if (!weightClass) return "-"
-  if (weightClass === 999) return "120+kg"
-  return `${weightClass}kg`
 }
 
 const formatDivision = (division: Division): string => {

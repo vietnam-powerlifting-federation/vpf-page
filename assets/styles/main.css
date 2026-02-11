@@ -6,40 +6,8 @@
 /* SVN-CenturyGothic Font Face Declarations */
 @font-face {
   font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-Thin.otf") format("opentype");
-  font-weight: 100;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-ThinItalic.otf") format("opentype");
-  font-weight: 100;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-Light.otf") format("opentype");
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-LightItalic.otf") format("opentype");
-  font-weight: 300;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "SVN-CenturyGothic";
   src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-Regular.otf") format("opentype");
-  font-weight: 400;
+  font-weight: 100;
   font-style: normal;
   font-display: swap;
 }
@@ -47,6 +15,38 @@
 @font-face {
   font-family: "SVN-CenturyGothic";
   src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-RegularItalic.otf") format("opentype");
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-Regular.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-RegularItalic.otf") format("opentype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-SemiBold.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-CenturyGothic";
+  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-SemiBoldItalic.otf") format("opentype");
   font-weight: 400;
   font-style: italic;
   font-display: swap;
