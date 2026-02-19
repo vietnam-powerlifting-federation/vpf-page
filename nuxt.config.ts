@@ -6,6 +6,7 @@ export default defineNuxtConfig({
   compatibilityDate: "2026-01-02",
   modules: [
     "@nuxt/eslint",
+    "@nuxt/content",
     "@nuxtjs/i18n",
     "@nuxt/image",
     "@nuxtjs/color-mode",

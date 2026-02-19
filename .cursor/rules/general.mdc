@@ -8,12 +8,14 @@ Prioritize writing simple code that is easy to understand and maintain
 
 This rule provides standards for frontend components:
 
-When working in components directory:
+When working in pages and components directory:
 
 Always use Tailwind for styling
 Follow component naming conventions
 Follow code conventions and structure from other files in the components directory
 Prioritize using declared tailwind color instead of hardcoded ones
+Do not use @apply for styling
+Always ensure multiple languages are supported
 
 This rule enforces validation for API endpoints:
 
