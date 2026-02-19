@@ -6,10 +6,10 @@
         class="absolute inset-0 bg-cover bg-center bg-no-repeat grayscale-25"
         :style="{ backgroundImage: `url(${heroBg})` }"
       />
-      <div class="absolute inset-0 bg-gradient-to-br from-gray-400/0 to-gray-800/50" />
+      <div class="absolute inset-0 bg-gradient-to-br from-surface-400/0 to-surface-800/50" />
       <div class="container mx-auto px-4 relative z-10">
         <div class="text-center max-w-3xl mx-auto">
-          <h1 class="text-4xl md:text-6xl font-bold mb-4 text-white text-shadow-lg text-gray-800">{{ $t("home.title") }}</h1>
+          <h1 class="text-4xl md:text-6xl font-bold mb-4 text-white text-shadow-lg text-surface-800">{{ $t("home.title") }}</h1>
           <p class="text-xl md:text-2xl mb-8 text-white/90 text-shadow-lg">{{ $t("home.subtitle") }}</p>
           <div class="flex flex-col md:flex-row gap-4 justify-center">
             <Button :label="$t('membership.joinNow')" class="p-button-primary" @click="navigateTo('/membership')" />
@@ -23,8 +23,8 @@
     <section class="py-12 md:py-16">
       <div class="container mx-auto px-4">
         <div class="text-center max-w-3xl mx-auto">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-800">{{ $t("home.welcome") }}</h2>
-          <p class="text-lg md:text-xl text-gray-600 mb-12">{{ $t("home.description") }}</p>
+          <h2 class="text-3xl md:text-4xl font-bold mb-4 text-surface-800">{{ $t("home.welcome") }}</h2>
+          <p class="text-lg md:text-xl text-surface-600 mb-12">{{ $t("home.description") }}</p>
         </div>
       </div>
     </section>
@@ -32,12 +32,12 @@
     <!-- Latest News Section -->
     <section class="py-12 md:py-16 bg-light-bg">
       <div class="container mx-auto px-4">
-        <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center text-gray-800">{{ $t("home.latestNews") }}</h2>
+        <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center text-surface-800">{{ $t("home.latestNews") }}</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
           <Card v-for="(newsItem, index) in newsItems" :key="index" class="custom-card">
             <template #header>
-              <div class="h-48 bg-gray-300 flex items-center justify-center text-gray-500">
-                <span>News Image</span>
+              <div class="h-48 bg-surface-300 flex items-center justify-center text-surface-500">
+                <span>{{ $t("home.newsImage") }}</span>
               </div>
             </template>
             <template #title>
@@ -60,7 +60,7 @@
     <!-- Upcoming Events Section -->
     <section class="py-12 md:py-16">
       <div class="container mx-auto px-4">
-        <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center text-gray-800">{{ $t("home.upcomingEvents") }}</h2>
+        <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center text-surface-800">{{ $t("home.upcomingEvents") }}</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
           <Card v-for="(event, index) in events" :key="index" class="custom-card">
             <template #title>

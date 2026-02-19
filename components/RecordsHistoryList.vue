@@ -7,14 +7,14 @@
         
         <!-- Group by weight class and division -->
         <div v-for="group in getGroupedRecords(liftType)" :key="group.key" class="mb-6">
-          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4">
+          <div class="bg-surface-50 dark:bg-surface-800 rounded-lg p-4 mb-4">
             <h3 class="text-lg font-semibold mb-2">
               {{ formatWeightClass(group.weightClass, group.sex) }} - {{ formatDivision(group.division) }} 
-              ({{ group.sex === 'male' ? 'Male' : 'Female' }})
+              ({{ group.sex === 'male' ? t("general.male") : t("general.female") }})
             </h3>
             
             <!-- Show previous record if available -->
-            <div v-if="group.previousRecord" class="text-sm text-gray-600 dark:text-gray-400 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+            <div v-if="group.previousRecord" class="text-sm text-surface-600 dark:text-surface-400 mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
               <span class="font-medium">{{ t("records.previousRecord") }}:</span> 
               <span class="ml-2">{{ formatWeight(group.previousRecord) }}kg</span>
             </div>
@@ -24,11 +24,11 @@
               <div
                 v-for="(record, index) in group.records"
                 :key="`${record.vpfId}-${record.lot}-${record.attempt || 0}`"
-                class="flex items-center justify-between p-3 bg-white dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 hover:border-primary transition-colors"
+                class="flex items-center justify-between p-3 bg-surface-0 dark:bg-surface-900 rounded border border-surface-200 dark:border-surface-700 hover:border-primary transition-colors"
               >
                 <div class="flex-1">
                   <div class="flex items-center gap-3">
-                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[2rem]">
+                    <span class="text-sm font-medium text-surface-500 dark:text-surface-400 min-w-[2rem]">
                       #{{ index + 1 }}
                     </span>
                     <NuxtLink
@@ -40,15 +40,15 @@
                     </NuxtLink>
                     <span v-else class="font-semibold">{{ record.vpfId }}</span>
                   </div>
-                  <div class="flex items-center gap-4 mt-1 text-sm text-gray-600 dark:text-gray-400 ml-11">
+                  <div class="flex items-center gap-4 mt-1 text-sm text-surface-600 dark:text-surface-400 ml-11">
                     <span v-if="record.attempt">
-                      {{ t("records.attempt") }} {{ record.attempt }}
+                      {{ t("general.attempt") }} {{ record.attempt }}
                     </span>
                     <span v-if="record.bodyWeight">
-                      {{ t("records.bodyWeight") }}: {{ formatWeight(record.bodyWeight) }}kg
+                      {{ t("general.bodyWeight") }}: {{ formatWeight(record.bodyWeight) }}kg
                     </span>
                     <span v-if="record.lot" class="text-xs">
-                      Lot {{ record.lot }}
+                      {{ t("recordsHistory.lot") }} {{ record.lot }}
                     </span>
                   </div>
                 </div>
@@ -163,27 +163,27 @@ const getGroupedRecords = (lift: typeof liftTypes[number]): GroupedRecord[] => {
 }
 
 const getLiftName = (lift: typeof liftTypes[number]): string => {
-  const names = {
-    squat: "Squat",
-    bench: "Bench Press",
-    deadlift: "Deadlift",
-    total: "Total"
+  const keyMap = {
+    squat: "general.squat",
+    bench: "general.benchPress",
+    deadlift: "general.deadlift",
+    total: "general.total"
   }
-  return names[lift]
+  return t(keyMap[lift])
 }
 
 const formatDivision = (division: Division): string => {
-  const names: Record<Division, string> = {
-    subjr: "Sub-Junior",
-    jr: "Junior",
-    open: "Open",
-    mas1: "Masters 1",
-    mas2: "Masters 2",
-    mas3: "Masters 3",
-    mas4: "Masters 4",
-    guest: "Guest"
+  const keyMap: Record<Division, string> = {
+    subjr: "general.divisionSubJunior",
+    jr: "general.divisionJunior",
+    open: "general.divisionOpen",
+    mas1: "general.divisionMaster1",
+    mas2: "general.divisionMaster2",
+    mas3: "general.divisionMaster3",
+    mas4: "general.divisionMaster4",
+    guest: "general.divisionGuest"
   }
-  return names[division] || division
+  return t(keyMap[division] || "general.divisionOpen")
 }
 
 const formatWeight = (weight: number | null | undefined): string => {

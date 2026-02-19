@@ -3,7 +3,7 @@
     <section class="py-12 md:py-16">
       <div class="container mx-auto px-4">
         <h1 class="text-3xl md:text-4xl font-bold mb-4 text-center text-primary">{{ $t("membership.title") }}</h1>
-        <p class="text-lg md:text-xl text-gray-600 mb-12 text-center">{{ $t("membership.description") }}</p>
+        <p class="text-lg md:text-xl text-surface-600 mb-12 text-center">{{ $t("membership.description") }}</p>
 
         <div class="max-w-5xl mx-auto">
           <div class="mb-12">

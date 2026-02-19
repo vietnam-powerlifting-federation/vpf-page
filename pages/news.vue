@@ -3,13 +3,13 @@
     <section class="py-12 md:py-16">
       <div class="container mx-auto px-4">
         <h1 class="text-3xl md:text-4xl font-bold mb-4 text-center text-primary">{{ $t("news.title") }}</h1>
-        <p class="text-lg md:text-xl text-gray-600 mb-12 text-center">{{ $t("news.description") }}</p>
+        <p class="text-lg md:text-xl text-surface-600 mb-12 text-center">{{ $t("news.description") }}</p>
 
         <div class="max-w-5xl mx-auto">
           <div v-if="newsArticles.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
             <Card v-for="(article, index) in newsArticles" :key="index" class="custom-card h-full flex flex-col">
               <template #header>
-                <div class="h-48 bg-gray-300 flex items-center justify-center text-gray-500">
+                <div class="h-48 bg-surface-300 flex items-center justify-center text-surface-500">
                   <span>News Image</span>
                 </div>
               </template>
@@ -27,7 +27,7 @@
               </template>
             </Card>
           </div>
-          <div v-else class="text-center py-12 text-gray-600">
+          <div v-else class="text-center py-12 text-surface-600">
             <p>{{ $t("news.noNews") }}</p>
           </div>
         </div>

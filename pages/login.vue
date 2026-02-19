@@ -4,7 +4,7 @@
       <h1 class="text-3xl font-bold text-center text-text">{{ $t("login.title") }}</h1>
 
       <!-- Notice Section -->
-      <div class="p-4 rounded-lg border bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700">
+      <div class="p-4 rounded-lg border bg-surface-100 dark:bg-surface-800 border-surface-300 dark:border-surface-700">
         <button
           class="w-full text-left underline text-text hover:text-primary transition-colors"
           @click="showNoticeModal = true"

@@ -3,18 +3,18 @@
     <!-- Meet Header -->
     <div class="mb-8">
       <h1 class="text-3xl md:text-4xl font-bold mb-4 text">{{ meet.meetName }}</h1>
-      <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+      <div class="flex flex-wrap gap-4 text-sm text-surface-600">
         <span v-if="meet.hostDate">
-          <strong>Date:</strong> {{ formatDate(meet.hostDate) }}
+          <strong>{{ $t("meets.date") }}:</strong> {{ formatDate(meet.hostDate) }}
         </span>
         <span v-if="meet.city">
-          <strong>Location:</strong> {{ meet.city }}
+          <strong>{{ $t("meets.location") }}:</strong> {{ meet.city }}
         </span>
         <span v-if="meet.type">
-          <strong>Type:</strong> {{ formatMeetType(meet.type) }}
+          <strong>{{ $t("meets.type") }}:</strong> {{ formatMeetType(meet.type) }}
         </span>
         <span v-if="meet.systemYear">
-          <strong>Year:</strong> {{ meet.systemYear }}
+          <strong>{{ $t("meets.year") }}:</strong> {{ meet.systemYear }}
         </span>
       </div>
     </div>
@@ -25,19 +25,19 @@
         :to="`/meets/${slug}`"
         :class="getTabClass('scoresheet')"
       >
-        Scoresheet
+        {{ $t("meets.scoresheet") }}
       </NuxtLink>
       <NuxtLink
         :to="`/meets/${slug}/detailed`"
         :class="getTabClass('detailed')"
       >
-        Detailed Scoresheet
+        {{ $t("meets.detailedScoresheet") }}
       </NuxtLink>
       <NuxtLink
         :to="`/meets/${slug}/gl-ranking`"
         :class="getTabClass('gl-ranking')"
       >
-        Athlete Ranked by GL Point
+        {{ $t("meets.athleteRankedByGlPoint") }}
       </NuxtLink>
     </div>
   </div>
@@ -68,16 +68,18 @@ const formatDate = (date: string | null): string => {
   }
 }
 
+const { t } = useI18n()
+
 const formatMeetType = (type: MeetType | null): string => {
   if (!type) return "-"
-  const typeMap: Record<MeetType, string> = {
-    national: "National",
-    amateur: "Amateur",
-    professional: "Professional",
-    national_qualifier: "National Qualifier",
-    other: "Other"
+  const keyMap: Record<MeetType, string> = {
+    national: "general.meetTypeNational",
+    amateur: "general.meetTypeAmateur",
+    professional: "general.meetTypeProfessional",
+    national_qualifier: "general.meetTypeNationalQualifier",
+    other: "general.meetTypeOther"
   }
-  return typeMap[type] || type
+  return t(keyMap[type] || "meets.type")
 }
 
 const getTabClass = (tabValue: string): string => {

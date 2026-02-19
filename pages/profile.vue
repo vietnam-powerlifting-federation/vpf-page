@@ -7,12 +7,12 @@
         <!-- Loading State -->
         <div v-if="pending" class="max-w-4xl mx-auto text-center py-12">
           <ProgressSpinner />
-          <p class="mt-4 text-gray-600 dark:text-gray-400">{{ $t("general.loading") }}</p>
+          <p class="mt-4 text-surface-600 dark:text-surface-400">{{ $t("general.loading") }}</p>
         </div>
 
         <!-- Error State -->
         <div v-else-if="error" class="max-w-4xl mx-auto text-center py-12">
-          <p class="text-red-600 dark:text-red-400">{{ $t("general.error") }}</p>
+          <p class="text-error">{{ $t("general.error") }}</p>
         </div>
 
         <!-- Profile Form -->
@@ -36,9 +36,9 @@
                       <div class="space-y-6 pt-4">
                         <!-- Email -->
                         <div>
-                          <label for="email" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          <label for="email" class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
                             {{ $t("profile.email") }}
-                            <span class="text-red-500 ml-1">*</span>
+                            <span class="text-error ml-1">*</span>
                           </label>
                           <InputText
                             id="email"
@@ -52,9 +52,9 @@
 
                         <!-- Nationality -->
                         <div>
-                          <label for="nationality" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          <label for="nationality" class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
                             {{ $t("profile.nationality") }}
-                            <span class="text-red-500 ml-1">*</span>
+                            <span class="text-error ml-1">*</span>
                           </label>
                           <InputText
                             id="nationality"
@@ -67,9 +67,9 @@
 
                         <!-- Date of Birth (Year) -->
                         <div>
-                          <label for="dob" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          <label for="dob" class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
                             {{ $t("profile.dob") }}
-                            <span class="text-red-500 ml-1">*</span>
+                            <span class="text-error ml-1">*</span>
                           </label>
                           <InputNumber
                             id="dob"
@@ -84,9 +84,9 @@
 
                         <!-- Address -->
                         <div>
-                          <label for="address" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          <label for="address" class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
                             {{ $t("profile.address") }}
-                            <span class="text-red-500 ml-1">*</span>
+                            <span class="text-error ml-1">*</span>
                           </label>
                           <Textarea
                             id="address"
@@ -100,9 +100,9 @@
 
                         <!-- Phone Number -->
                         <div>
-                          <label for="phoneNumber" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          <label for="phoneNumber" class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
                             {{ $t("profile.phoneNumber") }}
-                            <span class="text-red-500 ml-1">*</span>
+                            <span class="text-error ml-1">*</span>
                           </label>
                           <InputText
                             id="phoneNumber"
@@ -115,7 +115,7 @@
 
                         <!-- Instagram Username -->
                         <div>
-                          <label for="instagramUsername" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          <label for="instagramUsername" class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
                             {{ $t("profile.instagramUsername") }}
                           </label>
                           <InputText
@@ -134,7 +134,7 @@
                       <div class="space-y-6 pt-4">
                         <!-- Squat Rack Pin -->
                         <div>
-                          <label for="squatRackPin" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          <label for="squatRackPin" class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
                             {{ $t("profile.squatRackPin") }}
                           </label>
                           <InputNumber
@@ -149,7 +149,7 @@
 
                         <!-- Bench Rack Pin -->
                         <div>
-                          <label for="benchRackPin" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          <label for="benchRackPin" class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
                             {{ $t("profile.benchRackPin") }}
                           </label>
                           <InputNumber
@@ -164,7 +164,7 @@
 
                         <!-- Bench Safety Pin -->
                         <div>
-                          <label for="benchSafetyPin" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          <label for="benchSafetyPin" class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
                             {{ $t("profile.benchSafetyPin") }}
                           </label>
                           <InputNumber
@@ -179,7 +179,7 @@
 
                         <!-- Bench Foot Block -->
                         <div>
-                          <label for="benchFootBlock" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          <label for="benchFootBlock" class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
                             {{ $t("profile.benchFootBlock") }}
                           </label>
                           <InputNumber

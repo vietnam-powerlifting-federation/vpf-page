@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl md:text-4xl font-bold mb-8 text-center">Athlete Rankings</h1>
+    <h1 class="text-3xl md:text-4xl font-bold mb-8 text-center text-primary">{{ $t("ranking.title") }}</h1>
     
     <!-- Filters -->
     <AthletesRankingFilter
@@ -25,13 +25,13 @@
           class="w-full"
           showGridlines
         >
-          <Column field="rank" header="#" :sortable="false" style="width: 5rem">
+          <Column field="rank" header="#" :sortable="false" style="width: 5rem" align="right">
             <template #body="{ data }">
               {{ data.rank }}
             </template>
           </Column>
           
-          <Column field="athleteName" header="Name" :sortable="false" style="min-width: 200px" frozen>
+          <Column field="athleteName" :header="$t('general.name')" :sortable="false" style="min-width: 200px" frozen>
             <template #body="{ data }">
               <NuxtLink
                 v-if="data.athlete"
@@ -40,53 +40,53 @@
               >
                 {{ data.athlete.fullName }}
               </NuxtLink>
-              <span v-else class="text-gray-400">-</span>
+              <span v-else class="text-surface-400">-</span>
             </template>
           </Column>
           
-          <Column field="weightClass" header="Class" :sortable="false" align="right" style="width: 8rem">
+          <Column field="weightClass" :header="$t('general.weightClass')" :sortable="false" align="right" style="width: 8rem">
             <template #body="{ data }">
               {{ formatWeightClass(data.weightClass, data.sex) }}
             </template>
           </Column>
           
-          <Column field="sex" header="Sport Gender" :sortable="false" align="right" style="width: 10rem">
+          <Column field="sex" :header="$t('general.sportGender')" :sortable="false" align="right" style="width: 10rem">
             <template #body="{ data }">
               {{ formatSex(data.sex) }}
             </template>
           </Column>
           
-          <Column field="division" header="Division" :sortable="false" align="right" style="width: 10rem">
+          <Column field="division" :header="$t('general.division')" :sortable="false" align="right" style="width: 10rem">
             <template #body="{ data }">
               {{ formatDivision(data.division) }}
             </template>
           </Column>
           
-          <Column field="bestSquat" header="Squat" :sortable="false" align="right" style="width: 8rem">
+          <Column field="bestSquat" :header="$t('general.squat')" :sortable="false" align="right" style="width: 8rem">
             <template #body="{ data }">
               {{ formatWeight(data.bestSquat) }}
             </template>
           </Column>
           
-          <Column field="bestBench" header="Bench" :sortable="false" align="right" style="width: 8rem">
+          <Column field="bestBench" :header="$t('general.bench')" :sortable="false" align="right" style="width: 8rem">
             <template #body="{ data }">
               {{ formatWeight(data.bestBench) }}
             </template>
           </Column>
           
-          <Column field="bestDeadlift" header="Deadlift" :sortable="false" align="right" style="width: 8rem">
+          <Column field="bestDeadlift" :header="$t('general.deadlift')" :sortable="false" align="right" style="width: 8rem">
             <template #body="{ data }">
               {{ formatWeight(data.bestDeadlift) }}
             </template>
           </Column>
           
-          <Column field="total" header="Total" :sortable="false" align="right" style="width: 8rem">
+          <Column field="total" :header="$t('general.total')" :sortable="false" align="right" style="width: 8rem">
             <template #body="{ data }">
               {{ formatWeight(data.total) }}
             </template>
           </Column>
           
-          <Column field="gl" header="GL" :sortable="false" align="right" style="width: 8rem">
+          <Column field="gl" :header="$t('general.gl')" :sortable="false" align="right" style="width: 8rem">
             <template #body="{ data }">
               {{ formatGL(data.gl) }}
             </template>
@@ -95,8 +95,8 @@
         <template #fallback>
           <div class="flex items-center justify-center py-12">
             <div class="text-center">
-              <div class="text-lg font-semibold mb-2 text">Loading rankings...</div>
-              <div class="text-sm text-gray-500">Please wait while we load the data</div>
+              <div class="text-lg font-semibold mb-2 text-primary">{{ $t("ranking.loading") }}</div>
+              <div class="text-sm text-surface-500">{{ $t("general.pleaseWait") }}</div>
             </div>
           </div>
         </template>

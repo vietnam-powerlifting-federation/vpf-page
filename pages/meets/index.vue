@@ -2,20 +2,20 @@
   <div class="container mx-auto px-4 py-8">
     <div v-if="pending" class="flex items-center justify-center py-12">
       <div class="text-center">
-        <div class="text-lg font-semibold mb-2 text">Loading meets...</div>
-        <div class="text-sm text-gray-500">Please wait while we load the data</div>
+        <div class="text-lg font-semibold mb-2 text-primary">{{ $t("meets.loadingMeets") }}</div>
+        <div class="text-sm text-surface-500">{{ $t("general.pleaseWait") }}</div>
       </div>
     </div>
 
     <div v-else-if="error" class="text-center py-12">
-      <div class="text-lg font-semibold mb-2 text-red-500">Error loading meets</div>
-      <div class="text-sm text-gray-500">{{ error }}</div>
+      <div class="text-lg font-semibold mb-2 text-error">{{ $t("meets.errorLoadingMeets") }}</div>
+      <div class="text-sm text-surface-500">{{ error }}</div>
     </div>
 
     <div v-else>
       <!-- New Meets Section -->
       <div v-if="newMeets.length > 0" class="mb-12">
-        <h2 class="text-2xl md:text-3xl font-bold mb-6 text">Upcoming Competitions</h2>
+        <h2 class="text-2xl md:text-3xl font-bold mb-6 text-primary">{{ $t("meets.upcomingCompetitions") }}</h2>
         <div class="w-full my-4">
           <div
             v-for="meet in newMeets"
@@ -30,7 +30,7 @@
                 :alt="meet.meetName"
                 class="w-full h-full object-cover"
               >
-              <span v-else class="text-surface-500 dark:text-surface-400 text-sm">placeholder image</span>
+              <span v-else class="text-surface-500 dark:text-surface-400 text-sm">{{ $t("meets.placeholderImage") }}</span>
             </div>
             
             <!-- Meet Info -->
@@ -46,13 +46,13 @@
                   class="flex flex-wrap gap-x-4 gap-y-2 text-sm text-surface-600 dark:text-surface-400 flex-1"
                 >
                   <span v-if="meet.city">
-                    <strong>Location:</strong> {{ meet.city }}
+                    <strong>{{ $t("meets.location") }}:</strong> {{ meet.city }}
                   </span>
                   <span v-if="meet.hostDate">
-                    <strong>Date:</strong> {{ formatDate(meet.hostDate) }}
+                    <strong>{{ $t("meets.date") }}:</strong> {{ formatDate(meet.hostDate) }}
                   </span>
                   <span v-if="meet.closeRegistration">
-                    <strong>End registration date:</strong> {{ formatDate(meet.closeRegistration) }}
+                    <strong>{{ $t("meets.endRegistrationDate") }}:</strong> {{ formatDate(meet.closeRegistration) }}
                   </span>
                 </div>
 
@@ -60,12 +60,12 @@
                 <div class="flex gap-2 shrink-0">
                   <Button
                     v-if="meet.allowSpotterRegistration"
-                    label="Register as spotter"
+                    :label="$t('meets.registerAsSpotter')"
                     outlined
                     @click.stop="handleSpotterRegistration(meet)"
                   />
                   <Button
-                    label="Register now"
+                    :label="$t('meets.registerNow')"
                     @click.stop="handleRegistration(meet)"
                   />
                 </div>
@@ -78,7 +78,7 @@
 
       <!-- Old Meets Section -->
       <div v-if="oldMeets.length > 0">
-        <h2 class="text-2xl md:text-3xl font-bold mb-6 text">Old Competitions</h2>
+        <h2 class="text-2xl md:text-3xl font-bold mb-6 text-primary">{{ $t("meets.oldCompetitions") }}</h2>
         <div class="bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-lg overflow-hidden">
           <ClientOnly>
             <div class="old-meets-table-wrapper">
@@ -90,7 +90,7 @@
                 class="w-full old-meets-table"
                 show-gridlines
               >
-                <Column field="meetName" header="Meet Name" :sortable="true" style="min-width: 200px">
+                <Column field="meetName" :header="$t('meets.meetName')" :sortable="true" style="min-width: 200px">
                   <template #body="{ data }">
                     <span 
                       class="text-primary cursor-pointer" 
@@ -101,7 +101,7 @@
                   </template>
                 </Column>
                 
-                <Column field="city" header="Location" :sortable="true" style="min-width: 150px">
+                <Column field="city" :header="$t('meets.location')" :sortable="true" style="min-width: 150px">
                   <template #body="{ data }">
                     <span 
                       class="cursor-pointer" 
@@ -112,7 +112,7 @@
                   </template>
                 </Column>
                 
-                <Column field="hostDate" header="Date" :sortable="true" style="min-width: 150px">
+                <Column field="hostDate" :header="$t('meets.date')" :sortable="true" style="min-width: 150px">
                   <template #body="{ data }">
                     <span 
                       class="cursor-pointer" 
@@ -123,7 +123,7 @@
                   </template>
                 </Column>
                 
-                <Column field="type" header="Type" :sortable="true" style="min-width: 120px">
+                <Column field="type" :header="$t('meets.type')" :sortable="true" style="min-width: 120px">
                   <template #body="{ data }">
                     <span 
                       class="cursor-pointer" 
@@ -134,7 +134,7 @@
                   </template>
                 </Column>
                 
-                <Column field="systemYear" header="Year" :sortable="true" style="min-width: 80px" align="right">
+                <Column field="systemYear" :header="$t('meets.year')" :sortable="true" style="min-width: 80px" align="right">
                   <template #body="{ data }">
                     <span 
                       class="cursor-pointer" 
@@ -149,7 +149,7 @@
             <template #fallback>
               <div class="flex items-center justify-center py-12">
                 <div class="text-center">
-                  <div class="text-lg font-semibold mb-2 text">Loading table...</div>
+                  <div class="text-lg font-semibold mb-2 text-primary">{{ $t("meets.loadingTable") }}</div>
                 </div>
               </div>
             </template>
@@ -159,8 +159,8 @@
 
       <!-- Empty State -->
       <div v-if="newMeets.length === 0 && oldMeets.length === 0" class="text-center py-12">
-        <div class="text-lg font-semibold mb-2 text">No meets found</div>
-        <div class="text-sm text-gray-500">There are no meets available at this time.</div>
+        <div class="text-lg font-semibold mb-2 text-primary">{{ $t("meets.noMeetsFound") }}</div>
+        <div class="text-sm text-surface-500">{{ $t("meets.noMeetsAvailable") }}</div>
       </div>
     </div>
   </div>

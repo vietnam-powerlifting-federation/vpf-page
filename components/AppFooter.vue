@@ -95,13 +95,14 @@ import { CONTACT_INFO } from "~/lib/config/contact"
 }
 
 .footer-link {
-  color: rgba(255, 255, 255, 0.8);
+  color: white;
+  opacity: 0.8;
   text-decoration: none;
-  transition: color 0.3s ease;
+  transition: color 0.3s ease, opacity 0.3s ease;
 }
 
 .footer-link:hover {
-  color: white;
+  opacity: 1;
 }
 
 .social-links {
@@ -111,29 +112,32 @@ import { CONTACT_INFO } from "~/lib/config/contact"
 }
 
 .social-link {
-  color: rgba(255, 255, 255, 0.8);
+  color: white;
+  opacity: 0.8;
   text-decoration: none;
-  transition: color 0.3s ease;
+  transition: color 0.3s ease, opacity 0.3s ease;
 }
 
 .social-link:hover {
-  color: white;
+  opacity: 1;
 }
 
 .footer-text {
-  color: rgba(255, 255, 255, 0.8);
+  color: white;
+  opacity: 0.8;
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
 }
 
 .footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgb(255 255 255 / 0.1);
   padding-top: 1rem;
   text-align: center;
 }
 
 .copyright {
-  color: rgba(255, 255, 255, 0.6);
+  color: white;
+  opacity: 0.6;
   font-size: 0.9rem;
   margin: 0;
 }

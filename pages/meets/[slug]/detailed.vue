@@ -2,14 +2,14 @@
   <div class="container mx-auto px-4 py-8">
     <div v-if="pending" class="flex items-center justify-center py-12">
       <div class="text-center">
-        <div class="text-lg font-semibold mb-2 text">Loading meet details...</div>
-        <div class="text-sm text-gray-500">Please wait while we load the data</div>
+        <div class="text-lg font-semibold mb-2 text-primary">{{ $t("meets.loadingMeetDetails") }}</div>
+        <div class="text-sm text-surface-500">{{ $t("general.pleaseWait") }}</div>
       </div>
     </div>
 
     <div v-else-if="error || !meet" class="text-center py-12">
-      <div class="text-lg font-semibold mb-2 text-red-500">Error loading meet</div>
-      <div class="text-sm text-gray-500">{{ error || "Meet not found" }}</div>
+      <div class="text-lg font-semibold mb-2 text-error">{{ $t("meets.errorLoadingMeet") }}</div>
+      <div class="text-sm text-surface-500">{{ error || $t("meets.meetNotFound") }}</div>
     </div>
 
     <div v-else>
@@ -45,7 +45,7 @@
                     </template>
                   </Column>
                   
-                  <Column field="athleteName" header="Name" :sortable="false" style="min-width: 180px" frozen>
+                  <Column field="athleteName" :header="$t('general.name')" :sortable="false" style="min-width: 180px" frozen>
                     <template #body="{ data }">
                       <NuxtLink
                         v-if="data.athlete"
@@ -54,11 +54,11 @@
                       >
                         {{ data.athlete.fullName }}
                       </NuxtLink>
-                      <span v-else class="text-gray-400">-</span>
+                      <span v-else class="text-surface-400">-</span>
                     </template>
                   </Column>
                   
-                  <Column field="bodyWeight" header="BW" :sortable="true" align="right" style="width: 4rem">
+                  <Column field="bodyWeight" :header="$t('meets.bw')" :sortable="true" align="right" style="width: 4rem">
                     <template #body="{ data }">
                       {{ formatWeight(data.bodyWeight) }}
                     </template>
@@ -88,7 +88,7 @@
                     </template>
                   </Column>
                   
-                  <Column field="squatPlacement" header="Pl." :sortable="true" align="right" style="width: 3rem">
+                  <Column field="squatPlacement" :header="$t('meets.pl')" :sortable="true" align="right" style="width: 3rem">
                     <template #body="{ data }">
                       {{ formatPlacement(data.squatPlacement) }}
                     </template>
@@ -118,7 +118,7 @@
                     </template>
                   </Column>
                   
-                  <Column field="benchPlacement" header="Pl." :sortable="true" align="right" style="width: 3rem">
+                  <Column field="benchPlacement" :header="$t('meets.pl')" :sortable="true" align="right" style="width: 3rem">
                     <template #body="{ data }">
                       {{ formatPlacement(data.benchPlacement) }}
                     </template>
@@ -148,7 +148,7 @@
                     </template>
                   </Column>
                   
-                  <Column field="deadliftPlacement" header="Pl." :sortable="true" align="right" style="width: 3rem">
+                  <Column field="deadliftPlacement" :header="$t('meets.pl')" :sortable="true" align="right" style="width: 3rem">
                     <template #body="{ data }">
                       {{ formatPlacement(data.deadliftPlacement) }}
                     </template>
@@ -163,7 +163,7 @@
                 <template #fallback>
                   <div class="flex items-center justify-center py-12">
                     <div class="text-center">
-                      <div class="text-lg font-semibold mb-2 text">Loading detailed scoresheet...</div>
+                      <div class="text-lg font-semibold mb-2 text-primary">{{ $t("meets.loadingDetailedScoresheet") }}</div>
                     </div>
                   </div>
                 </template>
@@ -265,10 +265,10 @@ const formatAttempt = (attempt: number | null | undefined): string => {
 
 const getAttemptCellClass = (attempt: number | null | undefined): string => {
   if (attempt === null || attempt === undefined || attempt <= 0) {
-    return "bg-pink-100 text-pink-800 px-1 py-0.5 rounded"
+    return "bg-surface-200 text-surface-700 px-1 py-0.5 rounded"
   }
   
-  return "bg-green-100 text-green-800 font-semibold px-1 py-0.5 rounded"
+  return "bg-primary/10 text-primary font-semibold px-1 py-0.5 rounded"
 }
 
 useSeoMeta({

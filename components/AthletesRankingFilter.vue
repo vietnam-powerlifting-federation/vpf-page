@@ -1,76 +1,76 @@
 <template>
   <div class="flex flex-wrap gap-4 items-end p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700">
     <div class="flex-1 min-w-[200px]">
-      <label class="block text-sm font-medium mb-2 text">Search Athlete</label>
+      <label class="block text-sm font-medium mb-2 text-surface-700">{{ $t("ranking.searchAthlete") }}</label>
       <InputText
         :model-value="search"
-        placeholder="Search by name or VPF ID..."
+        :placeholder="$t('ranking.searchPlaceholder')"
         class="w-full"
         @update:model-value="$emit('update:search', $event)"
       />
     </div>
 
     <div class="min-w-[180px]">
-      <label class="block text-sm font-medium mb-2 text">Sort By</label>
+      <label class="block text-sm font-medium mb-2 text-surface-700">{{ $t("ranking.sortBy") }}</label>
       <Select
         :model-value="sort"
         :options="sortOptions"
         option-label="label"
         option-value="value"
-        placeholder="Sort by..."
+        :placeholder="$t('ranking.sortPlaceholder')"
         class="w-full"
         @update:model-value="$emit('update:sort', $event)"
       />
     </div>
 
     <div class="min-w-[150px]">
-      <label class="block text-sm font-medium mb-2 text">Competition Type</label>
+      <label class="block text-sm font-medium mb-2 text-surface-700">{{ $t("ranking.competitionType") }}</label>
       <Select
         :model-value="meetType"
         :options="meetTypeOptions"
         option-label="label"
         option-value="value"
-        placeholder="All"
+        :placeholder="$t('ranking.filterAll')"
         class="w-full"
         @update:model-value="$emit('update:meetType', $event)"
       />
     </div>
 
     <div class="min-w-[150px]">
-      <label class="block text-sm font-medium mb-2 text">Sport Gender</label>
+      <label class="block text-sm font-medium mb-2 text-surface-700">{{ $t("general.sportGender") }}</label>
       <Select
         :model-value="sex"
         :options="sexOptions"
         option-label="label"
         option-value="value"
-        placeholder="All"
+        :placeholder="$t('ranking.filterAll')"
         class="w-full"
         @update:model-value="$emit('update:sex', $event)"
       />
     </div>
 
     <div class="min-w-[150px]">
-      <label class="block text-sm font-medium mb-2 text">Division</label>
+      <label class="block text-sm font-medium mb-2 text-surface-700">{{ $t("general.division") }}</label>
       <Select
         :model-value="division"
         :options="divisionOptions"
         option-label="label"
         option-value="value"
-        placeholder="All"
+        :placeholder="$t('ranking.filterAll')"
         class="w-full"
         @update:model-value="$emit('update:division', $event)"
       />
     </div>
 
     <div class="min-w-[180px]">
-      <label class="block text-sm font-medium mb-2 text">Weight Class</label>
+      <label class="block text-sm font-medium mb-2 text-surface-700">{{ $t("general.weightClass") }}</label>
       <Select
         :model-value="weightClass"
         :options="weightClassOptions"
         option-label="label"
         option-value="value"
         :compare-with="compareWeightClass"
-        placeholder="All"
+        :placeholder="$t('ranking.filterAll')"
         class="w-full"
         @update:model-value="$emit('update:weightClass', $event)"
       />
@@ -103,57 +103,59 @@ defineEmits<{
   "update:meetType": [value: MeetType | null]
 }>()
 
-const sortOptions = [
-  { label: "GL Point", value: "gl" },
-  { label: "Squat", value: "bestSquat" },
-  { label: "Bench", value: "bestBench" },
-  { label: "Deadlift", value: "bestDeadlift" },
-  { label: "Total", value: "total" }
-]
+const { t } = useI18n()
 
-const meetTypeOptions = [
-  { label: "All", value: null },
-  { label: "National Championship", value: "national" },
-  { label: "National Qualifier", value: "national_qualifier" },
-  { label: "Amateur", value: "amateur" }
-]
+const sortOptions = computed(() => [
+  { label: t("ranking.sortGlPoint"), value: "gl" },
+  { label: t("general.squat"), value: "bestSquat" },
+  { label: t("general.bench"), value: "bestBench" },
+  { label: t("general.deadlift"), value: "bestDeadlift" },
+  { label: t("general.total"), value: "total" }
+])
 
-const sexOptions = [
-  { label: "All", value: null },
-  { label: "Male", value: "male" },
-  { label: "Female", value: "female" }
-]
+const meetTypeOptions = computed(() => [
+  { label: t("ranking.filterAll"), value: null },
+  { label: t("general.meetTypeNational"), value: "national" },
+  { label: t("general.meetTypeNationalQualifier"), value: "national_qualifier" },
+  { label: t("general.meetTypeAmateur"), value: "amateur" }
+])
 
-const divisionOptions = [
-  { label: "All", value: null },
-  { label: "Open", value: "open" },
-  { label: "Junior", value: "jr" },
-  { label: "Sub-Junior", value: "subjr" },
-  { label: "Master I", value: "mas1" },
-  { label: "Master II", value: "mas2" },
-  { label: "Master III", value: "mas3" },
-  { label: "Master IV", value: "mas4" }
-]
+const sexOptions = computed(() => [
+  { label: t("ranking.filterAll"), value: null },
+  { label: t("general.male"), value: "male" },
+  { label: t("general.female"), value: "female" }
+])
 
-const weightClassOptions = [
-  { label: "All", value: null },
-  { label: "Male 59kg", value: { weight: 59, sex: "male" } },
-  { label: "Male 66kg", value: { weight: 66, sex: "male" } },
-  { label: "Male 74kg", value: { weight: 74, sex: "male" } },
-  { label: "Male 83kg", value: { weight: 83, sex: "male" } },
-  { label: "Male 93kg", value: { weight: 93, sex: "male" } },
-  { label: "Male 105kg", value: { weight: 105, sex: "male" } },
-  { label: "Male 120kg", value: { weight: 120, sex: "male" } },
-  { label: "Male 120+kg", value: { weight: 999, sex: "male" } },
-  { label: "Female 47kg", value: { weight: 47, sex: "female" } },
-  { label: "Female 52kg", value: { weight: 52, sex: "female" } },
-  { label: "Female 57kg", value: { weight: 57, sex: "female" } },
-  { label: "Female 63kg", value: { weight: 63, sex: "female" } },
-  { label: "Female 69kg", value: { weight: 69, sex: "female" } },
-  { label: "Female 76kg", value: { weight: 76, sex: "female" } },
-  { label: "Female 84kg", value: { weight: 84, sex: "female" } },
-  { label: "Female 84+kg", value: { weight: 999, sex: "female" } }
-]
+const divisionOptions = computed(() => [
+  { label: t("ranking.filterAll"), value: null },
+  { label: t("general.divisionOpen"), value: "open" },
+  { label: t("general.divisionJunior"), value: "jr" },
+  { label: t("general.divisionSubJunior"), value: "subjr" },
+  { label: t("general.divisionMaster1"), value: "mas1" },
+  { label: t("general.divisionMaster2"), value: "mas2" },
+  { label: t("general.divisionMaster3"), value: "mas3" },
+  { label: t("general.divisionMaster4"), value: "mas4" }
+])
+
+const weightClassOptions = computed(() => [
+  { label: t("ranking.filterAll"), value: null },
+  { label: `${t("general.male")} 59kg`, value: { weight: 59, sex: "male" } },
+  { label: `${t("general.male")} 66kg`, value: { weight: 66, sex: "male" } },
+  { label: `${t("general.male")} 74kg`, value: { weight: 74, sex: "male" } },
+  { label: `${t("general.male")} 83kg`, value: { weight: 83, sex: "male" } },
+  { label: `${t("general.male")} 93kg`, value: { weight: 93, sex: "male" } },
+  { label: `${t("general.male")} 105kg`, value: { weight: 105, sex: "male" } },
+  { label: `${t("general.male")} 120kg`, value: { weight: 120, sex: "male" } },
+  { label: `${t("general.male")} 120+kg`, value: { weight: 999, sex: "male" } },
+  { label: `${t("general.female")} 47kg`, value: { weight: 47, sex: "female" } },
+  { label: `${t("general.female")} 52kg`, value: { weight: 52, sex: "female" } },
+  { label: `${t("general.female")} 57kg`, value: { weight: 57, sex: "female" } },
+  { label: `${t("general.female")} 63kg`, value: { weight: 63, sex: "female" } },
+  { label: `${t("general.female")} 69kg`, value: { weight: 69, sex: "female" } },
+  { label: `${t("general.female")} 76kg`, value: { weight: 76, sex: "female" } },
+  { label: `${t("general.female")} 84kg`, value: { weight: 84, sex: "female" } },
+  { label: `${t("general.female")} 84+kg`, value: { weight: 999, sex: "female" } }
+])
 
 // Compare function for weight class objects
 const compareWeightClass = (a: { weight: number | null; sex: Sex | null } | null, b: { weight: number | null; sex: Sex | null } | null): boolean => {

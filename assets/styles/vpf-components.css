@@ -22,7 +22,7 @@
   padding: 0.5rem 1rem;
   text-align: left;
   font-weight: 600;
-  background-color: #f3f4f6;
+  background-color: var(--p-surface-100);
 }
   
   

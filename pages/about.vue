@@ -3,7 +3,7 @@
     <section class="py-12 md:py-16">
       <div class="container mx-auto px-4">
         <h1 class="text-3xl md:text-4xl font-bold mb-4 text-center text-primary">{{ $t("about.title") }}</h1>
-        <p class="text-lg md:text-xl text-gray-600 mb-12 text-center">{{ $t("home.description") }}</p>
+        <p class="text-lg md:text-xl text-surface-600 mb-12 text-center">{{ $t("home.description") }}</p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
           <!-- Mission -->

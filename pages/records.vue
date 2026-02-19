@@ -32,7 +32,7 @@
               {{ $t("records.recordHistory") }}
             </SecondaryButton>
           </div>
-          <p v-if="viewMode === 'history'" class="text-sm text-gray-600 dark:text-gray-400 text-center mt-2">
+          <p v-if="viewMode === 'history'" class="text-sm text-surface-600 dark:text-surface-400 text-center mt-2">
             {{ $t("records.historyDescription") }}
           </p>
         </div>
@@ -41,8 +41,8 @@
         <div class="max-w-5xl mx-auto mb-8">
           <div class="flex flex-wrap gap-4 items-end">
             <div class="flex-1 min-w-[200px]">
-              <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                {{ $t("records.sportGender") }}
+              <label class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
+                {{ $t("general.sportGender") }}
               </label>
               <Select
                 v-model="selectedSex"
@@ -55,8 +55,8 @@
               />
             </div>
             <div class="flex-1 min-w-[200px]">
-              <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                {{ $t("records.division") }}
+              <label class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
+                {{ $t("general.division") }}
               </label>
               <Select
                 v-model="selectedDivision"
@@ -69,8 +69,8 @@
               />
             </div>
             <div class="flex-1 min-w-[200px]">
-              <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                {{ $t("records.year") }}
+              <label class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
+                {{ $t("general.year") }}
               </label>
               <Select
                 v-model="selectedYear"
@@ -88,27 +88,27 @@
         <!-- Loading State -->
         <div v-if="displayPending" class="max-w-5xl mx-auto text-center py-12">
           <ProgressSpinner />
-          <p class="mt-4 text-gray-600">{{ $t("general.loading") }}</p>
+          <p class="mt-4 text-surface-600">{{ $t("general.loading") }}</p>
         </div>
 
         <!-- Error State -->
         <div v-else-if="displayError" class="max-w-5xl mx-auto text-center py-12">
-          <p class="text-red-600">{{ $t("general.error") }}</p>
+          <p class="text-error">{{ $t("general.error") }}</p>
         </div>
 
         <!-- Records Tables -->
         <div v-else-if="displayData" class="max-w-5xl mx-auto">
           <!-- History Mode: Show meet info if available -->
-          <div v-if="viewMode === 'history' && historyData?.data?.meet" class="mb-8 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+          <div v-if="viewMode === 'history' && historyData?.data?.meet" class="mb-8 p-4 bg-surface-100 dark:bg-surface-800 rounded-lg">
             <h3 class="text-lg font-semibold mb-2">{{ historyData.data.meet.meetName }}</h3>
-            <p v-if="historyData.data.meet.hostDate" class="text-sm text-gray-600 dark:text-gray-400">
-              {{ $t("records.date") }}: {{ formatDate(historyData.data.meet.hostDate) }}
+            <p v-if="historyData.data.meet.hostDate" class="text-sm text-surface-600 dark:text-surface-400">
+              {{ $t("general.date") }}: {{ formatDate(historyData.data.meet.hostDate) }}
             </p>
           </div>
 
           <!-- No records message for history -->
           <div v-if="viewMode === 'history' && (!historyData?.data?.records || historyData.data.records.length === 0)" class="text-center py-12">
-            <p class="text-gray-600 dark:text-gray-400">{{ $t("records.noHistoryFound") }}</p>
+            <p class="text-surface-600 dark:text-surface-400">{{ $t("records.noHistoryFound") }}</p>
           </div>
 
           <!-- History Mode: Show list view -->
@@ -123,7 +123,7 @@
           <!-- Current Records Mode: Show table view -->
           <!-- Squat Records -->
           <div v-if="viewMode === 'current' && displayRecords.squat.length > 0" class="mb-12">
-            <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("records.squat") }}</h2>
+            <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("general.squat") }}</h2>
             <RecordsTable
               :records="displayRecords.squat"
               :athletes="displayAthletes"
@@ -135,7 +135,7 @@
 
           <!-- Bench Press Records -->
           <div v-if="viewMode === 'current' && displayRecords.bench.length > 0" class="mb-12">
-            <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("records.benchPress") }}</h2>
+            <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("general.benchPress") }}</h2>
             <RecordsTable
               :records="displayRecords.bench"
               :athletes="displayAthletes"
@@ -147,7 +147,7 @@
 
           <!-- Deadlift Records -->
           <div v-if="viewMode === 'current' && displayRecords.deadlift.length > 0" class="mb-12">
-            <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("records.deadlift") }}</h2>
+            <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("general.deadlift") }}</h2>
             <RecordsTable
               :records="displayRecords.deadlift"
               :athletes="displayAthletes"
@@ -159,7 +159,7 @@
 
           <!-- Total Records -->
           <div v-if="viewMode === 'current' && displayRecords.total.length > 0" class="mb-12">
-            <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("records.total") }}</h2>
+            <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("general.total") }}</h2>
             <RecordsTable
               :records="displayRecords.total"
               :athletes="displayAthletes"

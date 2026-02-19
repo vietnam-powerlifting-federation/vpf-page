@@ -52,7 +52,7 @@ const menuItems = computed(() => [
 const localeOptions = computed(() => {
   return locales.value.map((loc) => ({
     code: loc.code,
-    label: loc.code === "en" ? "English" : "Tiếng Việt",
+    label: loc.code === "en" ? t("language.english") : t("language.vietnamese"),
   }))
 })
 
@@ -64,7 +64,7 @@ const switchLocale = (newLocale) => {
 <style scoped>
 .header {
   background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--p-surface-200);
   position: sticky;
   top: 0;
   z-index: 1000;

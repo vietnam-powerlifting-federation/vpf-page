@@ -8,7 +8,7 @@
         <div class="text-text mx-auto">
           <ContentRenderer v-if="page" :value="page" class="prose prose-2xl max-w-none"/>
           <div v-else class="text-center text-fg">
-            {{ $t("aboutVpf.notFound", "Nội dung đang được cập nhật.") }}
+            {{ $t("aboutVpf.notFound") }}
           </div>
         </div>
       </div>

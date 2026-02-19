@@ -2,14 +2,14 @@
   <div class="container mx-auto px-4 py-8">
     <div v-if="pending" class="flex items-center justify-center py-12">
       <div class="text-center">
-        <div class="text-lg font-semibold mb-2 text">Loading meet details...</div>
-        <div class="text-sm text-gray-500">Please wait while we load the data</div>
+        <div class="text-lg font-semibold mb-2 text-primary">{{ $t("meets.loadingMeetDetails") }}</div>
+        <div class="text-sm text-surface-500">{{ $t("general.pleaseWait") }}</div>
       </div>
     </div>
 
     <div v-else-if="error || !meet" class="text-center py-12">
-      <div class="text-lg font-semibold mb-2 text-red-500">Error loading meet</div>
-      <div class="text-sm text-gray-500">{{ error || "Meet not found" }}</div>
+      <div class="text-lg font-semibold mb-2 text-error">{{ $t("meets.errorLoadingMeet") }}</div>
+      <div class="text-sm text-surface-500">{{ error || $t("meets.meetNotFound") }}</div>
     </div>
 
     <div v-else>
@@ -40,13 +40,13 @@
                       </td>
                     </tr>
                   </template>
-                  <Column field="placement" header="Place" :sortable="true" style="width: 5rem" align="right">
+                  <Column field="placement" :header="$t('meets.place')" :sortable="true" style="width: 5rem" align="right">
                     <template #body="{ data }">
                       {{ formatPlacement(data.placement) }}
                     </template>
                   </Column>
                   
-                  <Column field="athleteName" header="Name" :sortable="false" style="min-width: 200px" frozen>
+                  <Column field="athleteName" :header="$t('general.name')" :sortable="false" style="min-width: 200px" frozen>
                     <template #body="{ data }">
                       <NuxtLink
                         v-if="data.athlete"
@@ -55,65 +55,65 @@
                       >
                         {{ data.athlete.fullName }}
                       </NuxtLink>
-                      <span v-else class="text-gray-400">-</span>
+                      <span v-else class="text-surface-400">-</span>
                     </template>
                   </Column>
                   
-                  <Column field="sex" header="Gender" :sortable="false" align="right" style="width: 10rem">
+                  <Column field="sex" :header="$t('meets.gender')" :sortable="false" align="right" style="width: 10rem">
                     <template #body="{ data }">
                       {{ formatSex(data.sex) }}
                     </template>
                   </Column>
                   
-                  <Column field="division" header="Division" :sortable="false" align="right" style="width: 10rem">
+                  <Column field="division" :header="$t('general.division')" :sortable="false" align="right" style="width: 10rem">
                     <template #body="{ data }">
                       {{ formatDivision(data.division) }}
                     </template>
                   </Column>
                   
-                  <Column field="squatPlacement" header="Squat Place" :sortable="true" align="right" style="width: 8rem">
+                  <Column field="squatPlacement" :header="$t('meets.squatPlace')" :sortable="true" align="right" style="width: 8rem">
                     <template #body="{ data }">
                       {{ formatPlacement(data.squatPlacement) }}
                     </template>
                   </Column>
                   
-                  <Column field="bestSquat" header="Squat" :sortable="true" align="right" style="width: 8rem">
+                  <Column field="bestSquat" :header="$t('general.squat')" :sortable="true" align="right" style="width: 8rem">
                     <template #body="{ data }">
                       {{ formatWeight(data.bestSquat) }}
                     </template>
                   </Column>
                   
-                  <Column field="benchPlacement" header="Bench Place" :sortable="true" align="right" style="width: 8rem">
+                  <Column field="benchPlacement" :header="$t('meets.benchPlace')" :sortable="true" align="right" style="width: 8rem">
                     <template #body="{ data }">
                       {{ formatPlacement(data.benchPlacement) }}
                     </template>
                   </Column>
                   
-                  <Column field="bestBench" header="Bench" :sortable="true" align="right" style="width: 8rem">
+                  <Column field="bestBench" :header="$t('general.bench')" :sortable="true" align="right" style="width: 8rem">
                     <template #body="{ data }">
                       {{ formatWeight(data.bestBench) }}
                     </template>
                   </Column>
                   
-                  <Column field="deadliftPlacement" header="Deadlift Place" :sortable="true" align="right" style="width: 8rem">
+                  <Column field="deadliftPlacement" :header="$t('meets.deadliftPlace')" :sortable="true" align="right" style="width: 8rem">
                     <template #body="{ data }">
                       {{ formatPlacement(data.deadliftPlacement) }}
                     </template>
                   </Column>
                   
-                  <Column field="bestDeadlift" header="Deadlift" :sortable="true" align="right" style="width: 8rem">
+                  <Column field="bestDeadlift" :header="$t('general.deadlift')" :sortable="true" align="right" style="width: 8rem">
                     <template #body="{ data }">
                       {{ formatWeight(data.bestDeadlift) }}
                     </template>
                   </Column>
                   
-                  <Column field="total" header="Total" :sortable="true" align="right" style="width: 8rem">
+                  <Column field="total" :header="$t('general.total')" :sortable="true" align="right" style="width: 8rem">
                     <template #body="{ data }">
                       {{ formatWeight(data.total) }}
                     </template>
                   </Column>
                   
-                  <Column field="gl" header="GL" :sortable="true" align="right" style="width: 8rem">
+                  <Column field="gl" :header="$t('general.gl')" :sortable="true" align="right" style="width: 8rem">
                     <template #body="{ data }">
                       {{ formatGL(data.gl) }}
                     </template>
@@ -122,7 +122,7 @@
                 <template #fallback>
                   <div class="flex items-center justify-center py-12">
                     <div class="text-center">
-                      <div class="text-lg font-semibold mb-2 text">Loading scoresheet...</div>
+                      <div class="text-lg font-semibold mb-2 text-primary">{{ $t("meets.loadingScoresheet") }}</div>
                     </div>
                   </div>
                 </template>
