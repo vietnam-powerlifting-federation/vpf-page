@@ -19,7 +19,8 @@ import {
   fixtureLegacyMeetResults,
 } from "../fixtures/data"
 
-const SALT_ROUNDS = 10
+/** Lower than production for faster test seed; only used in test setup. */
+const SALT_ROUNDS = 4
 
 const migrationsFolder = path.resolve(
   process.cwd(),
