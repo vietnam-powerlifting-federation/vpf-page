@@ -1,6 +1,3 @@
--- Current sql file was generated after introspecting the database
--- If you want to run this migration please uncomment this code before executing migrations
-/*
 CREATE TYPE "public"."division" AS ENUM('subjr', 'jr', 'open', 'mas1', 'mas2', 'mas3', 'mas4', 'guest');--> statement-breakpoint
 CREATE TYPE "public"."meet_type" AS ENUM('national', 'amateur', 'professional', 'national_qualifier', 'other');--> statement-breakpoint
 CREATE TYPE "public"."roles" AS ENUM('user', 'admin');--> statement-breakpoint
@@ -69,10 +66,10 @@ CREATE TABLE "legacy_meet_results" (
 	"sex" "sexes" NOT NULL,
 	"weight_class" integer NOT NULL,
 	"division" "division" NOT NULL,
-	"body_weight" numeric(5, 2) DEFAULT 'NULL',
-	"best_squat" numeric(5, 2) DEFAULT 'NULL',
-	"best_bench" numeric(5, 2) DEFAULT 'NULL',
-	"best_deadlift" numeric(5, 2) DEFAULT 'NULL',
+	"body_weight" numeric(5, 2),
+	"best_squat" numeric(5, 2),
+	"best_bench" numeric(5, 2),
+	"best_deadlift" numeric(5, 2),
 	"platform" text,
 	"session" text,
 	"flight" text,
@@ -90,15 +87,15 @@ CREATE TABLE "meet_results" (
 	"weight_class" integer NOT NULL,
 	"division" "division" NOT NULL,
 	"body_weight" numeric(5, 2) DEFAULT '0.0',
-	"squat1" numeric(5, 2) DEFAULT 'NULL',
-	"squat2" numeric(5, 2) DEFAULT 'NULL',
-	"squat3" numeric(5, 2) DEFAULT 'NULL',
-	"bench1" numeric(5, 2) DEFAULT 'NULL',
-	"bench2" numeric(5, 2) DEFAULT 'NULL',
-	"bench3" numeric(5, 2) DEFAULT 'NULL',
-	"deadlift1" numeric(5, 2) DEFAULT 'NULL',
-	"deadlift2" numeric(5, 2) DEFAULT 'NULL',
-	"deadlift3" numeric(5, 2) DEFAULT 'NULL',
+	"squat1" numeric(5, 2),
+	"squat2" numeric(5, 2),
+	"squat3" numeric(5, 2),
+	"bench1" numeric(5, 2),
+	"bench2" numeric(5, 2),
+	"bench3" numeric(5, 2),
+	"deadlift1" numeric(5, 2),
+	"deadlift2" numeric(5, 2),
+	"deadlift3" numeric(5, 2),
 	"platform" text,
 	"session" text,
 	"flight" text,
@@ -116,4 +113,3 @@ ALTER TABLE "legacy_meet_results" ADD CONSTRAINT "legacy_meet_result_vpf_id_fkey
 ALTER TABLE "meet_results" ADD CONSTRAINT "meet_result_meet_id_fkey" FOREIGN KEY ("meet_id") REFERENCES "public"."meets"("meet_id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "meet_results" ADD CONSTRAINT "meet_result_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("team_id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "meet_results" ADD CONSTRAINT "meet_result_vpf_id_fkey" FOREIGN KEY ("vpf_id") REFERENCES "public"."users"("vpf_id") ON DELETE cascade ON UPDATE cascade;
-*/

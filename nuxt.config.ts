@@ -5,11 +5,12 @@ import Aura from "@primeuix/themes/aura"
 export default defineNuxtConfig({
   compatibilityDate: "2026-01-02",
   modules: [
+    "@nuxt/test-utils/module",
     "@nuxt/eslint",
     "@nuxt/content",
     "@nuxtjs/i18n",
     "@nuxt/image",
-    "@nuxtjs/color-mode",
+    ...(process.env.VITEST === "true" ? [] : ["@nuxtjs/color-mode"]),
     "nuxt-link-checker",
     "@primevue/nuxt-module",
   ],
