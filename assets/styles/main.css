@@ -2,6 +2,8 @@
 @plugin "@tailwindcss/typography";
 @import "tailwindcss-primeui";
 
+@custom-variant dark (&:where(.dark, .dark *)); /* fuck */
+
 /* SVN-CenturyGothic Font Face Declarations */
 @font-face {
   font-family: "SVN-CenturyGothic";
