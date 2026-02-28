@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-wrap gap-4 items-end p-4 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700">
+  <div class="flex flex-wrap gap-4 items-end p-4 bg-surface-50 dark:bg-surface-900 rounded-lg border border-surface-200 dark:border-surface-700">
     <div class="flex-1 min-w-[200px]">
       <label class="block text-sm font-medium mb-2 text-surface-700">{{ $t("ranking.searchAthlete") }}</label>
       <InputText

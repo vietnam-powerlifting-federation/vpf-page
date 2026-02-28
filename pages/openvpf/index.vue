@@ -1,5 +1,6 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
+  <div class="min-h-full dark-bg">
+    <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl md:text-4xl font-bold mb-8 text-center text-primary">{{ $t("ranking.title") }}</h1>
     
     <!-- Filters -->
@@ -22,8 +23,7 @@
           :rows="50"
           :rows-per-page-options="[25, 50, 100]"
           striped-rows
-          class="w-full"
-          showGridlines
+          class="w-full border border-surface-200 dark:border-surface-700"
         >
           <Column field="rank" header="#" :sortable="false" style="width: 5rem" align="right">
             <template #body="{ data }">
@@ -101,6 +101,7 @@
           </div>
         </template>
       </ClientOnly>
+    </div>
     </div>
   </div>
 </template>
@@ -234,7 +235,6 @@ const resultsWithAthletes = computed(() => {
 // Final ranked results with search filtering
 const finalRankedResults = computed(() => {
   let filtered = resultsWithAthletes.value
-  console.log(filtered)
   
   if (filters.search.value) {
     const searchLower = filters.search.value.toLowerCase()

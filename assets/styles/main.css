@@ -2,8 +2,6 @@
 @plugin "@tailwindcss/typography";
 @import "tailwindcss-primeui";
 
-@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
-
 /* SVN-CenturyGothic Font Face Declarations */
 @font-face {
   font-family: "SVN-CenturyGothic";
@@ -221,5 +219,9 @@ body {
 
 .page-leave-to {
   transform: translateX(-100%);
+}
+
+.dark-bg {
+  background-color: var(--p-surface-950);
 }
 

@@ -3,18 +3,18 @@
   padding: 0.5rem 1rem; /* py-2 px-4 */
   text-align: left;
   font-weight: 600;
-  background-color: var(--p-surface-100);
+  border-color: var(--p-surface-700) !important;
 }
 
 .p-datatable-column-title {
-  font-weight: 600 !important;
-  color: var(--p-surface-950) !important;
+  font-weight: 700 !important;
 }
 
 /* Body cells */
 .p-datatable-tbody > tr > td {
   padding: 0.5rem 1rem;
   text-align: left;
+  border-color: var(--p-surface-700) !important;
 }
 
 /* Footer cells */
@@ -22,7 +22,6 @@
   padding: 0.5rem 1rem;
   text-align: left;
   font-weight: 600;
-  background-color: var(--p-surface-100);
 }
   
   

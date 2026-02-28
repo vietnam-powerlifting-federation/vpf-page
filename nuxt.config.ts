@@ -1,6 +1,59 @@
 import { defineNuxtConfig } from "nuxt/config"
 import tailwindcss from "@tailwindcss/vite"
-import Aura from "@primeuix/themes/aura"
+import Nora from "@primeuix/themes/nora"
+import { definePreset } from "@primeuix/themes"
+
+const MyPreset = definePreset(Nora, {
+  semantic: {
+    primary: {
+      50: "{rose.50}",
+      100: "{rose.100}",
+      200: "{rose.200}",
+      300: "{rose.300}",
+      400: "{rose.400}",
+      500: "{rose.500}",
+      600: "{rose.600}",
+      700: "{rose.700}",
+      800: "{rose.800}",
+      900: "{rose.900}",
+      950: "{rose.950}"
+    },
+    colorScheme: {
+      light: {
+        surface: {
+          0: "#ffffff",
+          50: "{zinc.50}",
+          100: "{zinc.100}",
+          200: "{zinc.200}",
+          300: "{zinc.300}",
+          400: "{zinc.400}",
+          500: "{zinc.500}",
+          600: "{zinc.600}",
+          700: "{zinc.700}",
+          800: "{zinc.800}",
+          900: "{zinc.900}",
+          950: "{zinc.950}"
+        }
+      },
+      dark: {
+        surface: {
+          0: "#ffffff",
+          50: "{neutral.50}",
+          100: "{neutral.100}",
+          200: "{neutral.200}",
+          300: "{neutral.300}",
+          400: "{neutral.400}",
+          500: "{neutral.500}",
+          600: "{neutral.500}",
+          700: "{neutral.600}",
+          800: "{neutral.700}",
+          900: "{neutral.800}",
+          950: "{neutral.900}"
+        }
+      }
+    }
+  }
+})
 
 export default defineNuxtConfig({
   compatibilityDate: "2026-01-02",
@@ -10,7 +63,6 @@ export default defineNuxtConfig({
     "@nuxt/content",
     "@nuxtjs/i18n",
     "@nuxt/image",
-    ...(process.env.VITEST === "true" ? [] : ["@nuxtjs/color-mode"]),
     "nuxt-link-checker",
     "@primevue/nuxt-module",
   ],
@@ -25,11 +77,11 @@ export default defineNuxtConfig({
   primevue: {
     options: {
       theme: {
-        preset: Aura,
+        preset: MyPreset,
         options: {
           prefix: "p",
-          darkModeSelector: "what",
-          cssLayer: false
+          darkModeSelector: ".dark",
+          cssLayer: false,
         }
       },
     }
