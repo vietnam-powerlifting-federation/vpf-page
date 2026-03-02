@@ -45,7 +45,10 @@ export const users = pgTable("users", {
   benchSafetyPin: smallint("bench_safety_pin").default(0),
   benchFootBlock: smallint("bench_foot_block").default(0),
   legacyEmail: text("legacy_email"),
-  active: boolean().default(true),
+  vpfMembershipActive: boolean("vpf_membership_active").default(false),
+  vpfMembershipExpiresAt: date("vpf_membership_expires_at"),
+  vipMembershipActive: boolean("vip_membership_active").default(false),
+  vipMembershipExpiresAt: date("vip_membership_expires_at"),
   drugViolate: boolean("drug_violate").default(false),
   notes: text(),
   password: text(),
@@ -55,6 +58,7 @@ export const users = pgTable("users", {
   decorator2: text(),
   email: text(),
   role: roles().default("user").notNull(),
+
 }, (table) => [
   unique("members_slug_key").on(table.slug),
   unique("users_email_key").on(table.email),
@@ -90,7 +94,7 @@ export const legacyMeetResults = pgTable("legacy_meet_results", {
   teamId: integer("team_id"),
   lot: smallint(),
   ranked: boolean().default(true),
-  showOnProfile: boolean().default(true)
+  showOnProfile: boolean("show_on_profile").default(true)
 }, (table) => [
   foreignKey({
     columns: [table.meetId],
@@ -133,7 +137,7 @@ export const meetResults = pgTable("meet_results", {
   teamId: integer("team_id"),
   lot: smallint(),
   ranked: boolean().default(true),
-  showOnProfile: boolean().default(true)
+  showOnProfile: boolean("show_on_profile").default(true)
 }, (table) => [
   foreignKey({
     columns: [table.meetId],
