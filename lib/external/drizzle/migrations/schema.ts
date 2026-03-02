@@ -90,6 +90,7 @@ export const legacyMeetResults = pgTable("legacy_meet_results", {
   teamId: integer("team_id"),
   lot: smallint(),
   ranked: boolean().default(true),
+  showOnProfile: boolean().default(true)
 }, (table) => [
   foreignKey({
     columns: [table.meetId],
@@ -132,6 +133,7 @@ export const meetResults = pgTable("meet_results", {
   teamId: integer("team_id"),
   lot: smallint(),
   ranked: boolean().default(true),
+  showOnProfile: boolean().default(true)
 }, (table) => [
   foreignKey({
     columns: [table.meetId],
