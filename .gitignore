@@ -8,3 +8,7 @@ logs
 test.vue
 
 old_codebase
+
+.output
+
+dist
