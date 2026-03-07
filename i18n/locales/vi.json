@@ -1,4 +1,12 @@
 {
+  "openvpf": {
+    "headerNav": {
+      "rankings": "BẢNG XẾP HẠNG",
+      "records": "KỶ LỤC",
+      "competitions": "GIẢI ĐẤU",
+      "contact": "LIÊN HỆ"
+    }
+  },
   "nav": {
     "home": "Trang chủ",
     "about": "Giới thiệu",
@@ -164,7 +172,8 @@
     "benchPlace": "Hạng Bench",
     "deadliftPlace": "Hạng Deadlift",
     "bw": "CW",
-    "pl": "H."
+    "pl": "H.",
+    "clientSideTabsTest": "Tab phía máy khách (thử nghiệm)"
   },
   "recordsHistory": {
     "lot": "Lô"
@@ -235,13 +244,58 @@
     "enterInstagramUsername": "Nhập tên người dùng Instagram",
     "tabs": {
       "generalInfo": "Thông tin chung",
-      "competitionSettings": "Cài đặt thi đấu"
+      "competitionSettings": "Cài đặt thi đấu",
+      "personalInfo": "Thông tin cá nhân",
+      "vipBenefits": "Quyền lợi VIP",
+      "competitionInfo": "Thông tin thi đấu",
+      "voucher": "Voucher",
+      "changePassword": "Đổi mật khẩu"
     },
     "competition": {
       "bestWeight": "Trọng lượng tốt nhất",
       "attempt": "Lần thử",
       "meetId": "ID Giải đấu",
       "noData": "Không có dữ liệu thi đấu"
+    },
+    "vpfId": "VPF ID",
+    "demo": "Demo",
+    "competitionInfoTable": {
+      "date": "Ngày",
+      "competition": "Giải đấu",
+      "status": "Trạng thái",
+      "action": "Thao tác",
+      "displayOnProfile": "Hiển thị kết quả",
+      "registered": "Đã đăng ký",
+      "completed": "Hoàn thành",
+      "viewDetail": "Xem chi tiết",
+      "change": "Thay đổi",
+      "noCompetitions": "Chưa có dữ liệu thi đấu."
+    },
+    "voucherTable": {
+      "receivedDate": "Ngày nhận",
+      "expiryDate": "Ngày hết hạn",
+      "voucherType": "Loại Voucher",
+      "status": "Trạng thái",
+      "action": "Thao tác",
+      "viewDetail": "Xem chi tiết",
+      "active": "Còn hiệu lực",
+      "expired": "Hết hiệu lực",
+      "used": "Đã sử dụng",
+      "noVouchers": "Chưa có voucher."
+    },
+    "vipBenefits": {
+      "description": "Quyền lợi VIP cho phép các bạn tùy chỉnh Profile cá nhân của mình một cách chuyên nghiệp hơn, giúp bạn thể hiện cá tính thoải mái.",
+      "features": "Tính năng: Profile, Ảnh, Trang cá nhân",
+      "registerNow": "Đăng ký ngay"
+    },
+    "changePassword": {
+      "currentPassword": "Mật khẩu hiện tại",
+      "newPassword": "Mật khẩu mới",
+      "confirmPassword": "Nhập lại mật khẩu mới",
+      "enterCurrent": "Nhập mật khẩu hiện tại",
+      "enterNew": "Nhập một mật khẩu mới",
+      "enterConfirm": "Nhập lại mật khẩu mới",
+      "submit": "Đổi mật khẩu"
     }
   }
 }

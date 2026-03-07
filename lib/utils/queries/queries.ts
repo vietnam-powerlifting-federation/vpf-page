@@ -31,7 +31,7 @@ export async function getMeetsAndResultsAndAthletes(
   athletes: UserPublic[]
 }> {
   const {
-    meetIds,
+    meetIds: optionMeetIds,
     vpfIds,
     division,
     weightClass,
@@ -43,6 +43,33 @@ export async function getMeetsAndResultsAndAthletes(
     hidden,
     legacy,
   } = options
+
+  // When only vpfIds is provided (e.g. athlete profile), derive meetIds from results for performance
+  let meetIds = optionMeetIds
+  if ((!meetIds || meetIds.length === 0) && vpfIds && vpfIds.length > 0) {
+    const vpfIdCondition = vpfIds.length === 1 ? eq(meetResults.vpfId, vpfIds[0]) : inArray(meetResults.vpfId, vpfIds)
+    const legacyVpfCondition = vpfIds.length === 1 ? eq(legacyMeetResults.vpfId, vpfIds[0]) : inArray(legacyMeetResults.vpfId, vpfIds)
+    const [modernRows, legacyRows] = await Promise.all([
+      db.select({ meetId: meetResults.meetId }).from(meetResults).where(vpfIdCondition),
+      db.select({ meetId: legacyMeetResults.meetId }).from(legacyMeetResults).where(legacyVpfCondition),
+    ])
+    const allMeetIds = [...new Set([...modernRows.map((r) => r.meetId), ...legacyRows.map((r) => r.meetId)])]
+    if (allMeetIds.length === 0) {
+      return { meets: [], results: [], athletes: [] }
+    }
+    if (hidden !== undefined) {
+      const visible = await db
+        .select({ meetId: meets.meetId })
+        .from(meets)
+        .where(and(inArray(meets.meetId, allMeetIds), eq(meets.hidden, hidden)))
+      meetIds = visible.map((m) => m.meetId)
+      if (meetIds.length === 0) {
+        return { meets: [], results: [], athletes: [] }
+      }
+    } else {
+      meetIds = allMeetIds
+    }
+  }
 
   // Build meet filter conditions
   const meetConditions = []

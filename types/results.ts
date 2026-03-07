@@ -18,3 +18,10 @@ export type Result = ResultRaw & LegacyResultRaw & {
 export type ResultRanked = Result & {
   rank: number
 }
+
+export type PersonalBestSummary = {
+  squat: number | null
+  bench: number | null
+  deadlift: number | null
+  total: number | null
+}

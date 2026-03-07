@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
+  <div class="min-h-full">
     <div v-if="pending" class="flex items-center justify-center py-12">
       <div class="text-center">
         <div class="text-lg font-semibold mb-2 text-primary">{{ $t("meets.loadingMeets") }}</div>
@@ -32,10 +32,10 @@
               >
               <span v-else class="text-surface-500 dark:text-surface-400 text-sm">{{ $t("meets.placeholderImage") }}</span>
             </div>
-            
+
             <!-- Meet Info -->
             <div class="flex flex-col p-4">
-              <h3 class="text-lg font-semibold mb-3 text">
+              <h3 class="text-lg font-semibold mb-3 text-surface-0">
                 {{ meet.meetName }}
               </h3>
 
@@ -49,10 +49,10 @@
                     <strong>{{ $t("meets.location") }}:</strong> {{ meet.city }}
                   </span>
                   <span v-if="meet.hostDate">
-                    <strong>{{ $t("meets.date") }}:</strong> {{ formatDate(meet.hostDate) }}
+                    <strong>{{ $t("meets.date") }}:</strong> {{ formatMeetDate(meet.hostDate) }}
                   </span>
                   <span v-if="meet.closeRegistration">
-                    <strong>{{ $t("meets.endRegistrationDate") }}:</strong> {{ formatDate(meet.closeRegistration) }}
+                    <strong>{{ $t("meets.endRegistrationDate") }}:</strong> {{ formatMeetDate(meet.closeRegistration) }}
                   </span>
                 </div>
 
@@ -71,7 +71,6 @@
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
@@ -92,52 +91,52 @@
               >
                 <Column field="meetName" :header="$t('meets.meetName')" :sortable="true" style="min-width: 200px">
                   <template #body="{ data }">
-                    <span 
-                      class="text-primary cursor-pointer" 
+                    <span
+                      class="text-primary cursor-pointer"
                       @click="handleRowClick(data)"
                     >
                       {{ data.meetName }}
                     </span>
                   </template>
                 </Column>
-                
+
                 <Column field="city" :header="$t('meets.location')" :sortable="true" style="min-width: 150px">
                   <template #body="{ data }">
-                    <span 
-                      class="cursor-pointer" 
+                    <span
+                      class="cursor-pointer"
                       @click="handleRowClick(data)"
                     >
                       {{ data.city || "-" }}
                     </span>
                   </template>
                 </Column>
-                
+
                 <Column field="hostDate" :header="$t('meets.date')" :sortable="true" style="min-width: 150px">
                   <template #body="{ data }">
-                    <span 
-                      class="cursor-pointer" 
+                    <span
+                      class="cursor-pointer"
                       @click="handleRowClick(data)"
                     >
-                      {{ formatDate(data.hostDate) }}
+                      {{ formatMeetDate(data.hostDate) }}
                     </span>
                   </template>
                 </Column>
-                
+
                 <Column field="type" :header="$t('meets.type')" :sortable="true" style="min-width: 120px">
                   <template #body="{ data }">
-                    <span 
-                      class="cursor-pointer" 
+                    <span
+                      class="cursor-pointer"
                       @click="handleRowClick(data)"
                     >
-                      {{ formatMeetType(data.type) }}
+                      {{ formatMeetTypeLabel(data.type) }}
                     </span>
                   </template>
                 </Column>
-                
+
                 <Column field="systemYear" :header="$t('meets.year')" :sortable="true" style="min-width: 80px" align="right">
                   <template #body="{ data }">
-                    <span 
-                      class="cursor-pointer" 
+                    <span
+                      class="cursor-pointer"
                       @click="handleRowClick(data)"
                     >
                       {{ data.systemYear || "-" }}
@@ -171,116 +170,37 @@ import Button from "@/components/volt/Button.vue"
 import DataTable from "primevue/datatable"
 import Column from "primevue/column"
 import type { MeetPublic } from "~/types/meets"
-import type { ApiResponse } from "~/types/api"
-import type { MeetType } from "~/types/union-types"
+import { useMeetsList } from "~/composables/useMeetsList"
+import { formatMeetDate, formatMeetTypeLabel } from "~/lib/utils/meet-formatters"
 
 definePageMeta({
-  layout: "with-footer",
+  layout: "openvpf-competitions",
   pageTransition: {
     name: "page",
-    mode: "out-in"
-  }
+    mode: "out-in",
+  },
 })
 
+const { newMeets, oldMeets, pending, error } = useMeetsList()
+
+const { t } = useI18n()
 useSeoMeta({
-  title: "VPF Meets",
+  title: () => t("openvpf.headerNav.competitions"),
   ogType: "website",
-  ogTitle: "VPF Meets",
-  ogDescription: "View all powerlifting meets organized by VPF (Vietnamese Powerlifting Federation)."
+  ogTitle: () => t("openvpf.headerNav.competitions"),
+  ogDescription: () => "View all powerlifting meets organized by VPF (Vietnamese Powerlifting Federation).",
 })
 
-const { data: response, pending, error } = useFetch<ApiResponse<MeetPublic[]>>("/api/meets")
-
-const allMeets = computed(() => {
-  if (response.value?.success && response.value.data) {
-    return response.value.data
-  }
-  return []
-})
-
-// Separate meets into new (open registration) and old (closed/past)
-const newMeets = computed(() => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  
-  return allMeets.value.filter(meet => {
-    // Check if registration is currently open
-    if (meet.startRegistration && meet.closeRegistration) {
-      const startDate = new Date(meet.startRegistration)
-      const endDate = new Date(meet.closeRegistration)
-      startDate.setHours(0, 0, 0, 0)
-      endDate.setHours(23, 59, 59, 999)
-      
-      return today >= startDate && today <= endDate
-    }
-    return false
-  })
-})
-
-const oldMeets = computed(() => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  
-  return allMeets.value.filter(meet => {
-    // If it has registration dates, check if registration is closed
-    if (meet.startRegistration && meet.closeRegistration) {
-      const endDate = new Date(meet.closeRegistration)
-      endDate.setHours(23, 59, 59, 999)
-      return today > endDate
-    }
-    // If no registration dates, consider it old if host date is in the past
-    if (meet.hostDate) {
-      const hostDate = new Date(meet.hostDate)
-      hostDate.setHours(0, 0, 0, 0)
-      return today > hostDate
-    }
-    // If no dates at all, include in old meets
-    return true
-  }).sort((a, b) => {
-    // Sort by host date descending (most recent first)
-    const dateA = a.hostDate ? new Date(a.hostDate).getTime() : 0
-    const dateB = b.hostDate ? new Date(b.hostDate).getTime() : 0
-    return dateB - dateA
-  })
-})
-
-const formatDate = (date: string | null): string => {
-  if (!date) return "-"
-  try {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric"
-    })
-  } catch {
-    return date
-  }
-}
-
-const formatMeetType = (type: MeetType | null): string => {
-  if (!type) return "-"
-  const typeMap: Record<MeetType, string> = {
-    national: "National",
-    amateur: "Amateur",
-    professional: "Professional",
-    national_qualifier: "National Qualifier",
-    other: "Other"
-  }
-  return typeMap[type] || type
-}
-
-const handleRegistration = (meet: MeetPublic) => {
-  // TODO: Implement registration logic
+function handleRegistration(meet: MeetPublic) {
   navigateTo(`/meets/${meet.meetSlug}`)
 }
 
-const handleSpotterRegistration = (meet: MeetPublic) => {
-  // TODO: Implement spotter registration logic
+function handleSpotterRegistration(meet: MeetPublic) {
   navigateTo(`/meets/${meet.meetSlug}`)
 }
 
-const handleRowClick = (meet: MeetPublic) => {
-  navigateTo(`/meets/${meet.meetSlug}`)
+function handleRowClick(meet: MeetPublic) {
+  navigateTo(`/openvpf/competitions/${meet.meetSlug}`)
 }
 </script>
 

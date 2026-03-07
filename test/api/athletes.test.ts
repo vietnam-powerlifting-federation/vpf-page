@@ -64,29 +64,49 @@ describe("API: athletes", () => {
       expect(res.data?.athlete?.email).toBeUndefined()
     })
 
-    it("returns 200 with personalBest when include=personalBest", async () => {
+    it("returns 200 with athlete, personalBest summary and compHistory", async () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
         params: { id: fixtureUsers[0].vpfId },
-        query: { include: "personalBest" },
         context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "admin" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
       expect(res.data?.athlete?.vpfId).toBe(fixtureUsers[0].vpfId)
-      expect(Array.isArray(res.data?.personalBest)).toBe(true)
+      expect(res.data?.personalBest).toBeDefined()
+      expect(res.data?.personalBest).toHaveProperty("squat")
+      expect(res.data?.personalBest).toHaveProperty("bench")
+      expect(res.data?.personalBest).toHaveProperty("deadlift")
+      expect(res.data?.personalBest).toHaveProperty("total")
+      for (const key of ["squat", "bench", "deadlift", "total"]) {
+        const v = (res.data?.personalBest as Record<string, unknown>)?.[key]
+        expect(v === null || typeof v === "number").toBe(true)
+      }
+      expect(Array.isArray(res.data?.compHistory)).toBe(true)
+      expect(Array.isArray(res.data?.meets)).toBe(true)
     })
 
-    it("returns 200 with compHistory when include=compHistory", async () => {
+    it("returns 200 for id=self when authenticated (caller's own data)", async () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
-        params: { id: fixtureUsers[0].vpfId },
-        query: { include: "compHistory" },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "admin" } },
+        params: { id: "self" },
+        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
+      expect(res.data?.athlete?.vpfId).toBe(fixtureUsers[0].vpfId)
       expect(Array.isArray(res.data?.compHistory)).toBe(true)
+      expect(Array.isArray(res.data?.meets)).toBe(true)
+    })
+
+    it("returns 401 for id=self when not authenticated", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/index")).default
+      const event = createMockH3Event({
+        params: { id: "self" },
+        context: {},
+      })
+      const res = await handler(event)
+      expect(res.success).toBe(false)
     })
   })
 })

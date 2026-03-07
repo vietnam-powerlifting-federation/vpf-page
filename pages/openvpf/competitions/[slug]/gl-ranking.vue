@@ -1,121 +1,93 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <div v-if="pending" class="flex items-center justify-center py-12">
-      <div class="text-center">
-        <div class="text-lg font-semibold mb-2 text-primary">{{ $t("meets.loadingMeetDetails") }}</div>
-        <div class="text-sm text-surface-500">{{ $t("general.pleaseWait") }}</div>
-      </div>
-    </div>
-
-    <div v-else-if="error || !meet" class="text-center py-12">
-      <div class="text-lg font-semibold mb-2 text-error">{{ $t("meets.errorLoadingMeet") }}</div>
-      <div class="text-sm text-surface-500">{{ error || $t("meets.meetNotFound") }}</div>
-    </div>
-
-    <div v-else>
-      <MeetHeader :meet="meet" :slug="slug" active-tab="gl-ranking" />
-
-      <!-- GL Points Ranking Tab Content -->
-      <div class="mt-6">
-        <div class="overflow-hidden">
-          <ClientOnly>
-            <DataTable
-              :value="glRankedResults"
-              :loading="false"
-              :paginator="true"
-              :rows="50"
-              :rows-per-page-options="[25, 50, 100]"
-              :sort-field="'gl'"
-              :sort-order="-1"
-              striped-rows
-              class="w-full"
-              show-gridlines
-            >
-              <Column field="rank" header="#" :sortable="false" style="width: 5rem" align="right">
-                <template #body="{ data }">
-                  {{ data.rank }}
-                </template>
-              </Column>
-              
-              <Column field="athleteName" :header="$t('general.name')" :sortable="false" style="min-width: 200px" frozen>
-                <template #body="{ data }">
-                  <NuxtLink
-                    v-if="data.athlete"
-                    :to="`/athletes/${data.athlete.vpfId}`"
-                    class="text-primary hover:underline"
-                  >
-                    {{ data.athlete.fullName }}
-                  </NuxtLink>
-                  <span v-else class="text-surface-400">-</span>
-                </template>
-              </Column>
-              
-              <Column field="weightClass" :header="$t('general.weightClass')" :sortable="false" align="right" style="width: 8rem">
-                <template #body="{ data }">
-                  {{ formatWeightClass(data.weightClass, data.sex) }}
-                </template>
-              </Column>
-              
-              <Column field="sex" :header="$t('meets.gender')" :sortable="false" align="right" style="width: 10rem">
-                <template #body="{ data }">
-                  {{ formatSex(data.sex) }}
-                </template>
-              </Column>
-              
-              <Column field="division" :header="$t('general.division')" :sortable="false" align="right" style="width: 10rem">
-                <template #body="{ data }">
-                  {{ formatDivision(data.division) }}
-                </template>
-              </Column>
-              
-              <Column field="bestSquat" :header="$t('general.squat')" :sortable="true" align="right" style="width: 8rem">
-                <template #body="{ data }">
-                  {{ formatWeight(data.bestSquat) }}
-                </template>
-              </Column>
-              
-              <Column field="bestBench" :header="$t('general.bench')" :sortable="true" align="right" style="width: 8rem">
-                <template #body="{ data }">
-                  {{ formatWeight(data.bestBench) }}
-                </template>
-              </Column>
-              
-              <Column field="bestDeadlift" :header="$t('general.deadlift')" :sortable="true" align="right" style="width: 8rem">
-                <template #body="{ data }">
-                  {{ formatWeight(data.bestDeadlift) }}
-                </template>
-              </Column>
-              
-              <Column field="total" :header="$t('general.total')" :sortable="true" align="right" style="width: 8rem">
-                <template #body="{ data }">
-                  {{ formatWeight(data.total) }}
-                </template>
-              </Column>
-              
-              <Column field="gl" :header="$t('general.gl')" :sortable="true" align="right" style="width: 8rem">
-                <template #body="{ data }">
-                  {{ formatGL(data.gl) }}
-                </template>
-              </Column>
-            </DataTable>
-            <template #fallback>
-              <div class="flex items-center justify-center py-12">
-                <div class="text-center">
-                  <div class="text-lg font-semibold mb-2 text-primary">{{ $t("meets.loadingGlRankings") }}</div>
-                </div>
-              </div>
+  <MeetTabContent :pending="pending" :error="error" :meet="meet ?? null">
+    <div class="overflow-hidden">
+      <ClientOnly>
+        <DataTable
+          :value="glRankedResults"
+          :loading="false"
+          :paginator="true"
+          :rows="50"
+          :rows-per-page-options="[25, 50, 100]"
+          :sort-field="'gl'"
+          :sort-order="-1"
+          striped-rows
+          class="w-full"
+          show-gridlines
+        >
+          <Column field="rank" header="#" :sortable="false" style="width: 5rem" align="right">
+            <template #body="{ data }">
+              {{ data.rank }}
             </template>
-          </ClientOnly>
-        </div>
-      </div>
+          </Column>
+          <Column field="athleteName" :header="$t('general.name')" :sortable="false" style="min-width: 200px" frozen>
+            <template #body="{ data }">
+              <NuxtLink
+                v-if="data.athlete"
+                :to="`/athletes/${data.athlete.vpfId}`"
+                class="text-primary hover:underline"
+              >
+                {{ data.athlete.fullName }}
+              </NuxtLink>
+              <span v-else class="text-surface-400">-</span>
+            </template>
+          </Column>
+          <Column field="weightClass" :header="$t('general.weightClass')" :sortable="false" align="right" style="width: 8rem">
+            <template #body="{ data }">
+              {{ formatWeightClass(data.weightClass, data.sex) }}
+            </template>
+          </Column>
+          <Column field="sex" :header="$t('meets.gender')" :sortable="false" align="right" style="width: 10rem">
+            <template #body="{ data }">
+              {{ formatSex(data.sex) }}
+            </template>
+          </Column>
+          <Column field="division" :header="$t('general.division')" :sortable="false" align="right" style="width: 10rem">
+            <template #body="{ data }">
+              {{ formatDivision(data.division) }}
+            </template>
+          </Column>
+          <Column field="bestSquat" :header="$t('general.squat')" :sortable="true" align="right" style="width: 8rem">
+            <template #body="{ data }">
+              {{ formatWeight(data.bestSquat) }}
+            </template>
+          </Column>
+          <Column field="bestBench" :header="$t('general.bench')" :sortable="true" align="right" style="width: 8rem">
+            <template #body="{ data }">
+              {{ formatWeight(data.bestBench) }}
+            </template>
+          </Column>
+          <Column field="bestDeadlift" :header="$t('general.deadlift')" :sortable="true" align="right" style="width: 8rem">
+            <template #body="{ data }">
+              {{ formatWeight(data.bestDeadlift) }}
+            </template>
+          </Column>
+          <Column field="total" :header="$t('general.total')" :sortable="true" align="right" style="width: 8rem">
+            <template #body="{ data }">
+              {{ formatWeight(data.total) }}
+            </template>
+          </Column>
+          <Column field="gl" :header="$t('general.gl')" :sortable="true" align="right" style="width: 8rem">
+            <template #body="{ data }">
+              {{ formatGL(data.gl) }}
+            </template>
+          </Column>
+        </DataTable>
+        <template #fallback>
+          <div class="flex items-center justify-center py-12">
+            <div class="text-center">
+              <div class="text-lg font-semibold mb-2 text-primary">{{ $t("meets.loadingGlRankings") }}</div>
+            </div>
+          </div>
+        </template>
+      </ClientOnly>
     </div>
-  </div>
+  </MeetTabContent>
 </template>
 
 <script setup lang="ts">
 import DataTable from "primevue/datatable"
 import Column from "primevue/column"
-import MeetHeader from "@/components/meets/MeetHeader.vue"
+import MeetTabContent from "@/components/meets/MeetTabContent.vue"
 import { DISQUALIFIED } from "~/lib/constants/constants"
 import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL } from "@/lib/utils/client"
 
@@ -123,16 +95,15 @@ const route = useRoute()
 const slug = route.params.slug as string
 
 definePageMeta({
-  layout: "with-footer",
+  layout: "openvpf-competitions",
   pageTransition: {
     name: "page",
-    mode: "out-in"
-  }
+    mode: "out-in",
+  },
 })
 
 const { meet, resultsWithAthletes, pending, error } = useMeetData(slug)
 
-// GL ranked results
 const glRankedResults = computed(() => {
   const ranked = [...resultsWithAthletes.value]
     .filter(r => r.gl !== null && r.placement !== DISQUALIFIED)
@@ -143,7 +114,7 @@ const glRankedResults = computed(() => {
     })
     .map((result, index) => ({
       ...result,
-      rank: index + 1
+      rank: index + 1,
     }))
   return ranked
 })
@@ -152,7 +123,6 @@ useSeoMeta({
   title: computed(() => meet.value ? `${meet.value.meetName} - GL Rankings - VPF` : "VPF Meet"),
   ogType: "website",
   ogTitle: computed(() => meet.value ? `${meet.value.meetName} - GL Rankings` : "VPF Meet"),
-  ogDescription: computed(() => meet.value ? `View GL point rankings for ${meet.value.meetName}` : "View GL rankings")
+  ogDescription: computed(() => meet.value ? `View GL point rankings for ${meet.value.meetName}` : "View GL rankings"),
 })
 </script>
-

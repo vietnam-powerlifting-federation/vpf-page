@@ -1,4 +1,12 @@
 {
+  "openvpf": {
+    "headerNav": {
+      "rankings": "RANKINGS",
+      "records": "RECORDS",
+      "competitions": "COMPETITIONS",
+      "contact": "CONTACT"
+    }
+  },
   "nav": {
     "home": "Home",
     "about": "About",
@@ -164,7 +172,8 @@
     "benchPlace": "Bench Place",
     "deadliftPlace": "Deadlift Place",
     "bw": "BW",
-    "pl": "Pl."
+    "pl": "Pl.",
+    "clientSideTabsTest": "Client-side tabs (test)"
   },
   "recordsHistory": {
     "lot": "Lot"
@@ -235,13 +244,58 @@
     "enterInstagramUsername": "Enter Instagram username",
     "tabs": {
       "generalInfo": "General Info",
-      "competitionSettings": "Competition Settings"
+      "competitionSettings": "Competition Settings",
+      "personalInfo": "Personal Information",
+      "vipBenefits": "VIP Benefits",
+      "competitionInfo": "Competition Information",
+      "voucher": "Voucher",
+      "changePassword": "Change Password"
     },
     "competition": {
       "bestWeight": "Best Weight",
       "attempt": "Attempt",
       "meetId": "Meet ID",
       "noData": "No competition data available"
+    },
+    "vpfId": "VPF ID",
+    "demo": "Demo",
+    "competitionInfoTable": {
+      "date": "Date",
+      "competition": "Competition",
+      "status": "Status",
+      "action": "Action",
+      "displayOnProfile": "Display on profile",
+      "registered": "Registered",
+      "completed": "Completed",
+      "viewDetail": "View Details",
+      "change": "Change",
+      "noCompetitions": "No competition data available."
+    },
+    "voucherTable": {
+      "receivedDate": "Received Date",
+      "expiryDate": "Expiry Date",
+      "voucherType": "Voucher Type",
+      "status": "Status",
+      "action": "Action",
+      "viewDetail": "View Details",
+      "active": "Active",
+      "expired": "Expired",
+      "used": "Used",
+      "noVouchers": "No vouchers."
+    },
+    "vipBenefits": {
+      "description": "VIP benefits allow you to customize your personal profile in a more professional way and express your personality.",
+      "features": "Features: Profile, Photos, Personal Page",
+      "registerNow": "Register Now"
+    },
+    "changePassword": {
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Re-enter new password",
+      "enterCurrent": "Enter current password",
+      "enterNew": "Enter a new password",
+      "enterConfirm": "Re-enter new password",
+      "submit": "Change Password"
     }
   }
 }

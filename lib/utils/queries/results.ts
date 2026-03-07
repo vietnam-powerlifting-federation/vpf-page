@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { legacyMeetResults, meetResults } from "~/lib/external/drizzle/migrations/schema"
 import { addMetadataToMeetResults } from "~/lib/utils/meet-result"
-import type { Result, LegacyResultRaw, ResultRaw } from "~/types/results"
+import type { Result, LegacyResultRaw, ResultRaw, PersonalBestSummary } from "~/types/results"
 
 export type SortKey = "bestSquat" | "bestBench" | "bestDeadlift" | "total" | "gl"
 export type MeetType = "national" | "amateur" | "professional" | "national_qualifier" | "other"
@@ -32,6 +32,25 @@ export async function getResultsForAthlete(vpfId: string): Promise<Result[]> {
   ]
 
   return addMetadataToMeetResults(allRawResults)
+}
+
+/**
+ * Computes personal best summary (best squat, bench, deadlift, total) from results.
+ */
+export function getPersonalBestSummary(results: Result[]): PersonalBestSummary {
+  let squat: number | null = null
+  let bench: number | null = null
+  let deadlift: number | null = null
+  let total: number | null = null
+
+  for (const r of results) {
+    if (r.bestSquat !== null && (squat === null || r.bestSquat > squat)) squat = r.bestSquat
+    if (r.bestBench !== null && (bench === null || r.bestBench > bench)) bench = r.bestBench
+    if (r.bestDeadlift !== null && (deadlift === null || r.bestDeadlift > deadlift)) deadlift = r.bestDeadlift
+    if (r.total !== null && (total === null || r.total > total)) total = r.total
+  }
+
+  return { squat, bench, deadlift, total }
 }
 
 /**

@@ -46,19 +46,12 @@
               <p class="text-sm text-primary-700 dark:text-primary-300">{{ loginError }}</p>
             </div>
 
-            <div class="flex items-center justify-between gap-4">
-              <label class="inline-flex items-center gap-2 select-none">
-                <Checkbox v-model="rememberMe" :binary="true" input-id="rememberMe" />
-                <span class="text-sm text-surface-700 dark:text-surface-200">{{ $t("login.rememberMe") }}</span>
-              </label>
-
-              <NuxtLinkLocale
-                to="/forgot-password"
-                class="text-sm font-semibold text-primary hover:underline whitespace-nowrap"
-              >
-                {{ $t("login.forgotPassword") }}
-              </NuxtLinkLocale>
-            </div>
+            <NuxtLinkLocale
+              to="/forgot-password"
+              class="text-sm font-semibold text-primary hover:underline whitespace-nowrap"
+            >
+              {{ $t("login.forgotPassword") }}
+            </NuxtLinkLocale>
 
             <Button
               type="submit"
@@ -137,7 +130,6 @@ import InputText from "@/components/volt/InputText.vue"
 import Password from "@/components/volt/Password.vue"
 import Button from "@/components/volt/Button.vue"
 import Dialog from "@/components/volt/Dialog.vue"
-import Checkbox from "@/components/volt/Checkbox.vue"
 import type { ApiResponse, LoginResponse } from "~/types/api"
 import loginBg from "~/assets/img/login-bg.png"
 
@@ -150,7 +142,6 @@ const password = ref("")
 const isLoading = ref(false)
 const loginError = ref<string | null>(null)
 const showNoticeModal = ref(false)
-const rememberMe = ref(false)
 
 // Form errors
 const errors = ref({
