@@ -52,8 +52,6 @@ export const users = pgTable("users", {
   password: text(),
   instagramUsername: text("instagram_username"),
   slug: text(),
-  decorator1: text(),
-  decorator2: text(),
   email: text(),
   role: roles().default("user").notNull(),
 
@@ -61,6 +59,37 @@ export const users = pgTable("users", {
   unique("members_slug_key").on(table.slug),
   unique("users_email_key").on(table.email),
   check("members_dob_check", sql`(dob >= 1900) AND ((dob)::numeric <= EXTRACT(year FROM CURRENT_DATE))`),
+])
+
+export const vipBenefits = pgTable("vip_benefits", {
+  vpfId: text("vpf_id").primaryKey().notNull(),
+  avatarImageUrl: text("avatar_image_url"),
+  bannerImageUrl1: text("banner_image_url_1"),
+  bannerImageUrl2: text("banner_image_url_2"),
+  bannerImageUrl3: text("banner_image_url_3"),
+  bannerImageUrl4: text("banner_image_url_4"),
+  bannerImageUrl5: text("banner_image_url_5"),
+  profileDescription: text("profile_description"),
+  displayProfileDescription: boolean("display_profile_description").default(false),
+  alias: text("alias"),
+  displayAlias: boolean("display_alias").default(false),
+  facebook: text("facebook"),
+  displayFacebook: boolean("display_facebook").default(false),
+  instagram: text("instagram"),
+  displayInstagram: boolean("display_instagram").default(false),
+  tiktok: text("tiktok"),
+  displayTiktok: boolean("display_tiktok").default(false),
+  youtube: text("youtube"),
+  displayYoutube: boolean("display_youtube").default(false),
+  displayMobilePhone: boolean("display_mobile_phone").default(false),
+  decorator1: text("decorator1"),
+  decorator2: text("decorator2"),
+}, (table) => [
+  foreignKey({
+    columns: [table.vpfId],
+    foreignColumns: [users.vpfId],
+    name: "vip_benefits_vpf_id_fkey"
+  }).onUpdate("cascade").onDelete("cascade"),
 ])
 
 export const userViolations = pgTable("user_violations", {

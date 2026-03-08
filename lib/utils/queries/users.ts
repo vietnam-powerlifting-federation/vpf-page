@@ -20,8 +20,6 @@ export const userPrivateSelect = {
   notes: users.notes,
   instagramUsername: users.instagramUsername,
   slug: users.slug,
-  decorator1: users.decorator1,
-  decorator2: users.decorator2,
   email: users.email,
   role: users.role,
 } satisfies Record<keyof UserPrivate, unknown>
@@ -33,6 +31,4 @@ export const userPublicSelect = {
   dob: users.dob,
   instagramUsername: users.instagramUsername,
   slug: users.slug,
-  decorator1: users.decorator1,
-  decorator2: users.decorator2,
 } satisfies Record<keyof UserPublic, unknown>

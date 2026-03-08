@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations"
-import { users, userViolations, meets, legacyMeetResults, teams, meetResults } from "./schema"
+import { users, userViolations, meets, legacyMeetResults, teams, meetResults, vipBenefits } from "./schema"
 
 export const userViolationsRelations = relations(userViolations, ({ one }) => ({
   user: one(users, {
@@ -8,10 +8,18 @@ export const userViolationsRelations = relations(userViolations, ({ one }) => ({
   }),
 }))
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
+  vipBenefits: one(vipBenefits),
   userViolations: many(userViolations),
   legacyMeetResults: many(legacyMeetResults),
   meetResults: many(meetResults),
+}))
+
+export const vipBenefitsRelations = relations(vipBenefits, ({ one }) => ({
+  user: one(users, {
+    fields: [vipBenefits.vpfId],
+    references: [users.vpfId]
+  }),
 }))
 
 export const legacyMeetResultsRelations = relations(legacyMeetResults, ({ one }) => ({
