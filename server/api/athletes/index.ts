@@ -1,10 +1,16 @@
-import { eq } from "drizzle-orm"
+import { or, isNull, gte, sql } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { users } from "~/lib/external/drizzle/migrations/schema"
 import { userPrivateSelect, userPublicSelect } from "~/lib/utils/queries/users"
 import { logger } from "~/lib/logger/logger"
 import type { ApiResponse } from "~/types/api"
 import type { UserPrivate, UserPublic } from "~/types/users"
+
+// VPF membership is active when expires-at is null (no expiry) or in the future
+const vpfMembershipActive = or(
+  isNull(users.vpfMembershipExpiresAt),
+  gte(users.vpfMembershipExpiresAt, sql`CURRENT_DATE`),
+)
 
 export default defineEventHandler(async (event): Promise<ApiResponse<(UserPrivate[] | UserPublic[])>> => {
   try {
@@ -19,12 +25,12 @@ export default defineEventHandler(async (event): Promise<ApiResponse<(UserPrivat
       allUsers = await db
         .select(userPrivateSelect)
         .from(users)
-        .where(eq(users.active, true))
+        .where(vpfMembershipActive)
     } else {
       allUsers = await db
         .select(userPublicSelect)
         .from(users)
-        .where(eq(users.active, true))
+        .where(vpfMembershipActive)
     }
 
     return {

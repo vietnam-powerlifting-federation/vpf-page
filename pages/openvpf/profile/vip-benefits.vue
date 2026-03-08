@@ -9,7 +9,7 @@
       <p class="text-surface-300">{{ $t("profile.vipBenefits.description") }}</p>
       <p class="text-surface-400 text-sm">{{ $t("profile.vipBenefits.features") }}</p>
       <img :src="vipPreview" alt="" class="h-full w-full object-cover"></img>
-      <div v-if="!userData?.vipMembershipActive" class="pt-4">
+      <div v-if="!vipActive" class="pt-4">
         <Button :label="$t('profile.vipBenefits.registerNow')" class="bg-primary" />
         <span class="ml-3 text-sm text-surface-500">({{ $t("profile.demo") }})</span>
       </div>
@@ -35,6 +35,11 @@ definePageMeta({
 
 const { data: userResponse, pending } = useProfileUser()
 const userData = computed(() => userResponse.value ?? null)
+const vipActive = computed(() => {
+  const expiresAt = userData.value?.vipMembershipExpiresAt
+  if (!expiresAt) return false
+  return new Date(expiresAt) > new Date()
+})
 
 useHead({ title: () => useI18n().t("profile.tabs.vipBenefits") })
 </script>

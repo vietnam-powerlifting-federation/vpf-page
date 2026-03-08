@@ -36,6 +36,13 @@
       "when": 1772445889655,
       "tag": "0004_careless_turbo",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1772968434043,
+      "tag": "0005_foamy_ted_forrester",
+      "breakpoints": true
     }
   ]
 }

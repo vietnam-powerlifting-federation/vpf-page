@@ -58,7 +58,6 @@ export const fixtureUsers = [
     benchSafetyPin: 0,
     benchFootBlock: 0,
     legacyEmail: null,
-    active: true,
     drugViolate: false,
     notes: null,
     password: "password123", // will be hashed in seed
@@ -82,7 +81,6 @@ export const fixtureUsers = [
     benchSafetyPin: 0,
     benchFootBlock: 0,
     legacyEmail: null,
-    active: true,
     drugViolate: false,
     notes: null,
     password: "admin123",
@@ -106,7 +104,6 @@ export const fixtureUsers = [
     benchSafetyPin: 0,
     benchFootBlock: 0,
     legacyEmail: null,
-    active: true,
     drugViolate: false,
     notes: null,
     password: "password123",

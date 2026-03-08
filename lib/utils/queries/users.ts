@@ -14,9 +14,7 @@ export const userPrivateSelect = {
   benchSafetyPin: users.benchSafetyPin,
   benchFootBlock: users.benchFootBlock,
   legacyEmail: users.legacyEmail,
-  vpfMembershipActive: users.vpfMembershipActive,
   vpfMembershipExpiresAt: users.vpfMembershipExpiresAt,
-  vipMembershipActive: users.vipMembershipActive,
   vipMembershipExpiresAt: users.vipMembershipExpiresAt,
   drugViolate: users.drugViolate,
   notes: users.notes,
@@ -37,5 +35,4 @@ export const userPublicSelect = {
   slug: users.slug,
   decorator1: users.decorator1,
   decorator2: users.decorator2,
-  vipMembershipActive: users.vipMembershipActive,
 } satisfies Record<keyof UserPublic, unknown>
