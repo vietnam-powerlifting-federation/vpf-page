@@ -1,9 +1,9 @@
+import { computed } from "vue"
 import type { ApiResponse } from "~/types/api"
 import type { UserPrivate } from "~/types/users"
 import type { Result, PersonalBestSummary } from "~/types/results"
 import type { MeetPublic } from "~/types/meets"
 
-export const PROFILE_USER_KEY = "openvpf-profile-user"
 export const PROFILE_ATHLETE_KEY = "openvpf-profile-athlete"
 
 type AthleteDetailsData = {
@@ -13,34 +13,25 @@ type AthleteDetailsData = {
   meets: MeetPublic[]
 }
 
-function fetchProfileUser() {
-  return useFetch<ApiResponse<UserPrivate>>("/api/users/self", {
-    key: PROFILE_USER_KEY,
-  })
-}
+let profileFetch: ReturnType<typeof useFetch<ApiResponse<AthleteDetailsData>>> | null = null
 
-type ProfileUserReturn = ReturnType<typeof fetchProfileUser>
-let profileUserCache: ProfileUserReturn | null = null
-
-export function useProfileUser(): ProfileUserReturn {
-  if (!profileUserCache) {
-    profileUserCache = fetchProfileUser()
+function getProfileFetch() {
+  if (!profileFetch) {
+    profileFetch = useFetch<ApiResponse<AthleteDetailsData>>("/api/athletes/self", {
+      key: PROFILE_ATHLETE_KEY,
+    })
   }
-  return profileUserCache
+  return profileFetch
 }
 
-function fetchProfileAthlete() {
-  return useFetch<ApiResponse<AthleteDetailsData>>("/api/athletes/self", {
-    key: PROFILE_ATHLETE_KEY,
-  })
+export function useProfileAthlete() {
+  return getProfileFetch()
 }
 
-type ProfileAthleteReturn = ReturnType<typeof fetchProfileAthlete>
-let profileAthleteCache: ProfileAthleteReturn | null = null
-
-export function useProfileAthlete(): ProfileAthleteReturn {
-  if (!profileAthleteCache) {
-    profileAthleteCache = fetchProfileAthlete()
+export function useProfileUser() {
+  const f = getProfileFetch()
+  return {
+    ...f,
+    data: computed(() => f.data.value?.data?.athlete ?? null),
   }
-  return profileAthleteCache
 }

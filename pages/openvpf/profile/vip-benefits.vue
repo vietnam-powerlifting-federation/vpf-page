@@ -34,7 +34,7 @@ definePageMeta({
 })
 
 const { data: userResponse, pending } = useProfileUser()
-const userData = computed(() => userResponse.value?.data ?? null)
+const userData = computed(() => userResponse.value ?? null)
 
 useHead({ title: () => useI18n().t("profile.tabs.vipBenefits") })
 </script>

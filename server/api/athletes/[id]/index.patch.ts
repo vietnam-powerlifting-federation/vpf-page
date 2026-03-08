@@ -9,7 +9,20 @@ import type { UserPrivate } from "~/types/users"
 
 export default defineEventHandler(async (event): Promise<ApiResponse<UserPrivate>> => {
   try {
+    const idParam = getRouterParam(event, "id")
     const currentUser = event.context.user
+
+    if (idParam !== "self") {
+      setResponseStatus(event, 403)
+      return {
+        success: false,
+        data: null,
+        message: {
+          en: "Only the current athlete profile can be updated",
+          vi: "Chỉ có thể cập nhật hồ sơ vận động viên hiện tại",
+        },
+      }
+    }
 
     if (!currentUser || !currentUser.vpfId) {
       setResponseStatus(event, 401)
@@ -39,7 +52,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<UserPrivate
       }
     }
 
-    // Get current user data to check required fields
+    // Get current athlete data to check required fields
     const currentUserData = await db
       .select(userPrivateSelect)
       .from(users)
@@ -53,8 +66,8 @@ export default defineEventHandler(async (event): Promise<ApiResponse<UserPrivate
         success: false,
         data: null,
         message: {
-          en: "User not found",
-          vi: "Không tìm thấy người dùng",
+          en: "Athlete not found",
+          vi: "Không tìm thấy vận động viên",
         },
       }
     }
@@ -79,13 +92,13 @@ export default defineEventHandler(async (event): Promise<ApiResponse<UserPrivate
       }
     }
 
-    // Update user in database
+    // Update athlete in database
     await db
       .update(users)
       .set(patchResult.data)
       .where(eq(users.vpfId, currentUser.vpfId))
 
-    // Fetch updated user
+    // Fetch updated athlete
     const updatedUser = await db
       .select(userPrivateSelect)
       .from(users)
@@ -99,8 +112,8 @@ export default defineEventHandler(async (event): Promise<ApiResponse<UserPrivate
         success: false,
         data: null,
         message: {
-          en: "User not found after update",
-          vi: "Không tìm thấy người dùng sau khi cập nhật",
+          en: "Athlete not found after update",
+          vi: "Không tìm thấy vận động viên sau khi cập nhật",
         },
       }
     }
@@ -114,7 +127,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<UserPrivate
       },
     }
   } catch (error) {
-    logger.error("Error updating user profile", { error })
+    logger.error("Error updating athlete profile", { error })
     setResponseStatus(event, 500)
     return {
       success: false,

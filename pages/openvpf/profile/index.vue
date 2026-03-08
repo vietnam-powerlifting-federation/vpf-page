@@ -115,7 +115,7 @@ definePageMeta({
 const toast = useToast()
 const { t, locale } = useI18n()
 const { data: userResponse, pending, error } = useProfileUser()
-const userData = computed(() => userResponse.value?.data ?? null)
+const userData = computed(() => userResponse.value ?? null)
 
 type FormData = Required<z.infer<typeof UserSelfPatchSchema>>
 const formData = ref<FormData>({
@@ -159,7 +159,7 @@ async function handleSubmit() {
   if (Object.keys(payload).length === 0) return
   isSubmitting.value = true
   try {
-    const response = (await $fetch("/api/users/self", {
+    const response = (await $fetch("/api/athletes/self", {
       method: "PATCH",
       body: payload,
     })) as ApiResponse<UserPrivate>
