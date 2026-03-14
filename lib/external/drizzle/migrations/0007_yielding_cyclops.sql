@@ -1,0 +1,1 @@
+ALTER TABLE "vip_benefits" ADD COLUMN "vip_phone_number" text;

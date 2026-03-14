@@ -17,6 +17,14 @@ const setResponseStatus = vi.fn((event: H3Event, code: number) => {
   if (e.node?.res) e.node.res.statusCode = code
 })
 const setHeader = vi.fn(() => {})
+const getRequestHeader = vi.fn((event: H3Event, name: string) => {
+  const e = event as { node?: { req?: { headers?: Record<string, string> } } }
+  const headers = e.node?.req?.headers
+  if (!headers) return null
+  const key = name.toLowerCase()
+  return headers[key] ?? headers[name] ?? null
+})
+const useRuntimeConfig = vi.fn(() => ({ vipUploadDir: "" }))
 
 vi.stubGlobal("defineEventHandler", defineEventHandler)
 vi.stubGlobal("readBody", readBody)
@@ -24,3 +32,5 @@ vi.stubGlobal("getRouterParam", getRouterParam)
 vi.stubGlobal("getQuery", getQuery)
 vi.stubGlobal("setResponseStatus", setResponseStatus)
 vi.stubGlobal("setHeader", setHeader)
+vi.stubGlobal("getRequestHeader", getRequestHeader)
+vi.stubGlobal("useRuntimeConfig", useRuntimeConfig)

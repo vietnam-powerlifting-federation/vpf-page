@@ -50,6 +50,13 @@
       "when": 1772969190078,
       "tag": "0006_mushy_wildside",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1773462770749,
+      "tag": "0007_yielding_cyclops",
+      "breakpoints": true
     }
   ]
 }

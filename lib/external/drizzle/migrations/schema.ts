@@ -81,6 +81,7 @@ export const vipBenefits = pgTable("vip_benefits", {
   displayTiktok: boolean("display_tiktok").default(false),
   youtube: text("youtube"),
   displayYoutube: boolean("display_youtube").default(false),
+  vipPhoneNumber: text("vip_phone_number"),
   displayMobilePhone: boolean("display_mobile_phone").default(false),
   decorator1: text("decorator1"),
   decorator2: text("decorator2"),

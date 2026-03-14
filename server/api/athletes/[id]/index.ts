@@ -1,12 +1,14 @@
 import { eq } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
-import { users } from "~/lib/external/drizzle/migrations/schema"
+import { users, vipBenefits } from "~/lib/external/drizzle/migrations/schema"
 import { userPrivateSelect, userPublicSelect } from "~/lib/utils/queries/users"
 import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import { getPersonalBestSummary } from "~/lib/utils/queries/results"
+import { isVipActive } from "~/lib/utils/vip"
 import { logger } from "~/lib/logger/logger"
 import type { ApiResponse } from "~/types/api"
 import type { UserPrivate, UserPublic } from "~/types/users"
+import type { VipBenefits } from "~/types/vip"
 import type { Result, PersonalBestSummary } from "~/types/results"
 import type { MeetPublic } from "~/types/meets"
 
@@ -15,6 +17,7 @@ type AthleteDetailsResponse = {
   personalBest: PersonalBestSummary
   compHistory: Result[]
   meets: MeetPublic[]
+  vipSettings?: VipBenefits
 }
 
 export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDetailsResponse>> => {
@@ -83,6 +86,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
 
     const query = getQuery(event)
     const excludeHidden = query.excludeHidden === "true" || query.excludeHidden === true
+    const includeVipSettings = query.includeVipSettings === "true" || query.includeVipSettings === true
     const { meets: returnedMeets, results } = await getMeetsAndResultsAndAthletes({
       vpfIds: [vpfId],
       hidden: excludeHidden ? false : undefined,
@@ -92,6 +96,20 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
     const compHistory = results
     const personalBest = getPersonalBestSummary(results)
 
+    let vipSettings: VipBenefits | undefined
+    if (includeVipSettings && isPrivate) {
+      const vipExpiresAt = "vipMembershipExpiresAt" in athlete ? athlete.vipMembershipExpiresAt : null
+      if (isVipActive(vipExpiresAt ?? null)) {
+        const vipRow = await db
+          .select()
+          .from(vipBenefits)
+          .where(eq(vipBenefits.vpfId, vpfId))
+          .limit(1)
+          .then((rows) => rows[0])
+        if (vipRow) vipSettings = vipRow
+      }
+    }
+
     return {
       success: true,
       data: {
@@ -99,6 +117,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
         personalBest,
         compHistory,
         meets: returnedMeets,
+        ...(vipSettings !== undefined && { vipSettings }),
       },
       message: {
         en: "Athlete details retrieved successfully",
