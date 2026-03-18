@@ -104,7 +104,6 @@ function navigateTo(path: string) {
   router.push(path)
 }
 
-useProfileUser()
 useProfileAthlete()
 </script>
 

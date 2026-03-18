@@ -268,8 +268,8 @@ const toast = useToast()
 
 const { data: profileResponse, pending } = useProfileAthlete()
 
-const userData = computed(() => profileResponse.value?.data?.athlete ?? null)
-const vipSettings = computed(() => profileResponse.value?.data?.vipSettings ?? null)
+const userData = computed(() => profileResponse.value?.athlete ?? null)
+const vipSettings = computed(() => profileResponse.value?.vipSettings ?? null)
 
 const vipActive = computed(() => isVipActive(userData.value?.vipMembershipExpiresAt ?? null))
 

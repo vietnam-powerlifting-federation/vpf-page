@@ -21,6 +21,7 @@ Prioritize using primevue color for tailwind classes
 Do not use @apply for styling
 Always ensure multiple languages are supported
 Prioritize using primevue components over default components
+Skip server tests
 
 This rule enforces validation for API endpoints:
 

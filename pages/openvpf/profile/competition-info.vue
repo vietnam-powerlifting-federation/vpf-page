@@ -81,7 +81,7 @@ definePageMeta({
 const { data: athleteResponse, pending } = useProfileAthlete()
 
 const rows = computed(() => {
-  const data = athleteResponse.value?.data
+  const data = athleteResponse.value
   if (!data?.meets?.length) return []
   const today = new Date().toISOString().slice(0, 10)
   const resultByMeet = new Map<number, Result>()

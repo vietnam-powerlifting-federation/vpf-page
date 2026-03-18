@@ -1,20 +1,16 @@
+import { onMounted } from "vue"
 import type { Result } from "~/types/results"
 import type { UserPublic } from "~/types/users"
-import type { ApiResponse } from "~/types/api"
 import type { MeetPublic } from "~/types/meets"
 import type { Sex, Division } from "~/types/union-types"
+import { storeToRefs } from "pinia"
+import { useMeetDataStore } from "~/stores/meet-data"
 
 type MeetResult = Result & {
   squatPlacement: number
   benchPlacement: number
   deadliftPlacement: number
 }
-
-type MeetDataResponse = ApiResponse<{
-  meet: MeetPublic
-  results: MeetResult[]
-  athletes: UserPublic[]
-}>
 
 const sexOrder = ["male", "female"] satisfies Sex[]
 const divisionOrder = ["open", "jr", "subjr", "mas1", "mas2", "mas3", "mas4", "guest"] satisfies Division[]
@@ -38,15 +34,24 @@ export type MeetDataReturn = {
 }
 
 function createMeetData(slug: string): MeetDataReturn {
-  const { data: response, pending, error } = useFetch<MeetDataResponse>(`/api/meets/${slug}`, {
-    key: `meet:${slug}`,
+  const { $pinia } = useNuxtApp()
+  const store = useMeetDataStore($pinia)
+  const { bySlug } = storeToRefs(store)
+
+  onMounted(() => {
+    const entry = bySlug.value[slug]
+    if (!entry?.data && !entry?.pending) {
+      void store.fetchMeet(slug)
+    }
   })
 
-  const meet = computed(() => response.value?.success ? response.value.data.meet : null)
+  const entry = computed(() => bySlug.value[slug])
 
-  const results = computed(() => response.value?.success ? response.value.data.results : [])
+  const meet = computed(() => entry.value?.data?.meet ?? null)
 
-  const athletes = computed(() => response.value?.success ? response.value.data.athletes : [])
+  const results = computed<MeetResult[]>(() => (entry.value?.data?.results ?? []) as MeetResult[])
+
+  const athletes = computed(() => entry.value?.data?.athletes ?? [])
 
   /**
    * O(n) athlete lookup instead of O(n²)
@@ -139,12 +144,12 @@ function createMeetData(slug: string): MeetDataReturn {
     athletes,
     resultsWithAthletes,
     groupedByGenderDivision,
-    pending,
-    error,
+    pending: computed(() => entry.value?.pending ?? false),
+    error: computed(() => entry.value?.error ?? null),
   }
 }
 
 export function useMeetData(slug: string): MeetDataReturn {
-  // Nuxt de-dupes network calls via keyed useFetch; avoid module-scope caches (SSR safety).
+  // Cached globally (per-request on SSR) via Pinia store keyed by slug.
   return createMeetData(slug)
 }

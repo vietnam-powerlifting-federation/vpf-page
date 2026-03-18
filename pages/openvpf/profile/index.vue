@@ -91,7 +91,7 @@ import InputNumber from "@/components/volt/InputNumber.vue"
 import Textarea from "@/components/volt/Textarea.vue"
 import Button from "@/components/volt/Button.vue"
 import ProgressSpinner from "@/components/volt/ProgressSpinner.vue"
-import { useProfileUser } from "~/composables/useProfileData"
+import { useProfileAthlete } from "~/composables/useProfileData"
 import { buildPatchPayload } from "~/lib/utils/client"
 import type { ApiResponse } from "~/types/api"
 import type { UserPrivate } from "~/types/users"
@@ -105,8 +105,8 @@ definePageMeta({
 
 const toast = useToast()
 const { t, locale } = useI18n()
-const { data: userResponse, pending, error } = useProfileUser()
-const userData = computed(() => userResponse.value ?? null)
+const { data: profileResponse, pending, error } = useProfileAthlete()
+const userData = computed(() => profileResponse.value?.athlete ?? null)
 
 type FormData = Required<z.infer<typeof UserSelfPatchSchema>>
 const formData = ref<FormData>({

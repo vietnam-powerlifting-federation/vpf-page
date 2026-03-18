@@ -61,6 +61,7 @@ export default defineNuxtConfig({
     "@nuxt/test-utils/module",
     "@nuxt/eslint",
     "@nuxt/content",
+    "@pinia/nuxt",
     "@nuxtjs/i18n",
     "@nuxt/image",
     "nuxt-link-checker",
