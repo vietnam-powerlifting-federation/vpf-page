@@ -78,7 +78,7 @@ describe("API: athletes", () => {
       expect(res.success).toBe(true)
       expect(res.data?.athlete?.vpfId).toBe(fixtureUsers[2].vpfId)
       expect(res.data?.athlete?.fullName).toBe(fixtureUsers[2].fullName)
-      expect(res.data?.athlete?.email).toBeUndefined()
+      expect((res.data?.athlete as { email?: string })?.email).toBeUndefined()
     })
 
     it("returns 200 with athlete, personalBest summary and compHistory", async () => {

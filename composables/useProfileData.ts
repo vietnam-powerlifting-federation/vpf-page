@@ -13,15 +13,15 @@ type AthleteDetailsData = {
   meets: MeetPublic[]
 }
 
-let profileFetch: ReturnType<typeof useFetch<ApiResponse<AthleteDetailsData>>> | null = null
+let profileFetch: ReturnType<typeof useFetch<ApiResponse<AthleteDetailsData> | null>> | null = null
 
-function getProfileFetch() {
+function getProfileFetch(): ReturnType<typeof useFetch<ApiResponse<AthleteDetailsData> | null>> {
   if (!profileFetch) {
     profileFetch = useFetch<ApiResponse<AthleteDetailsData>>("/api/athletes/self", {
       key: PROFILE_ATHLETE_KEY,
-    })
+    }) as ReturnType<typeof useFetch<ApiResponse<AthleteDetailsData> | null>>
   }
-  return profileFetch
+  return profileFetch!
 }
 
 export function useProfileAthlete() {

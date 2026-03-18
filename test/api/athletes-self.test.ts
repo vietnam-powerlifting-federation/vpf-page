@@ -22,7 +22,7 @@ describe("API: athletes/[id] with id=self", () => {
       expect(res.success).toBe(true)
       expect(res.data?.athlete?.vpfId).toBe(fixtureUsers[0].vpfId)
       expect(res.data?.athlete?.fullName).toBe(fixtureUsers[0].fullName)
-      expect(res.data?.athlete?.email).toBe(fixtureUsers[0].email)
+      expect((res.data?.athlete as { email?: string })?.email).toBe(fixtureUsers[0].email)
     })
   })
 

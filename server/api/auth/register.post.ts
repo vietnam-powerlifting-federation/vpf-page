@@ -89,7 +89,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<UserPublic>
         email,
         password: hashedPassword,
         fullName: fullName,
-        active: true,
       })
       .returning({
         vpfId: users.vpfId,

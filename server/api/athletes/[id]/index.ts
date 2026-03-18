@@ -98,8 +98,9 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
 
     let vipSettings: VipBenefits | undefined
     if (includeVipSettings && isPrivate) {
-      const vipExpiresAt = "vipMembershipExpiresAt" in athlete ? athlete.vipMembershipExpiresAt : null
-      if (isVipActive(vipExpiresAt ?? null)) {
+      const vipExpiresAt: string | null =
+        "vipMembershipExpiresAt" in athlete ? (athlete.vipMembershipExpiresAt as string | null) ?? null : null
+      if (isVipActive(vipExpiresAt)) {
         const vipRow = await db
           .select()
           .from(vipBenefits)
