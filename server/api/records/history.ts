@@ -11,6 +11,7 @@ import type { UserPublic } from "~/types/users"
 import type { RankedDivision } from "~/types/union-types"
 import { eq, and, sql } from "drizzle-orm"
 import type { Result } from "~/types/results"
+import { ok, fail } from "~/server/utils/api-response"
 
 type HistoryResponse = {
   records: LiftRecord[]
@@ -66,14 +67,10 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
     const meet = returnedMeets[0] || null
 
     if (!meet) {
-      return {
-        success: true,
-        data: { records: [], meet: null, athletes: [] },
-        message: {
-          en: "No national meet found",
-          vi: "Không tìm thấy giải quốc gia",
-        },
-      }
+      return ok(
+        { records: [], meet: null, athletes: [] },
+        { en: "No national meet found", vi: "Không tìm thấy giải quốc gia" },
+      )
     }
 
     const usersMap = new Map<string, UserPublic>()
@@ -179,28 +176,16 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
 
     setHeader(event, "Cache-Control", "public, max-age=86400, s-maxage=86400")
 
-    return {
-      success: true,
-      data: {
+    return ok(
+      {
         records: newRecords,
         meet: meet as MeetPublic,
         athletes: [...usersMap.values()],
       },
-      message: {
-        en: "Record history retrieved successfully",
-        vi: "Lấy lịch sử kỷ lục thành công",
-      },
-    }
+      { en: "Record history retrieved successfully", vi: "Lấy lịch sử kỷ lục thành công" },
+    )
   } catch (error) {
     logger.error("Error fetching record history", { error })
-    setResponseStatus(event, 500)
-    return {
-      success: false,
-      data: null,
-      message: {
-        en: "Internal server error",
-        vi: "Lỗi máy chủ",
-      },
-    }
+    return fail(event, 500, { en: "Internal server error", vi: "Lỗi máy chủ" }) as ApiResponse<HistoryResponse>
   }
 })

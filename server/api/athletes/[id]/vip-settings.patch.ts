@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { vipBenefits } from "~/lib/external/drizzle/migrations/schema"
-import { config } from "~/lib/config/config"
 import { logger } from "~/lib/logger/logger"
 import { uploadVipImage } from "~/lib/utils/r2-vip-upload"
 import { VipSettingsPatchSchema } from "~/lib/zod/schemas/vip.schema"
@@ -60,17 +59,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<VipBenefits
     let patch: Partial<Omit<VipBenefits, "vpfId">> = {}
 
     if (contentType.includes("multipart/form-data")) {
-      if (!config.r2.isConfigured) {
-        setResponseStatus(event, 503)
-        return {
-          success: false,
-          data: null,
-          message: {
-            en: "Image upload is not configured",
-            vi: "Tải ảnh lên chưa được cấu hình",
-          },
-        }
-      }
       const form = await readMultipartFormData(event)
       if (!form?.length) {
         setResponseStatus(event, 400)
@@ -138,18 +126,11 @@ export default defineEventHandler(async (event): Promise<ApiResponse<VipBenefits
           filename: f.filename,
           mimeType: f.type,
         })
-        if (url) {
-          if (fieldLower === "avatar") patch.avatarImageUrl = url
-          else if (fieldLower.startsWith("banner")) {
-            const idx = parseInt(fieldLower.replace("banner", ""), 10)
-            if (Number.isNaN(idx) || idx < 1 || idx > 5) continue
-            patch[BANNER_URL_KEYS[idx - 1]] = url
-          }
-        } else {
-          logger.warn("VIP image uploaded to R2 but URL not returned (check CLOUDFLARE_R2_VIP_PUBLIC_URL_BASE)", {
-            vpfId,
-            field: f.field,
-          })
+        if (fieldLower === "avatar") patch.avatarImageUrl = url
+        else if (fieldLower.startsWith("banner")) {
+          const idx = parseInt(fieldLower.replace("banner", ""), 10)
+          if (Number.isNaN(idx) || idx < 1 || idx > 5) continue
+          patch[BANNER_URL_KEYS[idx - 1]] = url
         }
       }
     } else {

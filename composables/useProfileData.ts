@@ -15,24 +15,19 @@ type AthleteDetailsData = {
   vipSettings?: VipBenefits
 }
 
-let profileFetch: ReturnType<typeof useFetch<ApiResponse<AthleteDetailsData> | null>> | null = null
-
-function getProfileFetch(): ReturnType<typeof useFetch<ApiResponse<AthleteDetailsData> | null>> {
-  if (!profileFetch) {
-    profileFetch = useFetch<ApiResponse<AthleteDetailsData>>("/api/athletes/self", {
-      key: PROFILE_ATHLETE_KEY,
-      query: { includeVipSettings: true },
-    }) as ReturnType<typeof useFetch<ApiResponse<AthleteDetailsData> | null>>
-  }
-  return profileFetch!
+function useProfileFetch() {
+  return useFetch<ApiResponse<AthleteDetailsData>>("/api/athletes/self", {
+    key: PROFILE_ATHLETE_KEY,
+    query: { includeVipSettings: true },
+  })
 }
 
 export function useProfileAthlete() {
-  return getProfileFetch()
+  return useProfileFetch()
 }
 
 export function useProfileUser() {
-  const f = getProfileFetch()
+  const f = useProfileFetch()
   return {
     ...f,
     data: computed(() => f.data.value?.data?.athlete ?? null),

@@ -22,8 +22,25 @@ const r2AccountId = process.env.CLOUDFLARE_R2_ACCOUNT_ID
 const r2AccessKeyId = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID
 const r2SecretAccessKey = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY
 const r2VipBucket = process.env.CLOUDFLARE_R2_VIP_BUCKET
-/** Optional: base URL for public object access (e.g. R2 custom domain or r2.dev). Required to return public URLs. */
+/** Base URL for public object access (e.g. R2 custom domain or r2.dev). */
 const r2VipPublicUrlBase = process.env.CLOUDFLARE_R2_VIP_PUBLIC_URL_BASE
+
+function getMissingR2Env() {
+  const missing = []
+  if (!r2AccountId) missing.push("CLOUDFLARE_R2_ACCOUNT_ID")
+  if (!r2AccessKeyId) missing.push("CLOUDFLARE_R2_ACCESS_KEY_ID")
+  if (!r2SecretAccessKey) missing.push("CLOUDFLARE_R2_SECRET_ACCESS_KEY")
+  if (!r2VipBucket) missing.push("CLOUDFLARE_R2_VIP_BUCKET")
+  if (!r2VipPublicUrlBase) missing.push("CLOUDFLARE_R2_VIP_PUBLIC_URL_BASE")
+  return missing
+}
+
+const missingR2Env = getMissingR2Env()
+if (missingR2Env.length > 0) {
+  throw new Error(
+    `Cloudflare R2 is not configured. Missing env var(s): ${missingR2Env.join(", ")}`
+  )
+}
 
 export const config = {
   databaseURL,
@@ -33,12 +50,10 @@ export const config = {
   jwtSecret,
   jwtExpiresIn,
   r2: {
-    accountId: r2AccountId,
-    accessKeyId: r2AccessKeyId,
-    secretAccessKey: r2SecretAccessKey,
-    vipBucket: r2VipBucket,
-    vipPublicUrlBase: r2VipPublicUrlBase,
-    /** True when all required R2 env vars are set and VIP uploads can be used. */
-    isConfigured: Boolean(r2AccountId && r2AccessKeyId && r2SecretAccessKey && r2VipBucket),
+    accountId: r2AccountId!,
+    accessKeyId: r2AccessKeyId!,
+    secretAccessKey: r2SecretAccessKey!,
+    vipBucket: r2VipBucket!,
+    vipPublicUrlBase: r2VipPublicUrlBase!,
   },
 }

@@ -11,6 +11,7 @@ import type { UserPrivate, UserPublic } from "~/types/users"
 import type { VipBenefits } from "~/types/vip"
 import type { Result, PersonalBestSummary } from "~/types/results"
 import type { MeetPublic } from "~/types/meets"
+import { ok, fail } from "~/server/utils/api-response"
 
 type AthleteDetailsResponse = {
   athlete: UserPrivate | UserPublic
@@ -26,29 +27,19 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
     const currentUser = event.context.user
 
     if (!idParam) {
-      setResponseStatus(event, 400)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "Athlete ID is required",
-          vi: "ID vận động viên là bắt buộc",
-        },
-      }
+      return fail(event, 400, {
+        en: "Athlete ID is required",
+        vi: "ID vận động viên là bắt buộc",
+      }) as ApiResponse<AthleteDetailsResponse>
     }
 
     const vpfId = idParam === "self" ? currentUser?.vpfId : idParam
 
     if (!vpfId) {
-      setResponseStatus(event, 401)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "Unauthorized",
-          vi: "Không được phép",
-        },
-      }
+      return fail(event, 401, {
+        en: "Unauthorized",
+        vi: "Không được phép",
+      }) as ApiResponse<AthleteDetailsResponse>
     }
 
     const isAdmin = currentUser?.role === "admin"
@@ -73,15 +64,10 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
     }
 
     if (!athlete) {
-      setResponseStatus(event, 404)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "Athlete not found",
-          vi: "Không tìm thấy vận động viên",
-        },
-      }
+      return fail(event, 404, {
+        en: "Athlete not found",
+        vi: "Không tìm thấy vận động viên",
+      }) as ApiResponse<AthleteDetailsResponse>
     }
 
     const query = getQuery(event)
@@ -111,30 +97,18 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
       }
     }
 
-    return {
-      success: true,
-      data: {
-        athlete,
-        personalBest,
-        compHistory,
-        meets: returnedMeets,
-        ...(vipSettings !== undefined && { vipSettings }),
-      },
-      message: {
-        en: "Athlete details retrieved successfully",
-        vi: "Lấy thông tin vận động viên thành công",
-      },
-    }
+    return ok({
+      athlete,
+      personalBest,
+      compHistory,
+      meets: returnedMeets,
+      ...(vipSettings !== undefined && { vipSettings }),
+    }, {
+      en: "Athlete details retrieved successfully",
+      vi: "Lấy thông tin vận động viên thành công",
+    })
   } catch (error) {
     logger.error("Error fetching athlete details", { error })
-    setResponseStatus(event, 500)
-    return {
-      success: false,
-      data: null,
-      message: {
-        en: "Internal server error",
-        vi: "Lỗi máy chủ",
-      },
-    }
+    return fail(event, 500, { en: "Internal server error", vi: "Lỗi máy chủ" }) as ApiResponse<AthleteDetailsResponse>
   }
 })

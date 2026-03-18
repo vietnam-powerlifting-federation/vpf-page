@@ -37,8 +37,6 @@ export type MeetDataReturn = {
   error: Ref<Error | null>
 }
 
-const meetDataCache = new Map<string, MeetDataReturn>()
-
 function createMeetData(slug: string): MeetDataReturn {
   const { data: response, pending, error } = useFetch<MeetDataResponse>(`/api/meets/${slug}`, {
     key: `meet:${slug}`,
@@ -147,9 +145,6 @@ function createMeetData(slug: string): MeetDataReturn {
 }
 
 export function useMeetData(slug: string): MeetDataReturn {
-  if (!meetDataCache.has(slug)) {
-    meetDataCache.set(slug, createMeetData(slug))
-  }
-
-  return meetDataCache.get(slug)!
+  // Nuxt de-dupes network calls via keyed useFetch; avoid module-scope caches (SSR safety).
+  return createMeetData(slug)
 }

@@ -6,7 +6,7 @@ import {
 } from "./db"
 
 declare global {
-  // eslint-disable-next-line no-var
+   
   var __vpfTestDbSeeded: boolean | undefined
 }
 

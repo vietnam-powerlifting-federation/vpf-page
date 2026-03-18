@@ -1,5 +1,5 @@
 import { createSelectSchema } from "drizzle-zod"
-import { z } from "zod"
+import type { z } from "zod"
 import { vipBenefits } from "~/lib/external/drizzle/migrations/schema"
 
 export const VipSettingsPatchSchema = createSelectSchema(vipBenefits).partial().omit({

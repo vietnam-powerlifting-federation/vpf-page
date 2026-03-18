@@ -16,17 +16,16 @@ function getExt(filename: string, mimeType?: string): string {
 
 /**
  * Upload a VIP image to Cloudflare R2 (S3-compatible). Key format: {vpfId}/{type}.{ext} (e.g. VPF000901/avatar.png).
- * Requires config.r2.isConfigured.
- * @returns Public URL of the uploaded object, or null if R2 is not configured.
+ * Requires Cloudflare R2 to be configured.
+ * @returns Public URL of the uploaded object.
  */
 export async function uploadVipImage(
   vpfId: string,
   type: string,
   data: Uint8Array,
   options: { filename?: string; mimeType?: string },
-): Promise<string | null> {
+): Promise<string> {
   const { r2 } = config
-  if (!r2.isConfigured || !r2.accountId || !r2.vipBucket) return null
 
   const ext = getExt(options.filename ?? "", options.mimeType ?? "")
   const key = `${vpfId}/${type}${ext}`
@@ -36,8 +35,8 @@ export async function uploadVipImage(
     region: "auto",
     endpoint,
     credentials: {
-      accessKeyId: r2.accessKeyId!,
-      secretAccessKey: r2.secretAccessKey!,
+      accessKeyId: r2.accessKeyId,
+      secretAccessKey: r2.secretAccessKey,
     },
     forcePathStyle: true,
   })
@@ -51,10 +50,6 @@ export async function uploadVipImage(
     }),
   )
 
-  const baseRaw = r2.vipPublicUrlBase?.trim()
-  if (baseRaw) {
-    const base = baseRaw.replace(/\/$/, "")
-    return `${base}/${key}`
-  }
-  return null
+  const base = r2.vipPublicUrlBase.trim().replace(/\/$/, "")
+  return `${base}/${key}`
 }

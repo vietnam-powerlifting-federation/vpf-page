@@ -125,7 +125,6 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue"
-import { useRouter } from "vue-router"
 import InputText from "@/components/volt/InputText.vue"
 import Password from "@/components/volt/Password.vue"
 import Button from "@/components/volt/Button.vue"
@@ -133,7 +132,6 @@ import Dialog from "@/components/volt/Dialog.vue"
 import type { ApiResponse, LoginResponse } from "~/types/api"
 import loginBg from "~/assets/img/login-bg.png"
 
-const router = useRouter()
 const { t, locale } = useI18n()
 
 // Form state
@@ -206,17 +204,8 @@ const handleLogin = async () => {
     }) as ApiResponse<LoginResponse>
 
     if (response.success) {
-      // Store JWT token in cookie
-      const authToken = useCookie("auth-token", {
-        maxAge: 60 * 60 * 24 * 7, // 7 days (matching JWT expiration)
-        secure: true,
-        sameSite: "strict",
-        httpOnly: false, // Must be false for client-side access
-      })
-      authToken.value = response.data.token
-
       // Redirect to home or dashboard
-      router.push("/")
+      await navigateTo("/")
     } else {
       loginError.value = response.message[locale.value as "en" | "vi"] || response.message.en || t("general.error")
     }

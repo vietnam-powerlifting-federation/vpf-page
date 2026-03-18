@@ -1,43 +1,49 @@
 import { eq } from "drizzle-orm"
 import bcrypt from "bcryptjs"
+import { setCookie } from "h3"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { users } from "~/lib/external/drizzle/migrations/schema"
 import { userPublicSelect } from "~/lib/utils/queries/users"
 import { logger } from "~/lib/logger/logger"
 import { signToken } from "~/lib/utils/jwt"
 import type { ApiResponse, LoginResponse } from "~/types/api"
+import { z } from "zod"
+import { ok, fail } from "~/server/utils/api-response"
 
 export default defineEventHandler(async (event): Promise<ApiResponse<LoginResponse>> => {
   try {
     const body = await readBody(event)
-    const { vpfId, email, password } = body
+    const password = typeof body?.password === "string" ? body.password : ""
+    const rawVpfId = typeof body?.vpfId === "string" ? body.vpfId : undefined
+    const rawEmail = typeof body?.email === "string" ? body.email : undefined
+
+    if (!password) {
+      logger.debug("Login attempt without password", { vpfId: rawVpfId, email: rawEmail })
+      return fail(event, 400, { en: "Password is required", vi: "Mật khẩu là bắt buộc" }) as ApiResponse<LoginResponse>
+    }
+
+    const LoginBodySchema = z.object({
+      password: z.string().min(1),
+      vpfId: z.string().trim().min(1).optional(),
+      email: z.email().trim().toLowerCase().optional(),
+    }).refine((v) => Boolean(v.vpfId || v.email), {
+      message: "Either vpfId or email is required",
+      path: ["vpfId"],
+    })
+
+    const validated = LoginBodySchema.safeParse({ password, vpfId: rawVpfId, email: rawEmail })
+    if (!validated.success) {
+      logger.debug("Login attempt without vpfId or email")
+      return fail(event, 400, {
+        en: "Invalid login credentials",
+        vi: "Thông tin đăng nhập không hợp lệ",
+      }) as ApiResponse<LoginResponse>
+    }
+
+    const { vpfId, email } = validated.data
 
     // Validate input
-    if (!password) {
-      logger.debug("Login attempt without password", { vpfId, email })
-      setResponseStatus(event, 400)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "Password is required",
-          vi: "Mật khẩu là bắt buộc",
-        },
-      }
-    }
-
-    if (!vpfId && !email) {
-      logger.debug("Login attempt without vpfId or email")
-      setResponseStatus(event, 400)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "Invalid login credentials",
-          vi: "Thông tin đăng nhập không hợp lệ",
-        },
-      }
-    }
+    // (validated by schema)
 
     // Find user by vpfId or email
     const whereCondition = vpfId
@@ -47,15 +53,10 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
         : undefined
 
     if (!whereCondition) {
-      setResponseStatus(event, 400)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "Invalid login credentials",
-          vi: "Thông tin đăng nhập không hợp lệ",
-        },
-      }
+      return fail(event, 400, {
+        en: "Invalid login credentials",
+        vi: "Thông tin đăng nhập không hợp lệ",
+      }) as ApiResponse<LoginResponse>
     }
 
     // Query user with password for verification
@@ -73,29 +74,19 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
 
     if (!user) {
       logger.debug("Login attempt with non-existent user", { vpfId, email })
-      setResponseStatus(event, 401)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "Invalid login credentials",
-          vi: "Thông tin đăng nhập không hợp lệ",
-        },
-      }
+      return fail(event, 401, {
+        en: "Invalid login credentials",
+        vi: "Thông tin đăng nhập không hợp lệ",
+      }) as ApiResponse<LoginResponse>
     }
 
     // Check if user has a password set
     if (!user.password) {
       logger.debug("Login attempt for user without password", { vpfId: user.vpfId, email: user.email })
-      setResponseStatus(event, 401)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "Invalid login credentials",
-          vi: "Thông tin đăng nhập không hợp lệ",
-        },
-      }
+      return fail(event, 401, {
+        en: "Invalid login credentials",
+        vi: "Thông tin đăng nhập không hợp lệ",
+      }) as ApiResponse<LoginResponse>
     }
 
     // Compare password
@@ -103,15 +94,10 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
 
     if (!isPasswordValid) {
       logger.debug("Login attempt with invalid password", { vpfId: user.vpfId, email: user.email })
-      setResponseStatus(event, 401)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "Invalid login credentials",
-          vi: "Thông tin đăng nhập không hợp lệ",
-        },
-      }
+      return fail(event, 401, {
+        en: "Invalid login credentials",
+        vi: "Thông tin đăng nhập không hợp lệ",
+      }) as ApiResponse<LoginResponse>
     }
 
     // Query user again with public select for response
@@ -123,15 +109,10 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
 
     if (!userPublic) {
       logger.error("Failed to fetch user public data after login", { vpfId: user.vpfId })
-      setResponseStatus(event, 500)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "An error occurred during login",
-          vi: "Đã xảy ra lỗi khi đăng nhập",
-        },
-      }
+      return fail(event, 500, {
+        en: "An error occurred during login",
+        vi: "Đã xảy ra lỗi khi đăng nhập",
+      }) as ApiResponse<LoginResponse>
     }
 
     // Generate JWT token
@@ -143,28 +124,28 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
 
     logger.debug("User logged in successfully", { vpfId: user.vpfId, email: user.email })
 
-    setResponseStatus(event, 200)
-    return {
-      success: true,
-      data: {
-        user: userPublic,
-        token,
-      },
-      message: {
-        en: "Login successful",
-        vi: "Đăng nhập thành công",
-      },
+    const isSecure = process.env.NODE_ENV === "production"
+    // In unit tests, `event.node.res` is a minimal stub and may not support cookie helpers.
+    const res = (event as unknown as { node?: { res?: unknown } }).node?.res as { getHeader?: unknown } | undefined
+    if (typeof res?.getHeader === "function") {
+      setCookie(event, "auth-token", token, {
+        maxAge: 60 * 60 * 24 * 7,
+        secure: isSecure,
+        sameSite: "strict",
+        httpOnly: true,
+        path: "/",
+      })
     }
+
+    return ok(
+      { user: userPublic, token },
+      { en: "Login successful", vi: "Đăng nhập thành công" },
+    )
   } catch (error) {
     logger.error("Login error", { error: (error as Error).message })
-    setResponseStatus(event, 500)
-    return {
-      success: false,
-      data: null,
-      message: {
-        en: "An error occurred during login",
-        vi: "Đã xảy ra lỗi khi đăng nhập",
-      },
-    }
+    return fail(event, 500, {
+      en: "An error occurred during login",
+      vi: "Đã xảy ra lỗi khi đăng nhập",
+    }) as ApiResponse<LoginResponse>
   }
 })
