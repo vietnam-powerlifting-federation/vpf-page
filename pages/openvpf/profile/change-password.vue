@@ -35,9 +35,11 @@ definePageMeta({
   middleware: "auth",
 })
 
+const { t } = useI18n()
+
 const currentPassword = ref("")
 const newPassword = ref("")
 const confirmPassword = ref("")
 
-useHead({ title: () => useI18n().t("profile.tabs.changePassword") })
+useHead({ title: () => t("profile.tabs.changePassword") })
 </script>

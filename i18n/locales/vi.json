@@ -231,7 +231,6 @@
     "benchRackPin": "Bench Rack Pin",
     "benchSafetyPin": "Bench Safety Pin",
     "benchFootBlock": "Bench Foot Block",
-    "instagramUsername": "Tên người dùng Instagram",
     "enterEmail": "Nhập email",
     "enterNationality": "Nhập quốc tịch",
     "enterDob": "Nhập năm sinh",
@@ -241,7 +240,6 @@
     "enterBenchRackPin": "Nhập bench rack pin",
     "enterBenchSafetyPin": "Nhập bench safety pin",
     "enterBenchFootBlock": "Nhập bench foot block",
-    "enterInstagramUsername": "Nhập tên người dùng Instagram",
     "tabs": {
       "generalInfo": "Thông tin chung",
       "competitionSettings": "Cài đặt thi đấu",

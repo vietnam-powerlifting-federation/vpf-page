@@ -71,5 +71,5 @@ const demoVouchers = [
   },
 ]
 
-useHead({ title: () => useI18n().t("profile.tabs.voucher") })
+useHead({ title: () => t("profile.tabs.voucher") })
 </script>

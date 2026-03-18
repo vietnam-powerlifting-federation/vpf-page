@@ -61,15 +61,6 @@
         />
       </div>
       <div>
-        <label for="instagramUsername" class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.instagramUsername") }}</label>
-        <InputText
-          id="instagramUsername"
-          v-model="formData.instagramUsername"
-          :placeholder="$t('profile.enterInstagramUsername')"
-          class="w-full"
-        />
-      </div>
-      <div>
         <label for="squatRackPin" class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.squatRackPin") }}</label>
         <InputNumber id="squatRackPin" v-model="formData.squatRackPin" :placeholder="$t('profile.enterSquatRackPin')" class="w-full" :min="0" />
       </div>
@@ -128,7 +119,6 @@ const formData = ref<FormData>({
   benchRackPin: null,
   benchSafetyPin: null,
   benchFootBlock: null,
-  instagramUsername: null,
 })
 
 watch(
@@ -145,7 +135,6 @@ watch(
         benchRackPin: val.benchRackPin,
         benchSafetyPin: val.benchSafetyPin,
         benchFootBlock: val.benchFootBlock,
-        instagramUsername: val.instagramUsername,
       }
     }
   },

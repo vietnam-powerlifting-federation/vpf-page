@@ -18,7 +18,6 @@ export const userPrivateSelect = {
   vipMembershipExpiresAt: users.vipMembershipExpiresAt,
   drugViolate: users.drugViolate,
   notes: users.notes,
-  instagramUsername: users.instagramUsername,
   slug: users.slug,
   email: users.email,
   role: users.role,
@@ -29,6 +28,5 @@ export const userPublicSelect = {
   fullName: users.fullName,
   nationality: users.nationality,
   dob: users.dob,
-  instagramUsername: users.instagramUsername,
   slug: users.slug,
 } satisfies Record<keyof UserPublic, unknown>

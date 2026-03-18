@@ -266,15 +266,7 @@ definePageMeta({
 const { t, locale } = useI18n()
 const toast = useToast()
 
-type AthleteDetailsResponse = {
-  athlete: { vipMembershipExpiresAt?: string | null }
-  vipSettings?: VipBenefits
-}
-
-const { data: profileResponse, pending } = useFetch<ApiResponse<AthleteDetailsResponse>>("/api/athletes/self", {
-  query: { includeVipSettings: true },
-  key: "openvpf-profile-vip",
-})
+const { data: profileResponse, pending } = useProfileAthlete()
 
 const userData = computed(() => profileResponse.value?.data?.athlete ?? null)
 const vipSettings = computed(() => profileResponse.value?.data?.vipSettings ?? null)

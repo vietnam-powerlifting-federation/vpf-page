@@ -50,7 +50,6 @@ export const users = pgTable("users", {
   drugViolate: boolean("drug_violate").default(false),
   notes: text(),
   password: text(),
-  instagramUsername: text("instagram_username"),
   slug: text(),
   email: text(),
   role: roles().default("user").notNull(),

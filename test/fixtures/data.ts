@@ -61,7 +61,6 @@ export const fixtureUsers = [
     drugViolate: false,
     notes: null,
     password: "password123", // will be hashed in seed
-    instagramUsername: null,
     slug: "test-athlete-one",
     email: "athlete1@test.vpf",
     role: "user" as const,
@@ -82,7 +81,6 @@ export const fixtureUsers = [
     drugViolate: false,
     notes: null,
     password: "admin123",
-    instagramUsername: null,
     slug: "test-admin",
     email: "admin@test.vpf",
     role: "admin" as const,
@@ -103,7 +101,6 @@ export const fixtureUsers = [
     drugViolate: false,
     notes: null,
     password: "password123",
-    instagramUsername: null,
     slug: "test-athlete-two",
     email: "athlete2@test.vpf",
     role: "user" as const,

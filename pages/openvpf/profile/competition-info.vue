@@ -109,5 +109,7 @@ function formatDate(dateStr: string | null | undefined) {
   return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
 }
 
-useHead({ title: () => useI18n().t("profile.tabs.competitionInfo") })
+const { t } = useI18n()
+
+useHead({ title: () => t("profile.tabs.competitionInfo") })
 </script>

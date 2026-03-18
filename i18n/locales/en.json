@@ -231,7 +231,6 @@
     "benchRackPin": "Bench Rack Pin",
     "benchSafetyPin": "Bench Safety Pin",
     "benchFootBlock": "Bench Foot Block",
-    "instagramUsername": "Instagram Username",
     "enterEmail": "Enter email",
     "enterNationality": "Enter nationality",
     "enterDob": "Enter year of birth",
@@ -241,7 +240,6 @@
     "enterBenchRackPin": "Enter bench rack pin",
     "enterBenchSafetyPin": "Enter bench safety pin",
     "enterBenchFootBlock": "Enter bench foot block",
-    "enterInstagramUsername": "Enter Instagram username",
     "tabs": {
       "generalInfo": "General Info",
       "competitionSettings": "Competition Settings",

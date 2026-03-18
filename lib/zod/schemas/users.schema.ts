@@ -15,7 +15,6 @@ export const UserSelfPatchSchema = createSelectSchema(users, {
   benchRackPin: true,
   benchSafetyPin: true,
   benchFootBlock: true,
-  instagramUsername: true,
 })
 
 export const UserRequiredSchema = createSelectSchema(users, {
