@@ -126,6 +126,18 @@ describe("API: athletes", () => {
       expect(res.success).toBe(false)
     })
 
+    it("returns 200 with records array when includeRecords is true", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/index")).default
+      const event = createMockH3Event({
+        params: { id: fixtureUsers[0].vpfId },
+        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        query: { includeRecords: "true" },
+      })
+      const res = await handler(event)
+      expect(res.success).toBe(true)
+      expect(Array.isArray((res.data as { records?: unknown }).records)).toBe(true)
+    })
+
     it("returns 200 with vipSettings when includeVipSettings is true and athlete has active VIP", async () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({

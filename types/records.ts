@@ -6,4 +6,5 @@ export type LiftRecord = {
   attempt: 1 | 2 | 3
   recordWeight: number
   recordDivision: Division
+  status?: "holding" | "broken"
 }

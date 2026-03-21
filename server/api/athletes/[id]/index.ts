@@ -4,12 +4,14 @@ import { users, vipBenefits } from "~/lib/external/drizzle/migrations/schema"
 import { userPrivateSelect, userPublicSelect } from "~/lib/utils/queries/users"
 import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import { getPersonalBestSummary } from "~/lib/utils/queries/results"
+import { fetchAthleteRecordStatus } from "~/lib/utils/queries/records"
 import { isVipActive } from "~/lib/utils/vip"
 import { logger } from "~/lib/logger/logger"
 import type { ApiResponse } from "~/types/api"
 import type { UserPrivate, UserPublic } from "~/types/users"
 import type { VipBenefits } from "~/types/vip"
 import type { Result, PersonalBestSummary } from "~/types/results"
+import type { LiftRecord } from "~/types/records"
 import type { MeetPublic } from "~/types/meets"
 import { ok, fail } from "~/server/utils/api-response"
 
@@ -19,6 +21,7 @@ type AthleteDetailsResponse = {
   compHistory: Result[]
   meets: MeetPublic[]
   vipSettings?: VipBenefits
+  records?: LiftRecord[]
 }
 
 export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDetailsResponse>> => {
@@ -73,6 +76,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
     const query = getQuery(event)
     const excludeHidden = query.excludeHidden === "true" || query.excludeHidden === true
     const includeVipSettings = query.includeVipSettings === "true" || query.includeVipSettings === true
+    const includeRecords = query.includeRecords === "true" || query.includeRecords === true
     const { meets: returnedMeets, results } = await getMeetsAndResultsAndAthletes({
       vpfIds: [vpfId],
       hidden: excludeHidden ? false : undefined,
@@ -97,12 +101,18 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
       }
     }
 
+    let records: LiftRecord[] | undefined
+    if (includeRecords) {
+      records = await fetchAthleteRecordStatus(vpfId)
+    }
+
     return ok({
       athlete,
       personalBest,
       compHistory,
       meets: returnedMeets,
       ...(vipSettings !== undefined && { vipSettings }),
+      ...(records !== undefined && { records }),
     }, {
       en: "Athlete details retrieved successfully",
       vi: "Lấy thông tin vận động viên thành công",

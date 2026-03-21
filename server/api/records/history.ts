@@ -2,7 +2,7 @@ import { db } from "~/lib/external/drizzle/drizzle"
 import { meets } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
 import { RECORD_DIVISION_OVERRIDE } from "~/lib/constants/constants"
-import { fetchRecordsForYear, getDivisionFromAge, getBestAttempt } from "~/lib/utils/queries/records"
+import { fetchRecordsForYear, getDivisionFromAge, buildAttemptEvents } from "~/lib/utils/queries/records"
 import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import type { ApiResponse } from "~/types/api"
 import type { LiftRecord } from "~/types/records"
@@ -18,15 +18,6 @@ type HistoryResponse = {
   meet: MeetPublic | null
   athletes: UserPublic[]
   results: Result[]
-}
-
-type AttemptEvent = {
-  lot: number
-  lift: "squat" | "bench" | "deadlift"
-  liftOrder: number
-  attempt: 1 | 2 | 3
-  weight: number
-  result: Result
 }
 
 export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResponse>> => {
@@ -83,24 +74,8 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
 
     // ---------- BUILD ATTEMPT TIMELINE ----------
 
-    const attemptEvents: AttemptEvent[] = []
-
-    for (const r of results) {
-      const lot = r.lot ?? 999
-
-      if (r.squat1) attemptEvents.push({ lot, lift: "squat", liftOrder: 0, attempt: 1, weight: r.squat1, result: r })
-      if (r.squat2) attemptEvents.push({ lot, lift: "squat", liftOrder: 0, attempt: 2, weight: r.squat2, result: r })
-      if (r.squat3) attemptEvents.push({ lot, lift: "squat", liftOrder: 0, attempt: 3, weight: r.squat3, result: r })
-
-      if (r.bench1) attemptEvents.push({ lot, lift: "bench", liftOrder: 1, attempt: 1, weight: r.bench1, result: r })
-      if (r.bench2) attemptEvents.push({ lot, lift: "bench", liftOrder: 1, attempt: 2, weight: r.bench2, result: r })
-      if (r.bench3) attemptEvents.push({ lot, lift: "bench", liftOrder: 1, attempt: 3, weight: r.bench3, result: r })
-
-      if (r.deadlift1) attemptEvents.push({ lot, lift: "deadlift", liftOrder: 2, attempt: 1, weight: r.deadlift1, result: r })
-      if (r.deadlift2) attemptEvents.push({ lot, lift: "deadlift", liftOrder: 2, attempt: 2, weight: r.deadlift2, result: r })
-      if (r.deadlift3) attemptEvents.push({ lot, lift: "deadlift", liftOrder: 2, attempt: 3, weight: r.deadlift3, result: r })
-    }
-
+    const meetsMap = new Map([[meet.meetId, meet]])
+    const attemptEvents = buildAttemptEvents(results, meetsMap)
     attemptEvents.sort((a, b) => {
       if (a.liftOrder !== b.liftOrder) return a.liftOrder - b.liftOrder
       if (a.attempt !== b.attempt) return a.attempt - b.attempt
@@ -145,54 +120,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
             recordDivision: div,
           })
           groupBest.set(key, weight)
-        }
-      }
-    }
-
-    // ---------- TOTALS BY ATTEMPT (LAST) ----------
-    // Process total1→total2→total3 in order so earlier attempts can establish records
-    // that later attempts may then improve upon.
-
-    for (const attempt of [1, 2, 3] as const) {
-      const totalEvents = results
-        .map(r => {
-          const bestSquatW = getBestAttempt(r.squat1, r.squat2, r.squat3)?.weight ?? 0
-          const bestBenchW = getBestAttempt(r.bench1, r.bench2, r.bench3)?.weight ?? 0
-          const weight = bestSquatW + bestBenchW + Math.max(
-            r.deadlift1 ?? 0,
-            attempt >= 2 ? (r.deadlift2 ?? 0) : 0,
-            attempt >= 3 ? (r.deadlift3 ?? 0) : 0,
-            0,
-          )
-          return { r, weight, lot: r.lot ?? 999 }
-        })
-        .filter(e => e.weight > 0)
-        .sort((a, b) => a.lot - b.lot)
-
-      for (const { r, weight } of totalEvents) {
-        const dob = usersMap.get(r.vpfId)?.dob ?? null
-        const originalDiv: RankedDivision =
-          dob === null ? "open" : getDivisionFromAge(systemYear - dob)
-
-        const targetDivisions = (originalDiv in RECORD_DIVISION_OVERRIDE
-          ? RECORD_DIVISION_OVERRIDE[originalDiv]
-          : [originalDiv]) as RankedDivision[]
-
-        for (const div of targetDivisions) {
-          const key = `${r.sex}-${div}-${r.weightClass}-total`
-          const prev = previousRecordsMap.get(key) ?? 0
-          const best = groupBest.get(key) ?? prev
-
-          if (weight > best) {
-            newRecords.push({
-              resultId: r.resultId,
-              lift: "total",
-              attempt,
-              recordWeight: weight,
-              recordDivision: div,
-            })
-            groupBest.set(key, weight)
-          }
         }
       }
     }

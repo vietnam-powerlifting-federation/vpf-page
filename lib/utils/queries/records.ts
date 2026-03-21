@@ -34,6 +34,146 @@ export function getBestAttempt(
   )
 }
 
+export type AttemptEvent = {
+  year: number
+  lot: number
+  lift: "squat" | "bench" | "deadlift" | "total"
+  liftOrder: number
+  attempt: 1 | 2 | 3
+  weight: number
+  result: Result
+}
+
+/**
+ * Builds a flat list of attempt events from results, including individual lifts and running totals.
+ * Suitable for cross-year chronological sorting and record scanning.
+ */
+export function buildAttemptEvents(
+  results: Result[],
+  meetsMap: Map<number, MeetPublic>
+): AttemptEvent[] {
+  const events: AttemptEvent[] = []
+
+  for (const r of results) {
+    const meet = meetsMap.get(r.meetId)
+    if (!meet) continue
+    const year = meet.systemYear ?? 0
+    const lot = r.lot ?? 999
+
+    if (r.squat1) events.push({ year, lot, lift: "squat", liftOrder: 0, attempt: 1, weight: r.squat1, result: r })
+    if (r.squat2) events.push({ year, lot, lift: "squat", liftOrder: 0, attempt: 2, weight: r.squat2, result: r })
+    if (r.squat3) events.push({ year, lot, lift: "squat", liftOrder: 0, attempt: 3, weight: r.squat3, result: r })
+
+    if (r.bench1) events.push({ year, lot, lift: "bench", liftOrder: 1, attempt: 1, weight: r.bench1, result: r })
+    if (r.bench2) events.push({ year, lot, lift: "bench", liftOrder: 1, attempt: 2, weight: r.bench2, result: r })
+    if (r.bench3) events.push({ year, lot, lift: "bench", liftOrder: 1, attempt: 3, weight: r.bench3, result: r })
+
+    if (r.deadlift1) events.push({ year, lot, lift: "deadlift", liftOrder: 2, attempt: 1, weight: r.deadlift1, result: r })
+    if (r.deadlift2) events.push({ year, lot, lift: "deadlift", liftOrder: 2, attempt: 2, weight: r.deadlift2, result: r })
+    if (r.deadlift3) events.push({ year, lot, lift: "deadlift", liftOrder: 2, attempt: 3, weight: r.deadlift3, result: r })
+
+    const bestSquatW = getBestAttempt(r.squat1, r.squat2, r.squat3)?.weight ?? 0
+    const bestBenchW = getBestAttempt(r.bench1, r.bench2, r.bench3)?.weight ?? 0
+    for (const attempt of [1, 2, 3] as const) {
+      const weight = bestSquatW + bestBenchW + Math.max(
+        r.deadlift1 ?? 0,
+        attempt >= 2 ? (r.deadlift2 ?? 0) : 0,
+        attempt >= 3 ? (r.deadlift3 ?? 0) : 0,
+        0,
+      )
+      if (weight > 0) {
+        events.push({ year, lot, lift: "total", liftOrder: 3, attempt, weight, result: r })
+      }
+    }
+  }
+
+  return events
+}
+
+type RecordEntry = LiftRecord & { vpfId: string }
+
+/**
+ * Computes record status (holding/broken) for a specific athlete across all national meets.
+ * Returns all records ever set by the athlete with status populated.
+ */
+export async function fetchAthleteRecordStatus(targetVpfId: string): Promise<LiftRecord[]> {
+  const { meets: allMeets, results, athletes } = await getMeetsAndResultsAndAthletes({
+    meetType: ["national"],
+    legacy: false,
+    hidden: false,
+    minYear: RECORD_START_YEAR,
+  })
+
+  if (allMeets.length === 0) return []
+
+  const usersMap = new Map<string, UserPublic>()
+  athletes.forEach(u => usersMap.set(u.vpfId, u))
+
+  const meetsMap = new Map<number, MeetPublic>()
+  allMeets.forEach(m => meetsMap.set(m.meetId, m))
+
+  const events = buildAttemptEvents(results, meetsMap)
+  events.sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year
+    if (a.liftOrder !== b.liftOrder) return a.liftOrder - b.liftOrder
+    if (a.attempt !== b.attempt) return a.attempt - b.attempt
+    if (a.weight !== b.weight) return a.weight - b.weight
+    return a.lot - b.lot
+  })
+
+  const groupBest = new Map<string, { weight: number; entry: RecordEntry }>()
+  const allRecords: RecordEntry[] = []
+  const processed = new Set<string>()
+
+  for (const e of events) {
+    const { result, lift, attempt, weight } = e
+    if (weight <= 0) continue
+
+    const resultKey = `${result.vpfId}-${lift}-${attempt}-${weight}`
+    if (processed.has(resultKey)) continue
+    processed.add(resultKey)
+
+    const meet = meetsMap.get(result.meetId)
+    if (!meet) continue
+
+    const dob = usersMap.get(result.vpfId)?.dob ?? null
+    const systemYear = meet.systemYear
+    const originalDiv: RankedDivision = (dob === null || systemYear === null)
+      ? "open" : getDivisionFromAge(systemYear - dob)
+
+    const targetDivisions = (originalDiv in RECORD_DIVISION_OVERRIDE
+      ? RECORD_DIVISION_OVERRIDE[originalDiv]
+      : [originalDiv]) as RankedDivision[]
+
+    for (const div of targetDivisions) {
+      const key = `${result.sex}-${div}-${result.weightClass}-${lift}`
+      const prev = groupBest.get(key)
+
+      if (weight > (prev?.weight ?? 0)) {
+        if (prev) {
+          prev.entry.status = "broken"
+        }
+
+        const newEntry: RecordEntry = {
+          resultId: result.resultId,
+          lift,
+          attempt,
+          recordWeight: weight,
+          recordDivision: div,
+          status: "holding",
+          vpfId: result.vpfId,
+        }
+        groupBest.set(key, { weight, entry: newEntry })
+        allRecords.push(newEntry)
+      }
+    }
+  }
+
+  return allRecords
+    .filter(r => r.vpfId === targetVpfId)
+    .map(({ vpfId: _, ...rest }) => rest)
+}
+
 type FetchRecordsOptions = {
   maxYear?: number | null
   minYear?: number
