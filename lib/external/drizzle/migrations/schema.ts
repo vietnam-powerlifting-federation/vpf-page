@@ -1,4 +1,4 @@
-import { pgTable, serial, text, date, smallint, boolean, unique, check, foreignKey, timestamp, primaryKey, integer, numeric, pgSequence, pgEnum } from "drizzle-orm/pg-core"
+import { pgTable, serial, text, date, smallint, boolean, unique, check, foreignKey, timestamp, primaryKey, integer, numeric, pgSequence, pgEnum, uuid } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 export const division = pgEnum("division", ["subjr", "jr", "open", "mas1", "mas2", "mas3", "mas4", "guest"])
@@ -106,6 +106,7 @@ export const userViolations = pgTable("user_violations", {
 ])
 
 export const legacyMeetResults = pgTable("legacy_meet_results", {
+  legacyResultId: uuid("legacy_result_id").defaultRandom().primaryKey().notNull(),
   meetId: integer("meet_id").notNull(),
   vpfId: text("vpf_id").notNull(),
   sex: sexes().notNull(),
@@ -138,11 +139,12 @@ export const legacyMeetResults = pgTable("legacy_meet_results", {
     foreignColumns: [users.vpfId],
     name: "legacy_meet_result_vpf_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
-  primaryKey({ columns: [table.meetId, table.vpfId], name: "legacy_meet_result_pkey" }),
+  unique("legacy_meet_result_meet_vpf_key").on(table.meetId, table.vpfId),
   check("chk_weight_class_sex", sql`((sex = 'male'::sexes) AND (weight_class = ANY (ARRAY[53, 59, 66, 74, 83, 93, 105, 120, 999]))) OR ((sex = 'female'::sexes) AND (weight_class = ANY (ARRAY[43, 47, 52, 57, 63, 69, 76, 84, 999]))) OR (sex IS NULL)`),
 ])
 
 export const meetResults = pgTable("meet_results", {
+  resultId: uuid("result_id").defaultRandom().primaryKey().notNull(),
   meetId: integer("meet_id").notNull(),
   vpfId: text("vpf_id").notNull(),
   sex: sexes().notNull(),
@@ -181,6 +183,6 @@ export const meetResults = pgTable("meet_results", {
     foreignColumns: [users.vpfId],
     name: "meet_result_vpf_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
-  primaryKey({ columns: [table.meetId, table.vpfId], name: "meet_result_pkey" }),
+  unique("meet_result_meet_vpf_key").on(table.meetId, table.vpfId),
   check("chk_weight_class_sex", sql`((sex = 'male'::sexes) AND (weight_class = ANY (ARRAY[53, 59, 66, 74, 83, 93, 105, 120, 999]))) OR ((sex = 'female'::sexes) AND (weight_class = ANY (ARRAY[43, 47, 52, 57, 63, 69, 76, 84, 999]))) OR (sex IS NULL)`),
 ])
