@@ -25,3 +25,4 @@ In API directory:
 
 Follow code conventions and structure from other files in the API directory
 When making api changes, update test files in test/api directory
+If you modify an API’s return body, update all frontend consumers to match.

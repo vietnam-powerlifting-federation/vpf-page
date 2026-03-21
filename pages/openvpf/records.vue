@@ -116,6 +116,7 @@
             <RecordsHistoryList
               :records="filteredHistoryRecords"
               :athletes="displayAthletes"
+              :results="historyData?.data?.results ?? []"
               :previous-records-map="previousRecordsMap"
             />
           </div>
@@ -184,6 +185,7 @@ import RecordsTable from "@/components/RecordsTable.vue"
 import RecordsHistoryList from "@/components/RecordsHistoryList.vue"
 import { WEIGHT_CLASS_MALE, WEIGHT_CLASS_FEMALE, RECORD_START_YEAR } from "~/lib/constants/constants"
 import type { LiftRecord } from "~/types/records"
+import type { Result } from "~/types/results"
 import type { UserPublic } from "~/types/users"
 import type { MeetPublic } from "~/types/meets"
 import type { Sex, Division } from "~/types/union-types"
@@ -243,6 +245,7 @@ const { data, pending, error, refresh } = await useFetch<{
     records: LiftRecord[]
     meet: MeetPublic[]
     athletes: UserPublic[]
+    results: Result[]
   } | null
   message: {
     en: string
@@ -266,6 +269,7 @@ const { data: historyData, pending: historyPending, error: historyError, refresh
     records: LiftRecord[]
     meet: MeetPublic | null
     athletes: UserPublic[]
+    results: Result[]
   } | null
   message: {
     en: string
@@ -289,6 +293,7 @@ const { data: previousYearRecords } = await useFetch<{
     records: LiftRecord[]
     meet: MeetPublic[]
     athletes: UserPublic[]
+    results: Result[]
   } | null
 }>("/api/records", {
   query: computed(() => {
@@ -304,9 +309,13 @@ const { data: previousYearRecords } = await useFetch<{
 // Create a map of previous records for history view
 const previousRecordsMap = computed(() => {
   const map = new Map<string, number>()
-  if (previousYearRecords.value?.data?.records) {
-    for (const record of previousYearRecords.value.data.records) {
-      const key = `${record.sex}-${record.recordDivision}-${record.weightClass}-${record.lift}`
+  const prevData = previousYearRecords.value?.data
+  if (prevData?.records && prevData?.results) {
+    const prevResultsById = new Map(prevData.results.map(r => [r.resultId, r]))
+    for (const record of prevData.records) {
+      const result = prevResultsById.get(record.resultId)
+      if (!result) continue
+      const key = `${result.sex}-${record.recordDivision}-${result.weightClass}-${record.lift}`
       const currentBest = map.get(key) ?? 0
       if (record.recordWeight > currentBest) {
         map.set(key, record.recordWeight)
@@ -346,34 +355,25 @@ const displayMeets = computed(() => {
 
 // Filter and group records using the API's pre-calculated records
 const filteredRecords = computed(() => {
-  if (!displayData.value) {
-    return {
-      squat: [],
-      bench: [],
-      deadlift: [],
-      total: [],
-    }
+  if (!data.value?.data) {
+    return { squat: [], bench: [], deadlift: [], total: [] }
   }
 
-  const records = displayData.value.records
-  const meets = displayMeets.value
-  const athletes = displayAthletes.value
+  const { records, results: currentResults } = data.value.data
+  const resultsById = new Map(currentResults.map(r => [r.resultId, r]))
   const weightClassesList = weightClasses.value
 
-  // Create maps for quick lookup
   const meetsMap = new Map<number, MeetPublic>()
-  meets.forEach((m) => meetsMap.set(m.meetId, m))
+  displayMeets.value.forEach((m) => meetsMap.set(m.meetId, m))
 
   const athletesMap = new Map<string, UserPublic>()
-  athletes.forEach((a) => athletesMap.set(a.vpfId, a))
+  displayAthletes.value.forEach((a) => athletesMap.set(a.vpfId, a))
 
-  // Filter records by sex and division
-  const filteredRecordsWithMetadata = records
-    .filter((record) => {
-      return selectedSex.value == record.sex && selectedDivision.value === record.recordDivision
-    })
+  const filtered = records.filter((record) => {
+    const result = resultsById.get(record.resultId)
+    return result?.sex == selectedSex.value && record.recordDivision === selectedDivision.value
+  })
 
-  // Type for record row (matches RecordsTable's RecordRow interface)
   type RecordRow = {
     weightClass: number
     weight: number | null
@@ -384,92 +384,31 @@ const filteredRecords = computed(() => {
     meetId?: number
   }
 
-  // Group records by lift type and weight class
-  const grouped: {
-    squat: RecordRow[]
-    bench: RecordRow[]
-    deadlift: RecordRow[]
-    total: RecordRow[]
-  } = {
-    squat: [],
-    bench: [],
-    deadlift: [],
-    total: [],
+  const grouped: { squat: RecordRow[]; bench: RecordRow[]; deadlift: RecordRow[]; total: RecordRow[] } = {
+    squat: [], bench: [], deadlift: [], total: [],
   }
 
-  // For each weight class, find the matching record
   for (const weightClass of weightClassesList) {
-    // Squat
-    const squatRecord = filteredRecordsWithMetadata.find(
-      (record) => record.lift === "squat" && record.weightClass === weightClass
-    )
-    grouped.squat.push(
-      squatRecord
-        ? {
-          weightClass,
-          weight: squatRecord.recordWeight,
-          athlete: athletesMap.get(squatRecord.vpfId),
-          meet: meetsMap.get(squatRecord.meetId),
-          bodyWeight: squatRecord.bodyWeight,
-          vpfId: squatRecord.vpfId,
-          meetId: squatRecord.meetId,
-        }
-        : { weightClass, weight: null }
-    )
-
-    // Bench
-    const benchRecord = filteredRecordsWithMetadata.find(
-      (record) => record.lift === "bench" && record.weightClass === weightClass
-    )
-    grouped.bench.push(
-      benchRecord
-        ? {
-          weightClass,
-          weight: benchRecord.recordWeight,
-          athlete: athletesMap.get(benchRecord.vpfId),
-          meet: meetsMap.get(benchRecord.meetId),
-          bodyWeight: benchRecord.bodyWeight,
-          vpfId: benchRecord.vpfId,
-          meetId: benchRecord.meetId,
-        }
-        : { weightClass, weight: null }
-    )
-
-    // Deadlift
-    const deadliftRecord = filteredRecordsWithMetadata.find(
-      (record) => record.lift === "deadlift" && record.weightClass === weightClass
-    )
-    grouped.deadlift.push(
-      deadliftRecord
-        ? {
-          weightClass,
-          weight: deadliftRecord.recordWeight,
-          athlete: athletesMap.get(deadliftRecord.vpfId),
-          meet: meetsMap.get(deadliftRecord.meetId),
-          bodyWeight: deadliftRecord.bodyWeight,
-          vpfId: deadliftRecord.vpfId,
-          meetId: deadliftRecord.meetId,
-        }
-        : { weightClass, weight: null }
-    )
-
-    // Total
-    const totalRecord = filteredRecordsWithMetadata.find(
-      (record) => record.lift === "total" && record.weightClass === weightClass
-    )
-    grouped.total.push(
-      totalRecord
-        ? {
-          weightClass,
-          weight: totalRecord.recordWeight,
-          athlete: athletesMap.get(totalRecord.vpfId),
-          meet: meetsMap.get(totalRecord.meetId),
-          bodyWeight: totalRecord.bodyWeight,
-          vpfId: totalRecord.vpfId,
-          meetId: totalRecord.meetId,
-        }
-        : { weightClass, weight: null }
-    )
+    for (const lift of ["squat", "bench", "deadlift", "total"] as const) {
+      const rec = filtered.find(r => {
+        const result = resultsById.get(r.resultId)
+        return r.lift === lift && result?.weightClass === weightClass
+      })
+      const result = rec ? resultsById.get(rec.resultId) : undefined
+      grouped[lift].push(
+        rec && result
+          ? {
+            weightClass,
+            weight: rec.recordWeight,
+            athlete: athletesMap.get(result.vpfId),
+            meet: meetsMap.get(result.meetId),
+            bodyWeight: result.bodyWeight,
+            vpfId: result.vpfId,
+            meetId: result.meetId,
+          }
+          : { weightClass, weight: null }
+      )
+    }
   }
 
   return grouped
@@ -480,14 +419,14 @@ const displayRecords = computed(() => filteredRecords.value)
 
 // Filter history records by sex and division
 const filteredHistoryRecords = computed(() => {
-  if (!historyData.value?.data?.records) {
-    return []
-  }
+  const histData = historyData.value?.data
+  if (!histData?.records) return []
 
-  const records = historyData.value.data.records
+  const resultsById = new Map((histData.results ?? []).map(r => [r.resultId, r]))
 
-  return records.filter((record) => {
-    return selectedSex.value == record.sex && selectedDivision.value === record.recordDivision
+  return histData.records.filter((record) => {
+    const result = resultsById.get(record.resultId)
+    return result?.sex == selectedSex.value && record.recordDivision === selectedDivision.value
   })
 })
 

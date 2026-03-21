@@ -2,7 +2,7 @@ import { db } from "~/lib/external/drizzle/drizzle"
 import { meets } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
 import { RECORD_DIVISION_OVERRIDE } from "~/lib/constants/constants"
-import { fetchRecordsForYear, getDivisionFromAge } from "~/lib/utils/queries/records"
+import { fetchRecordsForYear, getDivisionFromAge, getBestAttempt } from "~/lib/utils/queries/records"
 import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import type { ApiResponse } from "~/types/api"
 import type { LiftRecord } from "~/types/records"
@@ -17,6 +17,7 @@ type HistoryResponse = {
   records: LiftRecord[]
   meet: MeetPublic | null
   athletes: UserPublic[]
+  results: Result[]
 }
 
 type AttemptEvent = {
@@ -44,14 +45,18 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
 
     if (year === null || year > maxYear) year = maxYear
 
-    const { records: previousYearRecords } =
+    const { records: previousYearRecords, results: previousYearResults } =
       await fetchRecordsForYear({ maxYear: year - 1 })
 
+    const previousResultsById = new Map(previousYearResults.map(r => [r.resultId, r]))
+
     const previousRecordsMap = new Map<string, number>()
-    for (const r of previousYearRecords) {
+    for (const rec of previousYearRecords) {
+      const result = previousResultsById.get(rec.resultId)
+      if (!result) continue
       previousRecordsMap.set(
-        `${r.sex}-${r.recordDivision}-${r.weightClass}-${r.lift}`,
-        r.recordWeight
+        `${result.sex}-${rec.recordDivision}-${result.weightClass}-${rec.lift}`,
+        rec.recordWeight
       )
     }
 
@@ -133,7 +138,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
 
         if (weight > best) {
           newRecords.push({
-            ...result,
+            resultId: result.resultId,
             lift,
             attempt,
             recordWeight: weight,
@@ -144,32 +149,50 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
       }
     }
 
-    // ---------- TOTALS (LAST) ----------
+    // ---------- TOTALS BY ATTEMPT (LAST) ----------
+    // Process total1→total2→total3 in order so earlier attempts can establish records
+    // that later attempts may then improve upon.
 
-    for (const r of results) {
-      if (!r.total || r.total <= 0) continue
+    for (const attempt of [1, 2, 3] as const) {
+      const totalEvents = results
+        .map(r => {
+          const bestSquatW = getBestAttempt(r.squat1, r.squat2, r.squat3)?.weight ?? 0
+          const bestBenchW = getBestAttempt(r.bench1, r.bench2, r.bench3)?.weight ?? 0
+          const weight = bestSquatW + bestBenchW + Math.max(
+            r.deadlift1 ?? 0,
+            attempt >= 2 ? (r.deadlift2 ?? 0) : 0,
+            attempt >= 3 ? (r.deadlift3 ?? 0) : 0,
+            0,
+          )
+          return { r, weight, lot: r.lot ?? 999 }
+        })
+        .filter(e => e.weight > 0)
+        .sort((a, b) => a.lot - b.lot)
 
-      const dob = usersMap.get(r.vpfId)?.dob ?? null
-      const originalDiv: RankedDivision =
-        dob === null ? "open" : getDivisionFromAge(systemYear - dob)
+      for (const { r, weight } of totalEvents) {
+        const dob = usersMap.get(r.vpfId)?.dob ?? null
+        const originalDiv: RankedDivision =
+          dob === null ? "open" : getDivisionFromAge(systemYear - dob)
 
-      const targetDivisions = (originalDiv in RECORD_DIVISION_OVERRIDE
-        ? RECORD_DIVISION_OVERRIDE[originalDiv]
-        : [originalDiv]) as RankedDivision[]
+        const targetDivisions = (originalDiv in RECORD_DIVISION_OVERRIDE
+          ? RECORD_DIVISION_OVERRIDE[originalDiv]
+          : [originalDiv]) as RankedDivision[]
 
-      for (const div of targetDivisions) {
-        const key = `${r.sex}-${div}-${r.weightClass}-total`
-        const prev = previousRecordsMap.get(key) ?? 0
-        const best = groupBest.get(key) ?? prev
+        for (const div of targetDivisions) {
+          const key = `${r.sex}-${div}-${r.weightClass}-total`
+          const prev = previousRecordsMap.get(key) ?? 0
+          const best = groupBest.get(key) ?? prev
 
-        if (r.total > best) {
-          newRecords.push({
-            ...r,
-            lift: "total",
-            recordWeight: r.total,
-            recordDivision: div,
-          })
-          groupBest.set(key, r.total)
+          if (weight > best) {
+            newRecords.push({
+              resultId: r.resultId,
+              lift: "total",
+              attempt,
+              recordWeight: weight,
+              recordDivision: div,
+            })
+            groupBest.set(key, weight)
+          }
         }
       }
     }
@@ -181,6 +204,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
         records: newRecords,
         meet: meet as MeetPublic,
         athletes: [...usersMap.values()],
+        results,
       },
       { en: "Record history retrieved successfully", vi: "Lấy lịch sử kỷ lục thành công" },
     )

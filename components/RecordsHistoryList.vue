@@ -4,26 +4,26 @@
     <div v-for="liftType in liftTypes" :key="liftType">
       <div v-if="getRecordsByLift(liftType).length > 0">
         <h2 class="text-2xl font-bold mb-4 text-primary">{{ getLiftName(liftType) }}</h2>
-        
+
         <!-- Group by weight class and division -->
         <div v-for="group in getGroupedRecords(liftType)" :key="group.key" class="mb-6">
           <div class="bg-surface-50 dark:bg-surface-800 rounded-lg p-4 mb-4">
             <h3 class="text-lg font-semibold mb-2">
-              {{ formatWeightClass(group.weightClass, group.sex) }} - {{ formatDivision(group.division) }} 
+              {{ formatWeightClass(group.weightClass, group.sex) }} - {{ formatDivision(group.division) }}
               ({{ group.sex === 'male' ? t("general.male") : t("general.female") }})
             </h3>
-            
+
             <!-- Show previous record if available -->
             <div v-if="group.previousRecord" class="text-sm text-surface-600 dark:text-surface-400 mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
-              <span class="font-medium">{{ t("records.previousRecord") }}:</span> 
+              <span class="font-medium">{{ t("records.previousRecord") }}:</span>
               <span class="ml-2">{{ formatWeight(group.previousRecord) }}kg</span>
             </div>
-            
+
             <!-- List of records broken -->
             <div class="space-y-2">
               <div
                 v-for="(record, index) in group.records"
-                :key="`${record.vpfId}-${record.lot}-${record.attempt || 0}`"
+                :key="`${record.resultId}-${record.attempt}`"
                 class="flex items-center justify-between p-3 bg-surface-0 dark:bg-surface-900 rounded border border-surface-200 dark:border-surface-700 hover:border-primary transition-colors"
               >
                 <div class="flex-1">
@@ -38,17 +38,17 @@
                     >
                       {{ record.athlete.fullName }}
                     </NuxtLink>
-                    <span v-else class="font-semibold">{{ record.vpfId }}</span>
+                    <span v-else class="font-semibold">{{ record.result?.vpfId }}</span>
                   </div>
                   <div class="flex items-center gap-4 mt-1 text-sm text-surface-600 dark:text-surface-400 ml-11">
-                    <span v-if="record.attempt">
+                    <span>
                       {{ t("general.attempt") }} {{ record.attempt }}
                     </span>
-                    <span v-if="record.bodyWeight">
-                      {{ t("general.bodyWeight") }}: {{ formatWeight(record.bodyWeight) }}kg
+                    <span v-if="record.result?.bodyWeight">
+                      {{ t("general.bodyWeight") }}: {{ formatWeight(record.result.bodyWeight) }}kg
                     </span>
-                    <span v-if="record.lot" class="text-xs">
-                      {{ t("recordsHistory.lot") }} {{ record.lot }}
+                    <span v-if="record.result?.lot" class="text-xs">
+                      {{ t("recordsHistory.lot") }} {{ record.result.lot }}
                     </span>
                   </div>
                 </div>
@@ -72,6 +72,7 @@
 <script setup lang="ts">
 import { computed } from "vue"
 import type { LiftRecord } from "~/types/records"
+import type { Result } from "~/types/results"
 import type { UserPublic } from "~/types/users"
 import type { Sex, Division } from "~/types/union-types"
 import { formatWeightClass } from "@/lib/utils/client"
@@ -81,6 +82,7 @@ const { t } = useI18n()
 interface Props {
   records: LiftRecord[]
   athletes: UserPublic[]
+  results: Result[]
   previousRecordsMap?: Map<string, number>
 }
 
@@ -90,75 +92,74 @@ const props = withDefaults(defineProps<Props>(), {
 
 const liftTypes = ["squat", "bench", "deadlift", "total"] as const
 
-// Create athletes map
 const athletesMap = computed(() => {
   const map = new Map<string, UserPublic>()
   props.athletes.forEach(a => map.set(a.vpfId, a))
   return map
 })
 
-// Get records by lift type
-const getRecordsByLift = (lift: typeof liftTypes[number]): LiftRecord[] => {
+const resultsById = computed(() => {
+  const map = new Map<string, Result>()
+  props.results.forEach(r => map.set(r.resultId, r))
+  return map
+})
+
+type RichRecord = LiftRecord & { athlete?: UserPublic; result?: Result }
+
+const getRecordsByLift = (lift: typeof liftTypes[number]): RichRecord[] => {
   return props.records
     .filter(r => r.lift === lift)
-    .map(r => ({
-      ...r,
-      athlete: athletesMap.value.get(r.vpfId)
-    }))
+    .map(r => {
+      const result = resultsById.value.get(r.resultId)
+      return {
+        ...r,
+        result,
+        athlete: result ? athletesMap.value.get(result.vpfId) : undefined,
+      }
+    })
 }
 
-// Group records by weight class, division, and sex
 interface GroupedRecord {
   key: string
   weightClass: number
   division: Division
   sex: Sex
-  records: (LiftRecord & { athlete?: UserPublic })[]
+  records: RichRecord[]
   previousRecord: number | null
 }
 
 const getGroupedRecords = (lift: typeof liftTypes[number]): GroupedRecord[] => {
   const records = getRecordsByLift(lift)
-  
-  // Group by weight class, division, and sex
   const groups = new Map<string, GroupedRecord>()
-  
+
   for (const record of records) {
-    const key = `${record.sex}-${record.recordDivision}-${record.weightClass}`
-    
+    const result = record.result
+    if (!result) continue
+
+    const key = `${result.sex}-${record.recordDivision}-${result.weightClass}`
+
     if (!groups.has(key)) {
-      // Get previous record from map
-      const previousRecordKey = `${record.sex}-${record.recordDivision}-${record.weightClass}-${record.lift}`
+      const previousRecordKey = `${result.sex}-${record.recordDivision}-${result.weightClass}-${record.lift}`
       const previousRecord = props.previousRecordsMap?.get(previousRecordKey) ?? null
-      
+
       groups.set(key, {
         key,
-        weightClass: record.weightClass,
+        weightClass: result.weightClass,
         division: record.recordDivision,
-        sex: record.sex,
+        sex: result.sex,
         records: [],
-        previousRecord
+        previousRecord,
       })
     }
-    
-    const group = groups.get(key)!
-    
-    group.records.push({
-      ...record,
-      athlete: athletesMap.value.get(record.vpfId)
-    })
+
+    groups.get(key)!.records.push(record)
   }
-  
-  // Sort records within each group by lot, then by attempt
+
   const groupsArray = Array.from(groups.values())
   for (const group of groupsArray) {
-    group.records.sort((a, b) => {
-      return a.recordWeight - b.recordWeight
-    })
-    
-    // Previous record is already set from the map
+    group.records.sort((a, b) => a.recordWeight - b.recordWeight)
   }
-  
+
   return groupsArray
 }
 
@@ -191,25 +192,20 @@ const formatWeight = (weight: number | null | undefined): string => {
   return weight.toFixed(2)
 }
 
-// Calculate improvement over previous record
 const getImprovement = (
-  record: LiftRecord & { athlete?: UserPublic },
+  record: RichRecord,
   group: GroupedRecord,
   index: number
 ): number | null => {
-  // If this is the first record and we have a previous record
   if (index === 0 && group.previousRecord) {
     return record.recordWeight - group.previousRecord
   }
-  
-  // If this is not the first record, compare with the previous record in the list
   if (index > 0) {
     const previousRecord = group.records[index - 1]
     if (record.recordWeight > previousRecord.recordWeight) {
       return record.recordWeight - previousRecord.recordWeight
     }
   }
-  
   return null
 }
 </script>
