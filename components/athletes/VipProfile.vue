@@ -3,15 +3,17 @@
     <!-- Banner Slideshow -->
     <div v-if="banners.length > 0" class="relative">
       <BannerSlideshow :banners="banners" />
-      <!-- Avatar overlapping banner bottom-left -->
-      <div class="absolute bottom-0 left-16 translate-y-1/2 z-10">
-        <AthleteAvatar
-          v-if="vipSettings.avatarImageUrl"
-          :src="vipSettings.avatarImageUrl"
-          :decorator1="vipSettings.decorator1"
-          :decorator2="vipSettings.decorator2"
-          class="w-36 h-36"
-        />
+      <!-- Avatar overlapping banner bottom-left, aligned with content container -->
+      <div class="absolute bottom-0 left-0 right-0 translate-y-1/2 z-10 pointer-events-none">
+        <div class="container mx-auto px-4 pointer-events-auto">
+          <AthleteAvatar
+            v-if="vipSettings.avatarImageUrl"
+            :src="vipSettings.avatarImageUrl"
+            :decorator1="vipSettings.decorator1"
+            :decorator2="vipSettings.decorator2"
+            class="w-36 h-36"
+          />
+        </div>
       </div>
     </div>
 
