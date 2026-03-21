@@ -183,6 +183,28 @@
     "info": "Thông tin",
     "messageContent": "Nội dung tin nhắn"
   },
+  "athlete": {
+    "notFound": "Không tìm thấy vận động viên",
+    "pbs": "Thành tích tốt nhất",
+    "squatPb": "Squat PB",
+    "benchPb": "Bench PB",
+    "deadliftPb": "Deadlift PB",
+    "totalPb": "Total PB",
+    "glPb": "GL PB",
+    "competitionHistory": "Lịch sử thi đấu",
+    "competition": "Giải đấu",
+    "bestSquat": "Squat tốt nhất",
+    "bestBench": "Bench tốt nhất",
+    "bestDeadlift": "Deadlift tốt nhất",
+    "liftersRecords": "Kỷ lục vận động viên",
+    "record": "Kỷ lục",
+    "state": "Trạng thái",
+    "holding": "Đang giữ",
+    "broken": "Đã phá",
+    "recordCertificate": "Chứng nhận kỷ lục",
+    "view": "Xem",
+    "placement": "#"
+  },
   "records": {
     "title": "Kỷ lục",
     "viewMode": "Chế độ xem",

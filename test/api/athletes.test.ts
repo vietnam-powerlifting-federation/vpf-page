@@ -154,5 +154,38 @@ describe("API: athletes", () => {
         expect(vip).toHaveProperty("vpfId")
       }
     })
+
+    it("returns 200 when fetching athlete by slug", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/index")).default
+      const event = createMockH3Event({
+        params: { id: fixtureUsers[0].slug },
+        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+      })
+      const res = await handler(event)
+      expect(res.success).toBe(true)
+      expect(res.data?.athlete?.vpfId).toBe(fixtureUsers[0].vpfId)
+    })
+
+    it("returns 404 when slug does not match any athlete", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/index")).default
+      const event = createMockH3Event({
+        params: { id: "nonexistent-slug" },
+        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+      })
+      const res = await handler(event)
+      expect(res.success).toBe(false)
+    })
+
+    it("returns 200 without vipSettings when athlete has no active VIP and request is from public viewer", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/index")).default
+      const event = createMockH3Event({
+        params: { id: fixtureUsers[2].vpfId },
+        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        query: { includeVipSettings: "true" },
+      })
+      const res = await handler(event)
+      expect(res.success).toBe(true)
+      expect((res.data as { vipSettings?: unknown }).vipSettings).toBeUndefined()
+    })
   })
 })

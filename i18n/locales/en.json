@@ -183,6 +183,28 @@
     "info": "Info",
     "messageContent": "Message Content"
   },
+  "athlete": {
+    "notFound": "Athlete not found",
+    "pbs": "Athlete PBs",
+    "squatPb": "Squat PB",
+    "benchPb": "Bench PB",
+    "deadliftPb": "Deadlift PB",
+    "totalPb": "Total PB",
+    "glPb": "GL PB",
+    "competitionHistory": "Competition History",
+    "competition": "Competition",
+    "bestSquat": "Best Squat",
+    "bestBench": "Best Bench",
+    "bestDeadlift": "Best Deadlift",
+    "liftersRecords": "Lifter's Records",
+    "record": "Record",
+    "state": "State",
+    "holding": "Holder",
+    "broken": "Broken",
+    "recordCertificate": "Record Certificate",
+    "view": "View",
+    "placement": "#"
+  },
   "records": {
     "title": "Records",
     "viewMode": "View Mode",

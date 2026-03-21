@@ -36,12 +36,31 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
       }) as ApiResponse<AthleteDetailsResponse>
     }
 
-    const vpfId = idParam === "self" ? currentUser?.vpfId : idParam
+    let vpfId: string | undefined
+    if (idParam === "self") {
+      vpfId = currentUser?.vpfId
+    } else if (idParam.startsWith("VPF")) {
+      vpfId = idParam
+    } else {
+      const row = await db
+        .select({ vpfId: users.vpfId })
+        .from(users)
+        .where(eq(users.slug, idParam))
+        .limit(1)
+        .then((rows) => rows[0])
+      vpfId = row?.vpfId
+    }
 
     if (!vpfId) {
-      return fail(event, 401, {
-        en: "Unauthorized",
-        vi: "Không được phép",
+      if (idParam === "self") {
+        return fail(event, 401, {
+          en: "Unauthorized",
+          vi: "Không được phép",
+        }) as ApiResponse<AthleteDetailsResponse>
+      }
+      return fail(event, 404, {
+        en: "Athlete not found",
+        vi: "Không tìm thấy vận động viên",
       }) as ApiResponse<AthleteDetailsResponse>
     }
 
@@ -87,9 +106,13 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
     const personalBest = getPersonalBestSummary(results)
 
     let vipSettings: VipBenefits | undefined
-    if (includeVipSettings && isPrivate) {
-      const vipExpiresAt: string | null =
-        "vipMembershipExpiresAt" in athlete ? (athlete.vipMembershipExpiresAt as string | null) ?? null : null
+    if (includeVipSettings) {
+      const vipExpiresAt = await db
+        .select({ vipMembershipExpiresAt: users.vipMembershipExpiresAt })
+        .from(users)
+        .where(eq(users.vpfId, vpfId))
+        .limit(1)
+        .then((rows) => rows[0]?.vipMembershipExpiresAt ?? null)
       if (isVipActive(vipExpiresAt)) {
         const vipRow = await db
           .select()
