@@ -1,7 +1,7 @@
 <template>
   <MeetTabContent :pending="pending" :error="error" :meet="meet ?? null">
+    <ClientOnly>
     <div class="overflow-hidden">
-      <ClientOnly>
         <DataTable
           :value="glRankedResults"
           :loading="false"
@@ -23,7 +23,7 @@
             <template #body="{ data }">
               <NuxtLink
                 v-if="data.athlete"
-                :to="`/athletes/${data.athlete.vpfId}`"
+                :to="`/openvpf/athletes/${data.athlete.vpfId}`"
                 class="text-primary hover:underline"
               >
                 {{ data.athlete.fullName }}
@@ -72,15 +72,8 @@
             </template>
           </Column>
         </DataTable>
-        <template #fallback>
-          <div class="flex items-center justify-center py-12">
-            <div class="text-center">
-              <div class="text-lg font-semibold mb-2 text-primary">{{ $t("meets.loadingGlRankings") }}</div>
-            </div>
-          </div>
-        </template>
-      </ClientOnly>
     </div>
+    </ClientOnly>
   </MeetTabContent>
 </template>
 
@@ -96,6 +89,7 @@ const slug = route.params.slug as string
 
 definePageMeta({
   layout: "openvpf-competitions",
+  keepalive: true,
   pageTransition: {
     name: "page",
     mode: "out-in",

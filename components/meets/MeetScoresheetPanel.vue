@@ -31,7 +31,7 @@
               <template #body="{ data }">
                 <NuxtLink
                   v-if="data.athlete"
-                  :to="`/athletes/${data.athlete.vpfId}`"
+                  :to="`/openvpf/athletes/${data.athlete.vpfId}`"
                   class="text-primary hover:underline"
                 >
                   {{ data.athlete.fullName }}

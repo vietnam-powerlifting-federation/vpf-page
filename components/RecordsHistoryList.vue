@@ -33,7 +33,7 @@
                     </span>
                     <NuxtLink
                       v-if="record.athlete"
-                      :to="`/athletes/${record.athlete.vpfId}`"
+                      :to="`/openvpf/athletes/${record.athlete.vpfId}`"
                       class="font-semibold text-primary hover:underline"
                     >
                       {{ record.athlete.fullName }}

@@ -47,17 +47,24 @@
 
 <script setup lang="ts">
 import type { MeetType } from "~/types/union-types"
-import { useMeetData } from "~/composables/useMeetData"
+import type { MeetDataPayload } from "~/types/meets"
+import type { ApiResponse } from "~/types/api"
 
 const props = defineProps<{
   slug: string
 }>()
 
-const { meet } = useMeetData(props.slug)
-
 const localePath = useLocalePath()
 const route = useRoute()
 const { t } = useI18n()
+
+const currentSlug = computed(() => route.params.slug as string)
+const nuxtApp = useNuxtApp()
+
+const meet = computed(() => {
+  const payload = nuxtApp.payload.data[`meet-data-${currentSlug.value}`] as ApiResponse<MeetDataPayload> | null | undefined
+  return payload?.data?.meet ?? null
+})
 
 const scoresheetPath = computed(() => localePath(`/openvpf/competitions/${props.slug}`))
 const detailedPath = computed(() => localePath(`/openvpf/competitions/${props.slug}/detailed`))

@@ -1,24 +1,23 @@
-import { onMounted } from "vue"
-import { storeToRefs } from "pinia"
-import { useProfileStore } from "~/stores/profile"
+import type { ApiResponse } from "~/types/api"
+import type { AthleteDetailsData } from "~/types/users"
 
 export const PROFILE_ATHLETE_KEY = "openvpf-profile-athlete"
 
 export function useProfileAthlete() {
-  const { $pinia } = useNuxtApp()
-  const store = useProfileStore($pinia)
-  const { data, pending, error } = storeToRefs(store)
-
-  onMounted(() => {
-    if (!data.value && !pending.value) {
-      void store.fetchProfile()
-    }
-  })
+  const nuxtApp = useNuxtApp()
+  const { data, pending, error, refresh } = useFetch<ApiResponse<AthleteDetailsData>>(
+    "/api/athletes/self",
+    {
+      key: PROFILE_ATHLETE_KEY,
+      query: { includeVipSettings: true },
+      getCachedData: (key) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    },
+  )
 
   return {
-    data,
+    data: computed(() => data.value?.data ?? null),
     pending,
     error,
-    refresh: () => store.fetchProfile({ force: true }),
+    refresh,
   }
 }

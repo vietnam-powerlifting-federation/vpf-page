@@ -35,7 +35,7 @@
           <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">
             <template v-if="record.athlete">
               <NuxtLink
-                :to="`/athletes/${record.athlete.vpfId}`"
+                :to="`/openvpf/athletes/${record.athlete.vpfId}`"
                 class="text-primary hover:underline"
               >
                 {{ record.athlete.fullName }}

@@ -60,21 +60,38 @@
           rows="3"
         />
       </div>
-      <div>
-        <label for="squatRackPin" class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.squatRackPin") }}</label>
-        <InputNumber id="squatRackPin" v-model="formData.squatRackPin" :placeholder="$t('profile.enterSquatRackPin')" class="w-full" :min="0" />
-      </div>
-      <div>
-        <label for="benchRackPin" class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.benchRackPin") }}</label>
-        <InputNumber id="benchRackPin" v-model="formData.benchRackPin" :placeholder="$t('profile.enterBenchRackPin')" class="w-full" :min="0" />
-      </div>
-      <div>
-        <label for="benchSafetyPin" class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.benchSafetyPin") }}</label>
-        <InputNumber id="benchSafetyPin" v-model="formData.benchSafetyPin" :placeholder="$t('profile.enterBenchSafetyPin')" class="w-full" :min="0" />
-      </div>
-      <div>
-        <label for="benchFootBlock" class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.benchFootBlock") }}</label>
-        <InputNumber id="benchFootBlock" v-model="formData.benchFootBlock" :placeholder="$t('profile.enterBenchFootBlock')" class="w-full" :min="0" />
+      <div class="flex gap-4">
+        <div class="flex-1">
+          <label for="squatRackPin" class="block mb-2 text-sm font-medium text-surface-300">
+            {{ $t("profile.squatRackPin") }}
+          </label>
+          <InputNumber id="squatRackPin" v-model="formData.squatRackPin"
+            :placeholder="$t('profile.enterSquatRackPin')" class="w-full" :min="0" />
+        </div>
+
+        <div class="flex-1">
+          <label for="benchRackPin" class="block mb-2 text-sm font-medium text-surface-300">
+            {{ $t("profile.benchRackPin") }}
+          </label>
+          <InputNumber id="benchRackPin" v-model="formData.benchRackPin"
+            :placeholder="$t('profile.enterBenchRackPin')" class="w-full" :min="0" />
+        </div>
+
+        <div class="flex-1">
+          <label for="benchSafetyPin" class="block mb-2 text-sm font-medium text-surface-300">
+            {{ $t("profile.benchSafetyPin") }}
+          </label>
+          <InputNumber id="benchSafetyPin" v-model="formData.benchSafetyPin"
+            :placeholder="$t('profile.enterBenchSafetyPin')" class="w-full" :min="0" />
+        </div>
+
+        <div class="flex-1">
+          <label for="benchFootBlock" class="block mb-2 text-sm font-medium text-surface-300">
+            {{ $t("profile.benchFootBlock") }}
+          </label>
+          <InputNumber id="benchFootBlock" v-model="formData.benchFootBlock"
+            :placeholder="$t('profile.enterBenchFootBlock')" class="w-full" :min="0" />
+        </div>
       </div>
       <div class="pt-4 flex justify-end">
         <Button :label="$t('profile.save')" :loading="isSubmitting" :disabled="isSubmitting" class="bg-primary text-primary-contrast" @click="handleSubmit" />
