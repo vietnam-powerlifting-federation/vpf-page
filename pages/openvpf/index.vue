@@ -33,13 +33,13 @@
           
           <Column field="athleteName" :header="$t('general.name')" :sortable="false" style="min-width: 200px" frozen>
             <template #body="{ data }">
-              <NuxtLink
+              <NuxtLinkLocale
                 v-if="data.athlete"
                 :to="`/openvpf/athletes/${data.athlete.vpfId}`"
                 class="hover:text-primary"
               >
                 {{ data.athlete.fullName }}
-              </NuxtLink>
+              </NuxtLinkLocale>
               <span v-else class="text-surface-400">-</span>
             </template>
           </Column>

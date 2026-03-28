@@ -23,9 +23,9 @@
           <tr v-for="row in rows" :key="row.meetId" class="border-t border-surface-700 hover:bg-surface-800/50">
             <td class="p-3">{{ formatDate(row.hostDate) }}</td>
             <td class="p-3">
-              <NuxtLink :to="`/openvpf/competitions/${row.meetSlug}`" class="text-primary hover:underline">
+              <NuxtLinkLocale :to="`/openvpf/competitions/${row.meetSlug}`" class="text-primary hover:underline">
                 {{ row.meetName }}
-              </NuxtLink>
+              </NuxtLinkLocale>
             </td>
             <td class="p-3" :class="row.completed ? 'text-surface-400' : 'text-primary'">
               {{ row.completed ? $t("profile.competitionInfoTable.completed") : $t("profile.competitionInfoTable.registered") }}

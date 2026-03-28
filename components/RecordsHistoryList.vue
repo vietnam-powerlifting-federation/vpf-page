@@ -31,13 +31,13 @@
                     <span class="text-sm font-medium text-surface-500 dark:text-surface-400 min-w-[2rem]">
                       #{{ index + 1 }}
                     </span>
-                    <NuxtLink
+                    <NuxtLinkLocale
                       v-if="record.athlete"
                       :to="`/openvpf/athletes/${record.athlete.vpfId}`"
                       class="font-semibold text-primary hover:underline"
                     >
                       {{ record.athlete.fullName }}
-                    </NuxtLink>
+                    </NuxtLinkLocale>
                     <span v-else class="font-semibold">{{ record.result?.vpfId }}</span>
                   </div>
                   <div class="flex items-center gap-4 mt-1 text-sm text-surface-600 dark:text-surface-400 ml-11">

@@ -40,7 +40,7 @@
           to="/login"
           class="bg-primary text-primary-contrast px-4 py-2 rounded font-medium text-sm hover:opacity-90"
         >
-          {{ $t("auth.loginButton") }}
+          {{ $t("login.loginButton") }}
         </NuxtLinkLocale>
       </div>
     </header>
