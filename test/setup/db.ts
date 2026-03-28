@@ -11,6 +11,7 @@ import {
   legacyMeetResults,
   userViolations,
   vipBenefits,
+  purchases,
 } from "../../lib/external/drizzle/migrations/schema"
 import {
   fixtureTeams,
@@ -74,6 +75,7 @@ export async function teardownTestDatabase(): Promise<void> {
   await db.delete(meetResults).where(inArray(meetResults.meetId, [...new Set(meetIds)]))
   await db.delete(userViolations).where(inArray(userViolations.vpfId, vpfIds))
   await db.delete(vipBenefits).where(inArray(vipBenefits.vpfId, vpfIds))
+  await db.delete(purchases).where(inArray(purchases.vpfId, vpfIds))
   await db.delete(users).where(inArray(users.vpfId, vpfIds))
   await db.delete(meets).where(inArray(meets.meetId, [...new Set([...meetIds, ...fixtureMeets.map((m) => m.meetId)])]))
   await db.delete(teams).where(inArray(teams.teamId, teamIds))

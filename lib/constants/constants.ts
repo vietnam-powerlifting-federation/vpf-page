@@ -23,3 +23,16 @@ export const RECORD_DIVISION_OVERRIDE = {
 }
 
 export const RECORD_START_YEAR = 2022
+
+export const VIP_MEMBERSHIP_PLANS = {
+  "6months": {
+    durationMonths: 6,
+    amount: 300_000,
+  },
+  "1year": {
+    durationMonths: 12,
+    amount: 600_000,
+  },
+} as const
+
+export type VipMembershipPlan = keyof typeof VIP_MEMBERSHIP_PLANS

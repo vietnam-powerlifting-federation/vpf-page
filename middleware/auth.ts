@@ -1,4 +1,4 @@
-export default defineNuxtRouteMiddleware(async () => {
+export default defineNuxtRouteMiddleware(async (to) => {
   // Auth token is stored as HttpOnly cookie (not readable client-side),
   // so we verify authentication via server session endpoint.
   // eslint-disable-next-line nuxt/prefer-import-meta
@@ -9,6 +9,6 @@ export default defineNuxtRouteMiddleware(async () => {
     headers,
   }) as { success?: boolean } | null
   if (!res || res.success !== true) {
-    return navigateTo("/login")
+    return navigateTo({ path: "/login", query: { to: to.fullPath } })
   }
 })

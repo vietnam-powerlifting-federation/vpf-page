@@ -133,6 +133,7 @@ import type { ApiResponse, LoginResponse } from "~/types/api"
 import loginBg from "~/assets/img/login-bg.png"
 
 const { t, locale } = useI18n()
+const route = useRoute()
 
 // Form state
 const vpfIdOrEmail = ref("")
@@ -204,8 +205,8 @@ const handleLogin = async () => {
     }) as ApiResponse<LoginResponse>
 
     if (response.success) {
-      // Redirect to home or dashboard
-      await navigateTo("/")
+      const redirectTo = typeof route.query.to === "string" ? route.query.to : "/"
+      await navigateTo(redirectTo)
     } else {
       loginError.value = response.message[locale.value as "en" | "vi"] || response.message.en || t("general.error")
     }

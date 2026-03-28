@@ -484,4 +484,8 @@ watch(
     if (newQuery.year) selectedYear.value = parseInt(newQuery.year as string, 10)
   }
 )
+
+definePageMeta({
+  layout: "openvpf",
+})
 </script>

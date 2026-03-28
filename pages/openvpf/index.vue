@@ -119,7 +119,7 @@ import type { Sex, Division, MeetType } from "~/types/union-types"
 import type { MeetPublic } from "~/types/meets"
 
 definePageMeta({
-  layout: "with-footer",
+  layout: "openvpf",
   pageTransition: {
     name: "page",
     mode: "out-in"

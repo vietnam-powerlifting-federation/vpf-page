@@ -55,4 +55,8 @@ const { data, pending, error } = await useFetch<{
 }>(`/api/athletes/${route.params.slug}`, {
   query: { includeVipSettings: "true", includeRecords: "true" },
 })
+
+definePageMeta({
+  layout: "openvpf",
+})
 </script>

@@ -1,10 +1,12 @@
-import { pgTable, serial, text, date, smallint, boolean, unique, check, foreignKey, timestamp, primaryKey, integer, numeric, pgSequence, pgEnum, uuid } from "drizzle-orm/pg-core"
+import { pgTable, serial, text, date, smallint, boolean, unique, check, foreignKey, timestamp, integer, numeric, pgSequence, pgEnum, uuid } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 export const division = pgEnum("division", ["subjr", "jr", "open", "mas1", "mas2", "mas3", "mas4", "guest"])
 export const meetType = pgEnum("meet_type", ["national", "amateur", "professional", "national_qualifier", "other"])
 export const roles = pgEnum("roles", ["user", "admin"])
 export const sexes = pgEnum("sexes", ["female", "male"])
+export const purchaseType = pgEnum("purchase_type", ["vip", "vpf_membership", "competition"])
+export const purchaseStatus = pgEnum("purchase_status", ["pending", "active", "expired", "cancelled"])
 
 export const vpfSeq = pgSequence("vpf_seq", { startWith: "889", increment: "1", minValue: "1", maxValue: "9223372036854775807", cache: "1", cycle: false })
 
@@ -185,4 +187,71 @@ export const meetResults = pgTable("meet_results", {
   }).onUpdate("cascade").onDelete("cascade"),
   unique("meet_result_meet_vpf_key").on(table.meetId, table.vpfId),
   check("chk_weight_class_sex", sql`((sex = 'male'::sexes) AND (weight_class = ANY (ARRAY[53, 59, 66, 74, 83, 93, 105, 120, 999]))) OR ((sex = 'female'::sexes) AND (weight_class = ANY (ARRAY[43, 47, 52, 57, 63, 69, 76, 84, 999]))) OR (sex IS NULL)`),
+])
+
+export const purchases = pgTable("purchases", {
+  purchaseId: serial("purchase_id").primaryKey().notNull(),
+  vpfId: text("vpf_id").notNull(),
+  type: purchaseType().notNull(),
+  refCode: text("ref_code").notNull(),
+  amount: integer("amount").notNull(),
+  status: purchaseStatus().default("pending").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
+  confirmedAt: timestamp("confirmed_at", { withTimezone: true, mode: "string" }),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true, mode: "string" }),
+  approvedBy: text("approved_by"),
+}, (table) => [
+  unique("purchases_ref_code_key").on(table.refCode),
+  foreignKey({
+    columns: [table.vpfId],
+    foreignColumns: [users.vpfId],
+    name: "purchases_vpf_id_fkey"
+  }).onUpdate("cascade").onDelete("cascade"),
+  foreignKey({
+    columns: [table.approvedBy],
+    foreignColumns: [users.vpfId],
+    name: "purchases_approved_by_fkey"
+  }).onUpdate("cascade").onDelete("cascade")
+])
+
+export const vipPurchaseMetadata = pgTable("vip_purchase_metadata", {
+  purchaseId: integer("purchase_id").primaryKey().notNull(),
+  durationMonths: smallint("duration_months").notNull(),
+}, (table) => [
+  foreignKey({
+    columns: [table.purchaseId],
+    foreignColumns: [purchases.purchaseId],
+    name: "vip_purchase_metadata_purchase_id_fkey"
+  }).onUpdate("cascade").onDelete("cascade"),
+])
+
+export const vpfMembershipPurchaseMetadata = pgTable("vpf_membership_purchase_metadata", {
+  purchaseId: integer("purchase_id").primaryKey().notNull(),
+  membershipYear: smallint("membership_year").notNull(),
+}, (table) => [
+  foreignKey({
+    columns: [table.purchaseId],
+    foreignColumns: [purchases.purchaseId],
+    name: "vpf_membership_purchase_metadata_purchase_id_fkey"
+  }).onUpdate("cascade").onDelete("cascade"),
+])
+
+export const competitionPurchaseMetadata = pgTable("competition_purchase_metadata", {
+  purchaseId: integer("purchase_id").primaryKey().notNull(),
+  meetId: integer("meet_id").notNull(),
+  sex: sexes().notNull(),
+  weightClass: integer("weight_class").notNull(),
+  division: division().notNull(),
+}, (table) => [
+  foreignKey({
+    columns: [table.purchaseId],
+    foreignColumns: [purchases.purchaseId],
+    name: "competition_purchase_metadata_purchase_id_fkey"
+  }).onUpdate("cascade").onDelete("cascade"),
+  foreignKey({
+    columns: [table.meetId],
+    foreignColumns: [meets.meetId],
+    name: "competition_purchase_metadata_meet_id_fkey"
+  }).onUpdate("cascade").onDelete("cascade"),
+  check("chk_competition_weight_class_sex", sql`((sex = 'male'::sexes) AND (weight_class = ANY (ARRAY[53, 59, 66, 74, 83, 93, 105, 120, 999]))) OR ((sex = 'female'::sexes) AND (weight_class = ANY (ARRAY[43, 47, 52, 57, 63, 69, 76, 84, 999])))`),
 ])
