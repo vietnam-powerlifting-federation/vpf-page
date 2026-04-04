@@ -1,6 +1,7 @@
 export type PurchaseCreated = {
   purchaseId: number
   refCode: string
+  type: "vip" | "vpf_membership" | "competition"
   plan: "6months" | "1year"
   amount: number
   status: "pending"

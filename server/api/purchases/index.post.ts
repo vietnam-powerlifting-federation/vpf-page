@@ -11,6 +11,7 @@ import type { PurchaseCreated } from "~/types/purchases"
 
 const CreatePurchaseSchema = z.object({
   plan: z.enum(["6months", "1year"]),
+  type: z.enum(["vip", "vpf_membership", "competition"]).optional().default("vip"),
   vpfId: z.string().optional(),
 })
 
@@ -41,7 +42,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseCre
       return fail(event, 400, { en: "Invalid input data", vi: "Dữ liệu đầu vào không hợp lệ" }) as ApiResponse<PurchaseCreated>
     }
 
-    const { plan, vpfId: targetVpfId } = validated.data
+    const { plan, type, vpfId: targetVpfId } = validated.data
 
     // Determine the target athlete
     let resolvedVpfId = currentUser.vpfId
@@ -74,7 +75,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseCre
       .insert(purchases)
       .values({
         vpfId: resolvedVpfId,
-        type: "vip",
+        type,
         refCode,
         amount: planConfig.amount,
         status: "pending",
@@ -100,6 +101,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseCre
       {
         purchaseId: inserted.purchaseId,
         refCode,
+        type,
         plan,
         amount: planConfig.amount,
         status: "pending",
