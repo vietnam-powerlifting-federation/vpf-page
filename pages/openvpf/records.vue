@@ -186,7 +186,7 @@ import RecordsHistoryList from "@/components/RecordsHistoryList.vue"
 import { WEIGHT_CLASS_MALE, WEIGHT_CLASS_FEMALE, RECORD_START_YEAR } from "~/lib/constants/constants"
 import type { LiftRecord } from "~/types/records"
 import type { Result } from "~/types/results"
-import type { UserPublic } from "~/types/users"
+import type { UserPublicWithDecorators } from "~/types/users"
 import type { MeetPublic } from "~/types/meets"
 import type { Sex, Division } from "~/types/union-types"
 
@@ -244,7 +244,7 @@ const { data, pending, error, refresh } = await useFetch<{
   data: {
     records: LiftRecord[]
     meet: MeetPublic[]
-    athletes: UserPublic[]
+    athletes: UserPublicWithDecorators[]
     results: Result[]
   } | null
   message: {
@@ -268,7 +268,7 @@ const { data: historyData, pending: historyPending, error: historyError, refresh
   data: {
     records: LiftRecord[]
     meet: MeetPublic | null
-    athletes: UserPublic[]
+    athletes: UserPublicWithDecorators[]
     results: Result[]
   } | null
   message: {
@@ -292,7 +292,7 @@ const { data: previousYearRecords } = await useFetch<{
   data: {
     records: LiftRecord[]
     meet: MeetPublic[]
-    athletes: UserPublic[]
+    athletes: UserPublicWithDecorators[]
     results: Result[]
   } | null
 }>("/api/records", {
@@ -366,7 +366,7 @@ const filteredRecords = computed(() => {
   const meetsMap = new Map<number, MeetPublic>()
   displayMeets.value.forEach((m) => meetsMap.set(m.meetId, m))
 
-  const athletesMap = new Map<string, UserPublic>()
+  const athletesMap = new Map<string, UserPublicWithDecorators>()
   displayAthletes.value.forEach((a) => athletesMap.set(a.vpfId, a))
 
   const filtered = records.filter((record) => {
@@ -377,7 +377,7 @@ const filteredRecords = computed(() => {
   type RecordRow = {
     weightClass: number
     weight: number | null
-    athlete?: UserPublic
+    athlete?: UserPublicWithDecorators
     meet?: MeetPublic
     bodyWeight?: number | null
     vpfId?: string

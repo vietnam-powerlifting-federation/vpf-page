@@ -23,8 +23,9 @@
             <template #body="{ data }">
               <NuxtLinkLocale
                 v-if="data.athlete"
-                :to="`/openvpf/athletes/${data.athlete.vpfId}`"
-                class="text-primary hover:underline"
+                :to="`/openvpf/athletes/${data.athlete.slug || data.athlete.vpfId}`"
+                class="hover:underline"
+                :style="nameGradientStyle(data.athlete.decorator1, data.athlete.decorator2)"
               >
                 {{ data.athlete.fullName }}
               </NuxtLinkLocale>
@@ -82,7 +83,7 @@ import DataTable from "primevue/datatable"
 import Column from "primevue/column"
 import MeetTabContent from "@/components/meets/MeetTabContent.vue"
 import { DISQUALIFIED } from "~/lib/constants/constants"
-import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL } from "@/lib/utils/client"
+import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL, nameGradientStyle } from "@/lib/utils/client"
 
 const route = useRoute()
 const slug = route.params.slug as string
@@ -90,10 +91,7 @@ const slug = route.params.slug as string
 definePageMeta({
   layout: "openvpf-competitions",
   keepalive: true,
-  pageTransition: {
-    name: "page",
-    mode: "out-in",
-  },
+  pageTransition: false
 })
 
 const { meet, resultsWithAthletes, pending, error } = useMeetData(slug)

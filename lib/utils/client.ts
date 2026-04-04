@@ -66,3 +66,17 @@ export function formatGL(gl: number | null | undefined): string {
   if (gl === null || gl === undefined) return "-"
   return gl.toFixed(2)
 }
+
+// Gradient style for VIP athlete names (same as VipProfile.vue nameStyle)
+export function nameGradientStyle(decorator1?: string | null, decorator2?: string | null): Record<string, string> {
+  if (!decorator1 && !decorator2) return {}
+  const from = decorator1 || "#ffffff"
+  const to = decorator2 || "#ffffff"
+  return {
+    background: `linear-gradient(to right, ${from}, ${to})`,
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    backgroundClip: "text",
+    color: "transparent",
+  }
+}

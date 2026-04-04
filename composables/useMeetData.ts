@@ -1,4 +1,4 @@
-import type { UserPublic } from "~/types/users"
+import type { UserPublicWithDecorators } from "~/types/users"
 import type { MeetPublic, MeetResult, MeetDataPayload } from "~/types/meets"
 import type { Sex, Division } from "~/types/union-types"
 import type { ApiResponse } from "~/types/api"
@@ -10,15 +10,15 @@ export type GroupedByGenderDivision = Array<{
   sex: Sex
   divisions: Array<{
     division: Division
-    results: (MeetResult & { athlete?: UserPublic })[]
+    results: (MeetResult & { athlete?: UserPublicWithDecorators })[]
   }>
 }>
 
 export type MeetDataReturn = {
   meet: ComputedRef<MeetPublic | null>
   results: ComputedRef<MeetResult[]>
-  athletes: ComputedRef<UserPublic[]>
-  resultsWithAthletes: ComputedRef<(MeetResult & { athlete?: UserPublic })[]>
+  athletes: ComputedRef<UserPublicWithDecorators[]>
+  resultsWithAthletes: ComputedRef<(MeetResult & { athlete?: UserPublicWithDecorators })[]>
   groupedByGenderDivision: ComputedRef<GroupedByGenderDivision>
   pending: Ref<boolean>
   error: Ref<Error | null>
@@ -40,7 +40,7 @@ export function useMeetData(slug: string): MeetDataReturn {
   const athletes = computed(() => data.value?.athletes ?? [])
 
   const athleteMap = computed(() => {
-    const map = new Map<string, UserPublic>()
+    const map = new Map<string, UserPublicWithDecorators>()
     for (const athlete of athletes.value) {
       map.set(athlete.vpfId, athlete)
     }
@@ -50,7 +50,7 @@ export function useMeetData(slug: string): MeetDataReturn {
   const resultsWithAthletes = computed(() => {
     const map = athleteMap.value
     const list = results.value
-    const merged = new Array<MeetResult & { athlete?: UserPublic }>(list.length)
+    const merged = new Array<MeetResult & { athlete?: UserPublicWithDecorators }>(list.length)
     for (let i = 0; i < list.length; i++) {
       const r = list[i]
       merged[i] = { ...r, athlete: map.get(r.vpfId) }
@@ -61,11 +61,11 @@ export function useMeetData(slug: string): MeetDataReturn {
   const groupedByGenderDivision = computed(() => {
     const list = resultsWithAthletes.value
 
-    const grouped: Record<Sex, Record<Division, (MeetResult & { athlete?: UserPublic })[]>> =
-      {} as Record<Sex, Record<Division, (MeetResult & { athlete?: UserPublic })[]>>
+    const grouped: Record<Sex, Record<Division, (MeetResult & { athlete?: UserPublicWithDecorators })[]>> =
+      {} as Record<Sex, Record<Division, (MeetResult & { athlete?: UserPublicWithDecorators })[]>>
 
     for (const result of list) {
-      const sexGroup = grouped[result.sex] ?? (grouped[result.sex] = {} as Record<Division, (MeetResult & { athlete?: UserPublic })[]>)
+      const sexGroup = grouped[result.sex] ?? (grouped[result.sex] = {} as Record<Division, (MeetResult & { athlete?: UserPublicWithDecorators })[]>)
       const divisionGroup = sexGroup[result.division] ?? (sexGroup[result.division] = [])
       divisionGroup.push(result)
     }

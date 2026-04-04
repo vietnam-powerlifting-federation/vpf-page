@@ -7,7 +7,7 @@ import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import type { ApiResponse } from "~/types/api"
 import type { LiftRecord } from "~/types/records"
 import type { MeetPublic } from "~/types/meets"
-import type { UserPublic } from "~/types/users"
+import type { UserPublicWithDecorators } from "~/types/users"
 import type { RankedDivision } from "~/types/union-types"
 import { eq, and, sql } from "drizzle-orm"
 import type { Result } from "~/types/results"
@@ -16,7 +16,7 @@ import { ok, fail } from "~/server/utils/api-response"
 type HistoryResponse = {
   records: LiftRecord[]
   meet: MeetPublic | null
-  athletes: UserPublic[]
+  athletes: UserPublicWithDecorators[]
   results: Result[]
 }
 
@@ -58,6 +58,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
       hidden: false,
       minYear: year,
       maxYear: year,
+      includeNameDecorators: true,
     })
 
     const meet = returnedMeets[0] || null

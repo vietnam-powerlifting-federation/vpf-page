@@ -3,13 +3,13 @@ import { fetchRecordsForYear } from "~/lib/utils/queries/records"
 import type { ApiResponse } from "~/types/api"
 import type { LiftRecord } from "~/types/records"
 import type { MeetPublic } from "~/types/meets"
-import type { UserPublic } from "~/types/users"
+import type { UserPublicWithDecorators } from "~/types/users"
 import type { Result } from "~/types/results"
 
 type RecordsResponse = {
   records: LiftRecord[]
   meet: MeetPublic[]
-  athletes: UserPublic[]
+  athletes: UserPublicWithDecorators[]
   results: Result[]
 }
 
@@ -22,6 +22,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<RecordsResp
     // Fetch records using the utility function
     const { records, meets: allMeets, athletes, results } = await fetchRecordsForYear({
       maxYear: year,
+      includeNameDecorators: true,
     })
 
     setHeader(event, "Cache-Control", "public, max-age=86400, s-maxage=86400")

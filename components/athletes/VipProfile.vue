@@ -96,13 +96,14 @@ const nameStyle = computed(() => {
   const c1 = props.vipSettings.decorator1 || null
   const c2 = props.vipSettings.decorator2 || null
   if (!c1 && !c2) return {}
-  const from = c1 || "var(--p-primary-color)"
-  const to = c2 || "var(--p-primary-color)"
+  const from = c1 || "#ffffff"
+  const to = c2 || "#ffffff"
   return {
     background: `linear-gradient(to right, ${from}, ${to})`,
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
     backgroundClip: "text",
+    color: "transparent",
   }
 })
 

@@ -16,4 +16,6 @@ type AthleteDetailsData = {
   vipSettings?: VipBenefits
 }
 
-export type { UserPrivate, UserPublic, AthleteDetailsData }
+type UserPublicWithDecorators = UserPublic & { decorator1?: string | null; decorator2?: string | null }
+
+export type { UserPrivate, UserPublic, UserPublicWithDecorators, AthleteDetailsData }

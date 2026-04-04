@@ -4,13 +4,13 @@ import { logger } from "~/lib/logger/logger"
 import type { ApiResponse } from "~/types/api"
 import type { ResultRanked } from "~/types/results"
 import type { MeetPublic } from "~/types/meets"
-import type { UserPublic } from "~/types/users"
+import type { UserPublicWithDecorators } from "~/types/users"
 import type { Sex, Division } from "~/types/union-types"
 
 type ResultsResponse = {
   results: ResultRanked[]
   meets: MeetPublic[]
-  athletes: UserPublic[]
+  athletes: UserPublicWithDecorators[]
 }
 
 export default defineEventHandler(async (event): Promise<ApiResponse<ResultsResponse>> => {
@@ -46,6 +46,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<ResultsResp
       weightClass,
       sex,
       sort: sortKey,
+      includeNameDecorators: true,
     })
 
     // Apply distinct filter if needed

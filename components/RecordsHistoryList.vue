@@ -33,8 +33,9 @@
                     </span>
                     <NuxtLinkLocale
                       v-if="record.athlete"
-                      :to="`/openvpf/athletes/${record.athlete.vpfId}`"
+                      :to="`/openvpf/athletes/${record.athlete.slug || record.athlete.vpfId}`"
                       class="font-semibold text-primary hover:underline"
+                      :style="nameGradientStyle(record.athlete.decorator1, record.athlete.decorator2)"
                     >
                       {{ record.athlete.fullName }}
                     </NuxtLinkLocale>
@@ -73,15 +74,15 @@
 import { computed } from "vue"
 import type { LiftRecord } from "~/types/records"
 import type { Result } from "~/types/results"
-import type { UserPublic } from "~/types/users"
+import type { UserPublicWithDecorators } from "~/types/users"
 import type { Sex, Division } from "~/types/union-types"
-import { formatWeightClass } from "@/lib/utils/client"
+import { formatWeightClass, nameGradientStyle } from "@/lib/utils/client"
 
 const { t } = useI18n()
 
 interface Props {
   records: LiftRecord[]
-  athletes: UserPublic[]
+  athletes: UserPublicWithDecorators[]
   results: Result[]
   previousRecordsMap?: Map<string, number>
 }
@@ -93,7 +94,7 @@ const props = withDefaults(defineProps<Props>(), {
 const liftTypes = ["squat", "bench", "deadlift", "total"] as const
 
 const athletesMap = computed(() => {
-  const map = new Map<string, UserPublic>()
+  const map = new Map<string, UserPublicWithDecorators>()
   props.athletes.forEach(a => map.set(a.vpfId, a))
   return map
 })
@@ -104,7 +105,7 @@ const resultsById = computed(() => {
   return map
 })
 
-type RichRecord = LiftRecord & { athlete?: UserPublic; result?: Result }
+type RichRecord = LiftRecord & { athlete?: UserPublicWithDecorators; result?: Result }
 
 const getRecordsByLift = (lift: typeof liftTypes[number]): RichRecord[] => {
   return props.records

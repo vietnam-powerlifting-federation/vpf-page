@@ -2,7 +2,7 @@ import { RECORD_DIVISION_OVERRIDE, RECORD_START_YEAR } from "~/lib/constants/con
 import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import type { LiftRecord } from "~/types/records"
 import type { MeetPublic } from "~/types/meets"
-import type { UserPublic } from "~/types/users"
+import type { UserPublic, UserPublicWithDecorators } from "~/types/users"
 import type { Result } from "~/types/results"
 import type { RankedDivision } from "~/types/union-types"
 
@@ -177,6 +177,7 @@ export async function fetchAthleteRecordStatus(targetVpfId: string): Promise<Lif
 type FetchRecordsOptions = {
   maxYear?: number | null
   minYear?: number
+  includeNameDecorators?: boolean
 }
 
 // Internal type that adds lot for tiebreaking during sorting
@@ -191,10 +192,10 @@ export async function fetchRecordsForYear(
 ): Promise<{
   records: LiftRecord[]
   meets: MeetPublic[]
-  athletes: UserPublic[]
+  athletes: UserPublicWithDecorators[]
   results: Result[]
 }> {
-  const { maxYear = null, minYear = RECORD_START_YEAR } = options
+  const { maxYear = null, minYear = RECORD_START_YEAR, includeNameDecorators } = options
 
   const { meets: allMeets, results, athletes } = await getMeetsAndResultsAndAthletes({
     meetType: ["national"],
@@ -202,6 +203,7 @@ export async function fetchRecordsForYear(
     hidden: false,
     minYear,
     maxYear: maxYear !== null && !isNaN(maxYear) ? maxYear : undefined,
+    includeNameDecorators,
   })
 
   if (allMeets.length === 0) {

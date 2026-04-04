@@ -31,8 +31,9 @@
               <template #body="{ data }">
                 <NuxtLinkLocale
                   v-if="data.athlete"
-                  :to="`/openvpf/athletes/${data.athlete.vpfId}`"
-                  class="text-primary hover:underline"
+                  :to="`/openvpf/athletes/${data.athlete.slug || data.athlete.vpfId}`"
+                  class="hover:underline"
+                  :style="nameGradientStyle(data.athlete.decorator1, data.athlete.decorator2)"
                 >
                   {{ data.athlete.fullName }}
                 </NuxtLinkLocale>
@@ -108,7 +109,7 @@
 import DataTable from "primevue/datatable"
 import Column from "primevue/column"
 import { DISQUALIFIED } from "~/lib/constants/constants"
-import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL, formatSexAlternative } from "@/lib/utils/client"
+import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL, formatSexAlternative, nameGradientStyle } from "@/lib/utils/client"
 
 const { slug } = defineProps<{ slug: string }>()
 const { groupedByGenderDivision } = useMeetData(slug)

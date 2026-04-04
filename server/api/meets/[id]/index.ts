@@ -5,14 +5,14 @@ import { logger } from "~/lib/logger/logger"
 import type { ApiResponse } from "~/types/api"
 import type { MeetPublic } from "~/types/meets"
 import type { Result } from "~/types/results"
-import type { UserPublic } from "~/types/users"
+import type { UserPublicWithDecorators } from "~/types/users"
 import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import { DISQUALIFIED } from "~/lib/constants/constants"
 
 type MeetDetailsResponse = {
   meet: MeetPublic
   results: ResultWithPlacements[]
-  athletes: UserPublic[]
+  athletes: UserPublicWithDecorators[]
 }
 
 type ResultWithPlacements = Result & {
@@ -103,6 +103,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<MeetDetails
     // Query meet, results, and athletes
     const { meets: returnedMeets, results: transformedResults, athletes: publicAthletes } = await getMeetsAndResultsAndAthletes({
       meetIds: [meetId],
+      includeNameDecorators: true,
     })
 
     const meet = foundMeet || returnedMeets[0] || null

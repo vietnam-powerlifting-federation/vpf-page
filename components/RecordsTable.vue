@@ -35,8 +35,9 @@
           <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">
             <template v-if="record.athlete">
               <NuxtLinkLocale
-                :to="`/openvpf/athletes/${record.athlete.vpfId}`"
+                :to="`/openvpf/athletes/${record.athlete.slug || record.athlete.vpfId}`"
                 class="text-primary hover:underline"
+                :style="nameGradientStyle(record.athlete.decorator1, record.athlete.decorator2)"
               >
                 {{ record.athlete.fullName }}
               </NuxtLinkLocale>
@@ -62,15 +63,15 @@
 </template>
 
 <script setup lang="ts">
-import type { UserPublic } from "~/types/users"
+import type { UserPublicWithDecorators } from "~/types/users"
 import type { MeetPublic } from "~/types/meets"
 import type { Sex } from "~/types/union-types"
-import { formatWeightClass } from "@/lib/utils/client"
+import { formatWeightClass, nameGradientStyle } from "@/lib/utils/client"
 
 interface RecordRow {
   weightClass: number
   weight: number | null
-  athlete?: UserPublic
+  athlete?: UserPublicWithDecorators
   meet?: MeetPublic
   bodyWeight?: number | null
   vpfId?: string
@@ -79,7 +80,7 @@ interface RecordRow {
 
 const props = defineProps<{
   records: RecordRow[]
-  athletes: UserPublic[]
+  athletes: UserPublicWithDecorators[]
   meets: MeetPublic[]
   weightClasses: number[]
   sex?: Sex | null

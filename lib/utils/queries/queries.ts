@@ -1,12 +1,12 @@
-import { eq, and, inArray, gte, lte } from "drizzle-orm"
+import { eq, and, inArray, gte, lte, or, isNull, sql } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
-import { legacyMeetResults, meetResults, meets, users } from "~/lib/external/drizzle/migrations/schema"
+import { legacyMeetResults, meetResults, meets, users, vipBenefits } from "~/lib/external/drizzle/migrations/schema"
 import { addMetadataToMeetResults } from "~/lib/utils/meet-result"
 import { userPublicSelect } from "~/lib/utils/queries/users"
 import { sortResultsByKey, type SortKey } from "~/lib/utils/queries/results"
 import type { MeetPublic } from "~/types/meets"
 import type { Result, LegacyResultRaw, ResultRaw } from "~/types/results"
-import type { UserPublic } from "~/types/users"
+import type { UserPublic, UserPublicWithDecorators } from "~/types/users"
 import type { Division, Sex, MeetType } from "~/types/union-types"
 
 type GetMeetsAndResultsAndAthletesOptions = {
@@ -21,6 +21,7 @@ type GetMeetsAndResultsAndAthletesOptions = {
   sort?: SortKey
   hidden?: boolean
   legacy?: boolean
+  includeNameDecorators?: boolean
 }
 
 export async function getMeetsAndResultsAndAthletes(
@@ -28,7 +29,7 @@ export async function getMeetsAndResultsAndAthletes(
 ): Promise<{
   meets: MeetPublic[]
   results: Result[]
-  athletes: UserPublic[]
+  athletes: UserPublicWithDecorators[]
 }> {
   const {
     meetIds: optionMeetIds,
@@ -42,6 +43,7 @@ export async function getMeetsAndResultsAndAthletes(
     sort,
     hidden,
     legacy,
+    includeNameDecorators,
   } = options
 
   // When only vpfIds is provided (e.g. athlete profile), derive meetIds from results for performance
@@ -197,9 +199,31 @@ export async function getMeetsAndResultsAndAthletes(
   }
 
   // Extract unique athletes
-  const athletesMap = new Map<string, UserPublic>()
+  const athletesMap = new Map<string, UserPublicWithDecorators>()
   for (const { user } of [...nonLegacyResultsWithUsers, ...legacyResultsWithUsers]) {
     athletesMap.set(user.vpfId, user)
+  }
+
+  if (includeNameDecorators && athletesMap.size > 0) {
+    const vpfIds = Array.from(athletesMap.keys())
+    const vipMembershipActive = or(
+      isNull(users.vipMembershipExpiresAt),
+      gte(users.vipMembershipExpiresAt, sql`CURRENT_DATE`),
+    )
+    const decorators = await db
+      .select({
+        vpfId: vipBenefits.vpfId,
+        decorator1: vipBenefits.decorator1,
+        decorator2: vipBenefits.decorator2,
+      })
+      .from(vipBenefits)
+      .innerJoin(users, eq(vipBenefits.vpfId, users.vpfId))
+      .where(and(vipMembershipActive, inArray(vipBenefits.vpfId, vpfIds)))
+    const decoratorMap = new Map(decorators.map(d => [d.vpfId, { decorator1: d.decorator1, decorator2: d.decorator2 }]))
+    for (const [vpfId, athlete] of athletesMap) {
+      const dec = decoratorMap.get(vpfId)
+      if (dec) athletesMap.set(vpfId, { ...athlete, ...dec })
+    }
   }
 
   return {

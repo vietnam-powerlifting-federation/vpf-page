@@ -35,8 +35,9 @@
             <template #body="{ data }">
               <NuxtLinkLocale
                 v-if="data.athlete"
-                :to="`/openvpf/athletes/${data.athlete.vpfId}`"
-                class="hover:text-primary"
+                :to="`/openvpf/athletes/${data.athlete.slug || data.athlete.vpfId}`"
+                class="hover:underline"
+                :style="nameGradientStyle(data.athlete.decorator1, data.athlete.decorator2)"
               >
                 {{ data.athlete.fullName }}
               </NuxtLinkLocale>
@@ -111,9 +112,9 @@ import DataTable from "primevue/datatable"
 import Column from "primevue/column"
 import AthletesRankingFilter from "@/components/AthletesRankingFilter.vue"
 import { useRankingFilters } from "@/composables/useRankingFilters"
-import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL } from "@/lib/utils/client"
+import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL, nameGradientStyle } from "@/lib/utils/client"
 import type { ResultRanked } from "~/types/results"
-import type { UserPublic } from "~/types/users"
+import type { UserPublicWithDecorators } from "~/types/users"
 import type { ApiResponse } from "~/types/api"
 import type { Sex, Division, MeetType } from "~/types/union-types"
 import type { MeetPublic } from "~/types/meets"
@@ -199,7 +200,7 @@ const queryParams = computed(() => {
 const { data: response, pending } = useFetch<ApiResponse<{
   results: ResultRanked[]
   meets: MeetPublic[]
-  athletes: UserPublic[]
+  athletes: UserPublicWithDecorators[]
 }>>("/api/results", {
   query: queryParams
 })
