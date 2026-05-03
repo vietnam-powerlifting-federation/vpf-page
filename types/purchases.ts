@@ -23,3 +23,14 @@ export type PurchaseApproved = {
   approvedBy: string
   vipMembershipExpiresAt: string
 }
+
+export type PurchaseStatus = {
+  purchaseId: number
+  refCode: string
+  type: "vip" | "vpf_membership" | "competition"
+  amount: number
+  status: "pending" | "active" | "expired" | "cancelled"
+  createdAt: string
+  confirmedAt: string | null
+  cancelledAt: string | null
+}

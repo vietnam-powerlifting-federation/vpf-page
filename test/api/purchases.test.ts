@@ -62,7 +62,7 @@ describe("API: purchases", () => {
       const res = await handler(event)
       expect(res.success).toBe(true)
       expect(res.data?.plan).toBe("1year")
-      expect(res.data?.amount).toBe(600_000)
+      expect(res.data?.amount).toBe(300_000)
     })
 
     it("returns purchase when admin creates for another athlete", async () => {
@@ -74,6 +74,60 @@ describe("API: purchases", () => {
       const res = await handler(event)
       expect(res.success).toBe(true)
       expect(res.data?.refCode).toMatch(/^\d{6}$/)
+    })
+  })
+
+  describe("GET /api/purchases/[refCode]", () => {
+    async function createPendingPurchase(forUser: typeof user) {
+      const createHandler = (await import("~/server/api/purchases/index.post")).default
+      const event = createMockH3Event({ body: { plan: "1year" }, context: { user: forUser } })
+      const res = await createHandler(event)
+      if (!res.success) throw new Error("Failed to create purchase")
+      return res.data!.refCode
+    }
+
+    it("returns 401 when not authenticated", async () => {
+      const handler = (await import("~/server/api/purchases/[refCode]/index.get")).default
+      const event = createMockH3Event({ params: { refCode: "000000" }, context: {} })
+      const res = await handler(event)
+      expect(res.success).toBe(false)
+    })
+
+    it("returns 404 for non-existent refCode", async () => {
+      const handler = (await import("~/server/api/purchases/[refCode]/index.get")).default
+      const event = createMockH3Event({ params: { refCode: "000000" }, context: { user } })
+      const res = await handler(event)
+      expect(res.success).toBe(false)
+    })
+
+    it("returns 403 when user tries to view another athlete's purchase", async () => {
+      const refCode = await createPendingPurchase(user2)
+      const handler = (await import("~/server/api/purchases/[refCode]/index.get")).default
+      const event = createMockH3Event({ params: { refCode }, context: { user } })
+      const res = await handler(event)
+      expect(res.success).toBe(false)
+    })
+
+    it("returns purchase status for own purchase", async () => {
+      const refCode = await createPendingPurchase(user)
+      const handler = (await import("~/server/api/purchases/[refCode]/index.get")).default
+      const event = createMockH3Event({ params: { refCode }, context: { user } })
+      const res = await handler(event)
+      expect(res.success).toBe(true)
+      expect(res.data?.refCode).toBe(refCode)
+      expect(res.data?.status).toBe("pending")
+      expect(res.data?.amount).toBe(300_000)
+      expect(res.data?.confirmedAt).toBeNull()
+      expect(res.data?.cancelledAt).toBeNull()
+    })
+
+    it("admin can view any purchase", async () => {
+      const refCode = await createPendingPurchase(user)
+      const handler = (await import("~/server/api/purchases/[refCode]/index.get")).default
+      const event = createMockH3Event({ params: { refCode }, context: { user: admin } })
+      const res = await handler(event)
+      expect(res.success).toBe(true)
+      expect(res.data?.refCode).toBe(refCode)
     })
   })
 

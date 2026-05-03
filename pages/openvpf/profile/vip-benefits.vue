@@ -10,8 +10,7 @@
       <p v-if="!vipActive" class="text-surface-400 text-sm">{{ $t("profile.vipBenefits.features") }}</p>
       <img v-if="!vipActive" :src="vipPreview" alt="" class="h-full w-full object-cover">
       <div v-if="!vipActive" class="pt-4">
-        <Button :label="$t('profile.vipBenefits.registerNow')" class="bg-primary" />
-        <span class="ml-3 text-sm text-surface-500">({{ $t("profile.demo") }})</span>
+        <Button :label="$t('profile.vipBenefits.registerNow')" class="bg-primary" @click="navigateTo('/openvpf/profile/vip-checkout')" />
       </div>
 
       <div v-else class="space-y-6">

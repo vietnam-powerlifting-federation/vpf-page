@@ -31,7 +31,7 @@ export const VIP_MEMBERSHIP_PLANS = {
   },
   "1year": {
     durationMonths: 12,
-    amount: 600_000,
+    amount: 300_000,
   },
 } as const
 

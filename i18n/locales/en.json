@@ -330,6 +330,23 @@
       "displayOnProfile": "Show on public profile",
       "saveChanges": "Save changes"
     },
+    "vipCheckout": {
+      "title": "VIP Membership Checkout",
+      "planName": "1 Year VIP Membership",
+      "benefit1": "Custom profile picture & cover photos",
+      "benefit2": "Personal bio, nickname & social links",
+      "benefit3": "Stand out in competition results",
+      "confirmButton": "Confirm Purchase",
+      "backButton": "Go Back",
+      "scanQr": "Scan the QR code below with your banking app to complete payment.",
+      "amount": "Amount",
+      "transferNote": "Transfer description",
+      "qrAlt": "Payment QR code",
+      "waitingForPayment": "Waiting for payment confirmation...",
+      "cancelButton": "Cancel Purchase",
+      "cancelled": "Your purchase has been cancelled.",
+      "paymentSuccess": "Your VIP membership is now active!"
+    },
     "changePassword": {
       "currentPassword": "Current password",
       "newPassword": "New password",

@@ -330,6 +330,23 @@
       "displayOnProfile": "Hiển thị trên hồ sơ công khai",
       "saveChanges": "Lưu điều chỉnh"
     },
+    "vipCheckout": {
+      "title": "Thanh toán thành viên VIP",
+      "planName": "Gói VIP 1 năm",
+      "benefit1": "Ảnh đại diện & ảnh cover cá nhân",
+      "benefit2": "Giới thiệu, biệt danh & liên kết mạng xã hội",
+      "benefit3": "Nổi bật trong kết quả thi đấu",
+      "confirmButton": "Xác nhận thanh toán",
+      "backButton": "Quay lại",
+      "scanQr": "Quét mã QR bên dưới bằng ứng dụng ngân hàng để hoàn tất thanh toán.",
+      "amount": "Số tiền",
+      "transferNote": "Nội dung chuyển khoản",
+      "qrAlt": "Mã QR thanh toán",
+      "waitingForPayment": "Đang chờ xác nhận thanh toán...",
+      "cancelButton": "Hủy giao dịch",
+      "cancelled": "Giao dịch của bạn đã bị hủy.",
+      "paymentSuccess": "Tài khoản VIP của bạn đã được kích hoạt!"
+    },
     "changePassword": {
       "currentPassword": "Mật khẩu hiện tại",
       "newPassword": "Mật khẩu mới",
