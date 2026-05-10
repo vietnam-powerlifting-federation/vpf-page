@@ -47,6 +47,7 @@ const tabs = [
   { path: "/openvpf/profile/vip-benefits", label: "profile.tabs.vipBenefits", icon: "pi-star" },
   { path: "/openvpf/profile/competition-info", label: "profile.tabs.competitionInfo", icon: "pi-calendar" },
   { path: "/openvpf/profile/voucher", label: "profile.tabs.voucher", icon: "pi-gift" },
+  { path: "/openvpf/profile/payment-history", label: "profile.tabs.paymentHistory", icon: "pi-credit-card" },
   { path: "/openvpf/profile/change-password", label: "profile.tabs.changePassword", icon: "pi-lock" },
 ]
 

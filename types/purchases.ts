@@ -6,6 +6,7 @@ export type PurchaseCreated = {
   amount: number
   status: "pending"
   createdAt: string
+  qrUrl: string
 }
 
 export type PurchaseCancelled = {
@@ -33,4 +34,5 @@ export type PurchaseStatus = {
   createdAt: string
   confirmedAt: string | null
   cancelledAt: string | null
+  qrUrl?: string
 }

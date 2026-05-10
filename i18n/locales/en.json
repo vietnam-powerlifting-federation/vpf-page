@@ -4,7 +4,10 @@
       "rankings": "RANKINGS",
       "records": "RECORDS",
       "competitions": "COMPETITIONS",
-      "contact": "CONTACT"
+      "contact": "CONTACT",
+      "viewProfile": "View OpenVPF Profile",
+      "profileSettings": "Profile Settings",
+      "signOut": "Sign Out"
     }
   },
   "nav": {
@@ -269,6 +272,7 @@
       "vipBenefits": "VIP Benefits",
       "competitionInfo": "Competition Information",
       "voucher": "Voucher",
+      "paymentHistory": "Payment History",
       "changePassword": "Change Password"
     },
     "competition": {
@@ -355,7 +359,36 @@
       "enterNew": "Enter a new password",
       "enterConfirm": "Re-enter new password",
       "submit": "Change Password"
+    },
+    "paymentHistory": {
+      "empty": "No payment history found.",
+      "qrDialogTitle": "Complete Payment",
+      "status": {
+        "pending": "Pending",
+        "active": "Active",
+        "expired": "Expired",
+        "cancelled": "Cancelled"
+      }
     }
+  },
+  "checkout": {
+    "title": "Checkout",
+    "itemsTitle": "Order Summary",
+    "item": "Item",
+    "price": "Price",
+    "totalTitle": "Total",
+    "total": "Total",
+    "emptyCart": "Your cart is empty.",
+    "confirmButton": "Confirm Purchase",
+    "backButton": "Go Back",
+    "scanQr": "Scan the QR code below with your banking app to complete payment.",
+    "amount": "Amount",
+    "transferNote": "Transfer description",
+    "qrAlt": "Payment QR code",
+    "waitingForPayment": "Waiting for payment confirmation...",
+    "cancelButton": "Cancel Purchase",
+    "cancelled": "Your purchase has been cancelled.",
+    "paymentSuccess": "Payment successful!"
   }
 }
 

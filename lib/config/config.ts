@@ -17,6 +17,10 @@ if (!jwtSecret) {
 }
 const jwtExpiresIn = process.env.JWT_EXPIRES_IN || "30d"
 
+const vietqrBankId = process.env.VIETQR_BANK_ID || ""
+const vietqrAccountNo = process.env.VIETQR_ACCOUNT_NO || ""
+const vietqrAccountName = process.env.VIETQR_ACCOUNT_NAME || ""
+
 /** Cloudflare R2 config for VIP image uploads (S3-compatible API). All must be set for server-side upload to work. */
 const r2AccountId = process.env.CLOUDFLARE_R2_ACCOUNT_ID
 const r2AccessKeyId = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID
@@ -55,5 +59,10 @@ export const config = {
     secretAccessKey: r2SecretAccessKey!,
     vipBucket: r2VipBucket!,
     vipPublicUrlBase: r2VipPublicUrlBase!,
+  },
+  vietqr: {
+    bankId: vietqrBankId,
+    accountNo: vietqrAccountNo,
+    accountName: vietqrAccountName,
   },
 }

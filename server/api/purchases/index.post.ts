@@ -3,11 +3,18 @@ import { z } from "zod"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { purchases, users, vipPurchaseMetadata } from "~/lib/external/drizzle/migrations/schema"
 import { VIP_MEMBERSHIP_PLANS } from "~/lib/constants/constants"
+import { config } from "~/lib/config/config"
 import { logger } from "~/lib/logger/logger"
 import { ok, fail } from "~/server/utils/api-response"
 import { readZodBody } from "~/server/utils/validate"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseCreated } from "~/types/purchases"
+
+function buildVietQrUrl(refCode: string, amount: number): string {
+  const { bankId, accountNo, accountName } = config.vietqr
+  const params = new URLSearchParams({ amount: String(amount), addInfo: `VPF${refCode}`, accountName })
+  return `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?${params.toString()}`
+}
 
 const CreatePurchaseSchema = z.object({
   plan: z.enum(["6months", "1year"]),
@@ -106,6 +113,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseCre
         amount: planConfig.amount,
         status: "pending",
         createdAt: inserted.createdAt,
+        qrUrl: buildVietQrUrl(refCode, planConfig.amount),
       },
       { en: "Purchase created successfully", vi: "Tạo giao dịch thành công" },
     )

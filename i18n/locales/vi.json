@@ -4,7 +4,10 @@
       "rankings": "BẢNG XẾP HẠNG",
       "records": "KỶ LỤC",
       "competitions": "GIẢI ĐẤU",
-      "contact": "LIÊN HỆ"
+      "contact": "LIÊN HỆ",
+      "viewProfile": "Xem hồ sơ OpenVPF",
+      "profileSettings": "Cài đặt hồ sơ",
+      "signOut": "Đăng xuất"
     }
   },
   "nav": {
@@ -269,6 +272,7 @@
       "vipBenefits": "Quyền lợi VIP",
       "competitionInfo": "Thông tin thi đấu",
       "voucher": "Voucher",
+      "paymentHistory": "Lịch sử thanh toán",
       "changePassword": "Đổi mật khẩu"
     },
     "competition": {
@@ -355,7 +359,36 @@
       "enterNew": "Nhập một mật khẩu mới",
       "enterConfirm": "Nhập lại mật khẩu mới",
       "submit": "Đổi mật khẩu"
+    },
+    "paymentHistory": {
+      "empty": "Không có lịch sử thanh toán.",
+      "qrDialogTitle": "Hoàn tất thanh toán",
+      "status": {
+        "pending": "Chờ thanh toán",
+        "active": "Đã kích hoạt",
+        "expired": "Hết hạn",
+        "cancelled": "Đã hủy"
+      }
     }
+  },
+  "checkout": {
+    "title": "Thanh toán",
+    "itemsTitle": "Chi tiết đơn hàng",
+    "item": "Sản phẩm",
+    "price": "Giá",
+    "totalTitle": "Tổng cộng",
+    "total": "Tổng",
+    "emptyCart": "Giỏ hàng của bạn đang trống.",
+    "confirmButton": "Xác nhận thanh toán",
+    "backButton": "Quay lại",
+    "scanQr": "Quét mã QR bên dưới bằng ứng dụng ngân hàng để hoàn tất thanh toán.",
+    "amount": "Số tiền",
+    "transferNote": "Nội dung chuyển khoản",
+    "qrAlt": "Mã QR thanh toán",
+    "waitingForPayment": "Đang chờ xác nhận thanh toán...",
+    "cancelButton": "Hủy giao dịch",
+    "cancelled": "Giao dịch của bạn đã bị hủy.",
+    "paymentSuccess": "Thanh toán thành công!"
   }
 }
 

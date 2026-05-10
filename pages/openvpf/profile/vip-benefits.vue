@@ -10,7 +10,7 @@
       <p v-if="!vipActive" class="text-surface-400 text-sm">{{ $t("profile.vipBenefits.features") }}</p>
       <img v-if="!vipActive" :src="vipPreview" alt="" class="h-full w-full object-cover">
       <div v-if="!vipActive" class="pt-4">
-        <Button :label="$t('profile.vipBenefits.registerNow')" class="bg-primary" @click="navigateTo('/openvpf/profile/vip-checkout')" />
+        <Button :label="$t('profile.vipBenefits.registerNow')" class="bg-primary" @click="goToCheckout" />
       </div>
 
       <div v-else class="space-y-6">
@@ -256,6 +256,8 @@ import { isVipActive } from "~/lib/utils/vip"
 import vipPreview from "~/assets/img/vip-preview.png"
 import type { ApiResponse } from "~/types/api"
 import type { VipBenefits } from "~/types/vip"
+import { CHECKOUT_STORAGE_KEY } from "~/types/checkout"
+import type { CheckoutItem } from "~/types/checkout"
 
 definePageMeta({
   layout: "openvpf-profile",
@@ -271,6 +273,18 @@ const userData = computed(() => profileResponse.value?.athlete ?? null)
 const vipSettings = computed(() => profileResponse.value?.vipSettings ?? null)
 
 const vipActive = computed(() => isVipActive(userData.value?.vipMembershipExpiresAt ?? null))
+
+function goToCheckout() {
+  const item: CheckoutItem = {
+    id: "vip-1year",
+    name: { en: "1 Year VIP Membership", vi: "Gói VIP 1 năm" },
+    amount: 300_000,
+    type: "vip",
+    plan: "1year",
+  }
+  localStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify([item]))
+  navigateTo("/openvpf/checkout")
+}
 
 type FormState = Partial<
   Omit<VipBenefits, "vpfId"> & {
