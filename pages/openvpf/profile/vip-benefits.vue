@@ -1,244 +1,72 @@
 <template>
   <div class="min-h-full">
-    <h1 class="text-2xl font-bold mb-6 text-surface-0">{{ $t("profile.tabs.vipBenefits") }}</h1>
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-surface-0">{{ $t("profile.tabs.vipBenefits") }}</h1>
+      <div v-if="isAdmin" class="flex items-center gap-2">
+        <span class="text-sm text-surface-400">
+          {{ vipActive ? $t("profile.vipBenefits.previewNonVip") : $t("profile.vipBenefits.previewActive") }}
+        </span>
+        <ToggleSwitch v-model="adminForceActive" />
+      </div>
+    </div>
 
     <div v-if="pending" class="flex justify-center py-12">
       <ProgressSpinner />
     </div>
     <template v-else>
-      <p v-if="!vipActive" class="text-surface-300">{{ $t("profile.vipBenefits.description") }}</p>
-      <p v-if="!vipActive" class="text-surface-400 text-sm">{{ $t("profile.vipBenefits.features") }}</p>
-      <img v-if="!vipActive" :src="vipPreview" alt="" class="h-full w-full object-cover">
-      <div v-if="!vipActive" class="pt-4">
-        <Button :label="$t('profile.vipBenefits.registerNow')" class="bg-primary" @click="goToCheckout" />
-      </div>
-
-      <div v-else class="space-y-6">
-        <!-- Avatar -->
-        <div class="flex flex-wrap items-start gap-4">
-          <div class="flex flex-col gap-2">
-            <label class="text-sm font-medium text-surface-300">{{ $t("profile.vipBenefits.avatar") }}</label>
-            <div class="w-24 h-24 rounded-lg overflow-hidden bg-surface-700 flex items-center justify-center border border-surface-600">
-              <img
-                v-if="avatarPreview"
-                :src="avatarPreview"
-                alt=""
-                class="w-full h-full object-cover"
-              >
-              <i v-else class="pi pi-user text-3xl text-surface-500" />
-            </div>
-            <p class="text-sm text-surface-400">{{ $t("profile.vipBenefits.changeAvatar") }}</p>
-            <input
-              ref="avatarInputRef"
-              type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp"
-              class="hidden"
-              @change="onAvatarChange"
-            >
-            <Button
-              :label="$t('profile.vipBenefits.change')"
-              size="small"
-              class="bg-primary text-primary-contrast"
-              @click="avatarInputRef?.click()"
-            />
+      <div v-if="!showActive">
+        <!-- Preview card -->
+        <div class="border border-surface-600 rounded-lg p-6 mb-2 bg-surface-800 flex flex-col gap-4">
+          <p class="text-surface-300">{{ $t("profile.vipBenefits.description") }}</p>
+          <p class="text-surface-400 text-sm">{{ $t("profile.vipBenefits.features") }}</p>
+          <img :src="vipPreview" alt="" class="w-full object-cover rounded-lg">
+          <div>
+            <Button :label="$t('profile.vipBenefits.registerNow')" class="bg-primary" @click="goToCheckout" />
           </div>
         </div>
 
-        <!-- Cover photos -->
-        <div>
-          <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.vipBenefits.coverPhotos") }}</label>
-          <p class="text-sm text-surface-500 mb-2">{{ $t("profile.vipBenefits.maxPhotos") }}</p>
-          <div class="flex flex-wrap gap-3">
-            <div
-              v-for="idx in 5"
-              :key="idx"
-              class="w-20 h-20 rounded-lg overflow-hidden bg-surface-700 border border-surface-600 flex items-center justify-center relative shrink-0"
-            >
-              <img
-                v-if="bannerPreview(idx)"
-                :src="bannerPreview(idx) ?? ''"
-                alt=""
-                class="w-full h-full object-cover"
-              >
-              <i v-else class="pi pi-image text-2xl text-surface-500" />
-              <button
-                v-if="bannerPreview(idx)"
-                type="button"
-                class="absolute top-0.5 right-0.5 w-5 h-5 rounded bg-red-500 text-white flex items-center justify-center text-xs hover:bg-red-600"
-                aria-label="Remove"
-                @click="clearBanner(idx)"
-              >
-                <i class="pi pi-times" />
-              </button>
-            </div>
-            <div
-              v-if="nextBannerSlot !== null"
-              class="w-20 h-20 rounded-lg border-2 border-dashed border-surface-600 flex items-center justify-center shrink-0 cursor-pointer hover:border-primary hover:bg-surface-800"
-              @click="triggerBannerInput"
-            >
-              <i class="pi pi-plus text-surface-500" />
-            </div>
-          </div>
-          <input
-            ref="bannerInputRef"
-            type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
-            class="hidden"
-            @change="onBannerChange"
-          >
-        </div>
-
-        <!-- About me -->
-        <div class="flex flex-wrap items-start gap-4 gap-y-2">
-          <div class="flex-1 min-w-[200px]">
-            <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.vipBenefits.aboutMe") }}</label>
-            <Textarea
-              v-model="form.profileDescription"
-              :placeholder="$t('profile.vipBenefits.aboutMePlaceholder')"
-              class="w-full"
-              rows="4"
-            />
-          </div>
-          <div class="flex items-center gap-2 pt-8">
-            <ToggleSwitch
-              :model-value="!!form.displayProfileDescription"
-              :aria-label="$t('profile.vipBenefits.displayOnProfile')"
-              @update:model-value="(v: boolean) => (form.displayProfileDescription = v)"
-            />
-            <span class="text-sm text-surface-400">{{ $t("profile.vipBenefits.displayOnProfile") }}</span>
-          </div>
-        </div>
-
-        <!-- Nickname -->
-        <div class="flex flex-wrap items-center gap-4 gap-y-2">
-          <div class="flex-1 min-w-[200px]">
-            <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.vipBenefits.nickname") }}</label>
-            <InputText
-              v-model="form.alias"
-              :placeholder="$t('profile.vipBenefits.nicknamePlaceholder')"
-              class="w-full"
-            />
-          </div>
-          <div class="flex items-center gap-2 pt-8">
-            <ToggleSwitch
-              :model-value="!!form.displayAlias"
-              :aria-label="$t('profile.vipBenefits.displayOnProfile')"
-              @update:model-value="(v: boolean) => (form.displayAlias = v)"
-            />
-            <span class="text-sm text-surface-400">{{ $t("profile.vipBenefits.displayOnProfile") }}</span>
-          </div>
-        </div>
-
-        <!-- Facebook -->
-        <div class="flex flex-wrap items-center gap-4 gap-y-2">
-          <div class="flex-1 min-w-[200px]">
-            <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.vipBenefits.facebook") }}</label>
-            <InputText
-              v-model="form.facebook"
-              :placeholder="$t('profile.vipBenefits.facebookPlaceholder')"
-              class="w-full"
-            />
-          </div>
-          <div class="flex items-center gap-2 pt-8">
-            <ToggleSwitch
-              :model-value="!!form.displayFacebook"
-              :aria-label="$t('profile.vipBenefits.displayOnProfile')"
-              @update:model-value="(v: boolean) => (form.displayFacebook = v)"
-            />
-            <span class="text-sm text-surface-400">{{ $t("profile.vipBenefits.displayOnProfile") }}</span>
-          </div>
-        </div>
-
-        <!-- Instagram -->
-        <div class="flex flex-wrap items-center gap-4 gap-y-2">
-          <div class="flex-1 min-w-[200px]">
-            <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.vipBenefits.instagram") }}</label>
-            <InputText
-              v-model="form.instagram"
-              :placeholder="$t('profile.vipBenefits.instagramPlaceholder')"
-              class="w-full"
-            />
-          </div>
-          <div class="flex items-center gap-2 pt-8">
-            <ToggleSwitch
-              :model-value="!!form.displayInstagram"
-              :aria-label="$t('profile.vipBenefits.displayOnProfile')"
-              @update:model-value="(v: boolean) => (form.displayInstagram = v)"
-            />
-            <span class="text-sm text-surface-400">{{ $t("profile.vipBenefits.displayOnProfile") }}</span>
-          </div>
-        </div>
-
-        <!-- TikTok -->
-        <div class="flex flex-wrap items-center gap-4 gap-y-2">
-          <div class="flex-1 min-w-[200px]">
-            <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.vipBenefits.tiktok") }}</label>
-            <InputText
-              v-model="form.tiktok"
-              :placeholder="$t('profile.vipBenefits.tiktokPlaceholder')"
-              class="w-full"
-            />
-          </div>
-          <div class="flex items-center gap-2 pt-8">
-            <ToggleSwitch
-              :model-value="!!form.displayTiktok"
-              :aria-label="$t('profile.vipBenefits.displayOnProfile')"
-              @update:model-value="(v: boolean) => (form.displayTiktok = v)"
-            />
-            <span class="text-sm text-surface-400">{{ $t("profile.vipBenefits.displayOnProfile") }}</span>
-          </div>
-        </div>
-
-        <!-- YouTube -->
-        <div class="flex flex-wrap items-center gap-4 gap-y-2">
-          <div class="flex-1 min-w-[200px]">
-            <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.vipBenefits.youtube") }}</label>
-            <InputText
-              v-model="form.youtube"
-              :placeholder="$t('profile.vipBenefits.youtubePlaceholder')"
-              class="w-full"
-            />
-          </div>
-          <div class="flex items-center gap-2 pt-8">
-            <ToggleSwitch
-              :model-value="!!form.displayYoutube"
-              :aria-label="$t('profile.vipBenefits.displayOnProfile')"
-              @update:model-value="(v: boolean) => (form.displayYoutube = v)"
-            />
-            <span class="text-sm text-surface-400">{{ $t("profile.vipBenefits.displayOnProfile") }}</span>
-          </div>
-        </div>
-
-        <!-- Phone -->
-        <div class="flex flex-wrap items-center gap-4 gap-y-2">
-          <div class="flex-1 min-w-[200px]">
-            <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.vipBenefits.phoneNumber") }}</label>
-            <InputText
-              v-model="form.vipPhoneNumber"
-              :placeholder="$t('profile.vipBenefits.phoneNumberPlaceholder')"
-              class="w-full"
-            />
-          </div>
-          <div class="flex items-center gap-2 pt-8">
-            <ToggleSwitch
-              :model-value="!!form.displayMobilePhone"
-              :aria-label="$t('profile.vipBenefits.displayOnProfile')"
-              @update:model-value="(v: boolean) => (form.displayMobilePhone = v)"
-            />
-            <span class="text-sm text-surface-400">{{ $t("profile.vipBenefits.displayOnProfile") }}</span>
-          </div>
-        </div>
-
-        <div class="pt-4 flex justify-center">
-          <Button
-            :label="$t('profile.vipBenefits.saveChanges')"
-            class="bg-primary text-primary-contrast"
-            :loading="isSubmitting"
-            :disabled="isSubmitting || !hasChanges"
-            @click="handleSubmit"
+        <!-- Disabled settings card -->
+          <ProfileVipSettingsForm
+            disabled
+            :form="form"
+            :avatar-preview="null"
+            :banner-preview="() => null"
+            :next-banner-slot="null"
+            :is-submitting="false"
+            :has-changes="false"
           />
-        </div>
       </div>
+
+      <ProfileVipSettingsForm
+        v-else
+        :disabled="false"
+        :form="form"
+        :avatar-preview="avatarPreview"
+        :banner-preview="bannerPreview"
+        :next-banner-slot="nextBannerSlot"
+        :is-submitting="isSubmitting"
+        :has-changes="hasChanges"
+        @update-field="handleFieldUpdate"
+        @avatar-click="avatarInputRef?.click()"
+        @trigger-banner-input="triggerBannerInput"
+        @clear-banner="clearBanner"
+        @submit="handleSubmit"
+      />
+
+      <input
+        ref="avatarInputRef"
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        class="hidden"
+        @change="onAvatarChange"
+      >
+      <input
+        ref="bannerInputRef"
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        class="hidden"
+        @change="onBannerChange"
+      >
     </template>
   </div>
 </template>
@@ -247,8 +75,6 @@
 import { ref, watch, computed } from "vue"
 import { useToast } from "primevue/usetoast"
 import Button from "@/components/volt/Button.vue"
-import InputText from "@/components/volt/InputText.vue"
-import Textarea from "@/components/volt/Textarea.vue"
 import ToggleSwitch from "@/components/volt/ToggleSwitch.vue"
 import ProgressSpinner from "@/components/volt/ProgressSpinner.vue"
 import { buildPatchPayload } from "~/lib/utils/client"
@@ -273,6 +99,10 @@ const userData = computed(() => profileResponse.value?.athlete ?? null)
 const vipSettings = computed(() => profileResponse.value?.vipSettings ?? null)
 
 const vipActive = computed(() => isVipActive(userData.value?.vipMembershipExpiresAt ?? null))
+const isAdmin = computed(() => userData.value?.role === "admin")
+
+const adminForceActive = ref(false)
+const showActive = computed(() => adminForceActive.value ? !vipActive.value : vipActive.value)
 
 function goToCheckout() {
   const item: CheckoutItem = {
@@ -390,6 +220,10 @@ const nextBannerSlot = computed(() => {
   return null
 })
 
+function handleFieldUpdate(key: string, value: string | boolean | null) {
+  form.value = { ...form.value, [key]: value }
+}
+
 function onAvatarChange(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
@@ -438,7 +272,6 @@ const hasChanges = computed(() => {
 const isSubmitting = ref(false)
 
 async function handleSubmit() {
-  // Only submit changed fields (patch) and new image files
   const patch = buildPatch()
   const hasFiles = !!avatarFile.value || Object.keys(bannerFiles.value).length > 0
 

@@ -209,7 +209,7 @@
     "placement": "#"
   },
   "records": {
-    "title": "Records",
+    "title": "VPF National Records",
     "viewMode": "View Mode",
     "currentRecords": "Current Records",
     "recordHistory": "Record History",
@@ -332,7 +332,9 @@
       "phoneNumber": "Phone number",
       "phoneNumberPlaceholder": "Enter phone number",
       "displayOnProfile": "Show on public profile",
-      "saveChanges": "Save changes"
+      "saveChanges": "Save changes",
+      "previewActive": "Preview as VIP active",
+      "previewNonVip": "Preview as non-VIP"
     },
     "vipCheckout": {
       "title": "VIP Membership Checkout",
@@ -368,6 +370,11 @@
         "active": "Active",
         "expired": "Expired",
         "cancelled": "Cancelled"
+      },
+      "type": {
+        "vip": "VIP Membership",
+        "vpf_membership": "VPF Membership",
+        "competition": "Competition"
       }
     }
   },

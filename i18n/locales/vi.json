@@ -209,7 +209,7 @@
     "placement": "#"
   },
   "records": {
-    "title": "Kỷ lục",
+    "title": "Kỷ lục quốc gia VPF",
     "viewMode": "Chế độ xem",
     "currentRecords": "Kỷ lục hiện tại",
     "recordHistory": "Lịch sử kỷ lục",
@@ -332,7 +332,9 @@
       "phoneNumber": "Số điện thoại",
       "phoneNumberPlaceholder": "Nhập số điện thoại",
       "displayOnProfile": "Hiển thị trên hồ sơ công khai",
-      "saveChanges": "Lưu điều chỉnh"
+      "saveChanges": "Lưu điều chỉnh",
+      "previewActive": "Xem trước khi VIP active",
+      "previewNonVip": "Xem trước khi không phải VIP"
     },
     "vipCheckout": {
       "title": "Thanh toán thành viên VIP",
@@ -368,6 +370,11 @@
         "active": "Đã kích hoạt",
         "expired": "Hết hạn",
         "cancelled": "Đã hủy"
+      },
+      "type": {
+        "vip": "Hội viên VIP",
+        "vpf_membership": "Hội viên VPF",
+        "competition": "Thi đấu"
       }
     }
   },

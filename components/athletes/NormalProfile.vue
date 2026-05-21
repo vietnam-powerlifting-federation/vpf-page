@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen">
     <section class="py-12 md:py-16">
-      <div class="container mx-auto px-4 max-w-5xl">
+      <div class="container mx-auto px-4">
         <h1 class="text-3xl md:text-4xl font-bold mb-8 text-primary">
           {{ athlete.fullName }}{{ sexLabel ? ` (${sexLabel})` : "" }}
         </h1>

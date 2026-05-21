@@ -20,10 +20,10 @@
         >
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-1">
-              <span class="font-mono text-sm text-surface-400">VPF{{ purchase.refCode }}</span>
+              <span class="font-mono text-sm text-surface-400">{{ $t(`profile.paymentHistory.type.${purchase.type}`) }} - VPF{{ purchase.refCode }}</span>
               <Tag :severity="statusSeverity(purchase.status)" :value="$t(`profile.paymentHistory.status.${purchase.status}`)" />
             </div>
-            <div class="text-surface-0 font-semibold">{{ formatAmount(purchase.amount) }} VND</div>
+            <div class="text-surface-0">{{ formatAmount(purchase.amount) }} VND</div>
             <div class="text-surface-500 text-xs mt-1">{{ formatDate(purchase.createdAt) }}</div>
           </div>
           <div v-if="purchase.status === 'pending'" class="text-primary shrink-0">
@@ -36,6 +36,7 @@
     <Dialog
       v-model:visible="qrDialogVisible"
       modal
+      dismissableMask
       :header="$t('profile.paymentHistory.qrDialogTitle')"
       :closable="true"
     >
@@ -55,7 +56,7 @@
 import { ref } from "vue"
 import { useToast } from "primevue/usetoast"
 import ProgressSpinner from "@/components/volt/ProgressSpinner.vue"
-import Dialog from "@/components/volt/Dialog.vue"
+import Dialog from "primevue/dialog"
 import Tag from "primevue/tag"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseStatus } from "~/types/purchases"
