@@ -9,14 +9,14 @@
       {{ $t("profile.competitionInfoTable.noCompetitions") }}
     </div>
     <div v-else class="overflow-x-auto">
-      <table class="w-full border border-surface-700 rounded-lg overflow-hidden">
+      <table class="w-full min-w-[640px] border border-surface-700 rounded-lg overflow-hidden">
         <thead class="bg-surface-800 text-surface-300 text-left text-sm">
           <tr>
             <th class="p-3 font-medium">{{ $t("profile.competitionInfoTable.date") }}</th>
             <th class="p-3 font-medium">{{ $t("profile.competitionInfoTable.competition") }}</th>
             <th class="p-3 font-medium">{{ $t("profile.competitionInfoTable.status") }}</th>
             <th class="p-3 font-medium">{{ $t("profile.competitionInfoTable.action") }}</th>
-            <th class="p-3 font-medium">{{ $t("profile.competitionInfoTable.displayOnProfile") }}</th>
+            <th class="hidden md:table-cell p-3 font-medium">{{ $t("profile.competitionInfoTable.displayOnProfile") }}</th>
           </tr>
         </thead>
         <tbody class="text-surface-200">
@@ -50,7 +50,7 @@
                 <span class="text-surface-500 text-sm">({{ $t("profile.demo") }})</span>
               </template>
             </td>
-            <td class="p-3">
+            <td class="hidden md:table-cell p-3">
               <template v-if="row.completed">
                 <Checkbox :model-value="row.displayOnProfile" :binary="true" disabled />
                 <span class="ml-2 text-surface-500 text-sm">({{ $t("profile.demo") }})</span>

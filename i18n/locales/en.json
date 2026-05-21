@@ -7,7 +7,9 @@
       "contact": "CONTACT",
       "viewProfile": "View OpenVPF Profile",
       "profileSettings": "Profile Settings",
-      "signOut": "Sign Out"
+      "signOut": "Sign Out",
+      "openNavigation": "Open navigation",
+      "openUserMenu": "Open account menu"
     }
   },
   "nav": {

@@ -7,7 +7,9 @@
       "contact": "LIÊN HỆ",
       "viewProfile": "Xem hồ sơ OpenVPF",
       "profileSettings": "Cài đặt hồ sơ",
-      "signOut": "Đăng xuất"
+      "signOut": "Đăng xuất",
+      "openNavigation": "Mở điều hướng",
+      "openUserMenu": "Mở menu tài khoản"
     }
   },
   "nav": {

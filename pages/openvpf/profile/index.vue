@@ -60,8 +60,8 @@
           rows="3"
         />
       </div>
-      <div class="flex gap-4">
-        <div class="flex-1">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
           <label for="squatRackPin" class="block mb-2 text-sm font-medium text-surface-300">
             {{ $t("profile.squatRackPin") }}
           </label>
@@ -69,7 +69,7 @@
             :placeholder="$t('profile.enterSquatRackPin')" class="w-full" :min="0" />
         </div>
 
-        <div class="flex-1">
+        <div>
           <label for="benchRackPin" class="block mb-2 text-sm font-medium text-surface-300">
             {{ $t("profile.benchRackPin") }}
           </label>
@@ -77,7 +77,7 @@
             :placeholder="$t('profile.enterBenchRackPin')" class="w-full" :min="0" />
         </div>
 
-        <div class="flex-1">
+        <div>
           <label for="benchSafetyPin" class="block mb-2 text-sm font-medium text-surface-300">
             {{ $t("profile.benchSafetyPin") }}
           </label>
@@ -85,7 +85,7 @@
             :placeholder="$t('profile.enterBenchSafetyPin')" class="w-full" :min="0" />
         </div>
 
-        <div class="flex-1">
+        <div>
           <label for="benchFootBlock" class="block mb-2 text-sm font-medium text-surface-300">
             {{ $t("profile.benchFootBlock") }}
           </label>

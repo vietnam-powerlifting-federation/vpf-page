@@ -14,19 +14,19 @@
         <div
           v-for="purchase in purchases"
           :key="purchase.purchaseId"
-          class="border border-surface-600 rounded-lg p-4 bg-surface-800 flex items-center justify-between gap-4"
+          class="border border-surface-600 rounded-lg p-4 bg-surface-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
           :class="purchase.status === 'pending' ? 'cursor-pointer hover:border-primary transition-colors' : ''"
           @click="purchase.status === 'pending' && openQrDialog(purchase)"
         >
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="font-mono text-sm text-surface-400">{{ $t(`profile.paymentHistory.type.${purchase.type}`) }} - VPF{{ purchase.refCode }}</span>
+          <div class="w-full sm:flex-1 min-w-0">
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+              <span class="font-mono text-sm text-surface-400 break-all sm:break-normal">{{ $t(`profile.paymentHistory.type.${purchase.type}`) }} - VPF{{ purchase.refCode }}</span>
               <Tag :severity="statusSeverity(purchase.status)" :value="$t(`profile.paymentHistory.status.${purchase.status}`)" />
             </div>
             <div class="text-surface-0">{{ formatAmount(purchase.amount) }} VND</div>
             <div class="text-surface-500 text-xs mt-1">{{ formatDate(purchase.createdAt) }}</div>
           </div>
-          <div v-if="purchase.status === 'pending'" class="text-primary shrink-0">
+          <div v-if="purchase.status === 'pending'" class="text-primary shrink-0 self-end sm:self-auto">
             <i class="pi pi-qrcode text-2xl" />
           </div>
         </div>

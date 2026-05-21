@@ -2,16 +2,14 @@
   <div class="min-h-full flex flex-col dark-bg">
     <OpenVPFHeader/>
 
-    <!-- 1:3 Layout Section -->
-    <div class="flex-1 grid grid-cols-4 max-w-8xl w-full mx-auto">
-      <!-- Sidebar (1 part) -->
-      <aside class="col-span-1 pt-6 px-4">
-        <nav class="flex flex-col gap-2">
+    <div class="flex-1 flex flex-col lg:grid lg:grid-cols-4 max-w-8xl w-full mx-auto">
+      <aside class="lg:col-span-1 lg:pt-6 lg:px-4 border-b border-surface-700 lg:border-b-0">
+        <nav class="flex gap-2 overflow-x-auto px-4 py-3 lg:flex-col lg:overflow-visible lg:p-0">
           <Button
             v-for="tab in tabs"
             :key="tab.path"
             :severity="isActive(tab.path) ? 'primary' : 'secondary'"
-            class="left-button justify-start"
+            class="left-button shrink-0 whitespace-nowrap lg:w-full"
             @click="navigateTo(tab.path)"
           >
             <i :class="['pi text-lg flex-shrink-0', tab.icon]" />
@@ -20,8 +18,7 @@
         </nav>
       </aside>
 
-      <!-- Main Content (3 parts) -->
-      <main class="col-span-3 overflow-auto p-6">
+      <main class="min-w-0 lg:col-span-3 overflow-auto p-4 lg:p-6">
         <Card>
           <template #content>
             <slot />
