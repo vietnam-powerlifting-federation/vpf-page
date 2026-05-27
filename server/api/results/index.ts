@@ -46,7 +46,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<ResultsResp
       weightClass,
       sex,
       sort: sortKey,
-      includeNameDecorators: true,
     })
 
     // Apply distinct filter if needed

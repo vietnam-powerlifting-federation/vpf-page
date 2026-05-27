@@ -22,7 +22,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<RecordsResp
     // Fetch records using the utility function
     const { records, meets: allMeets, athletes, results } = await fetchRecordsForYear({
       maxYear: year,
-      includeNameDecorators: true,
     })
 
     setHeader(event, "Cache-Control", "public, max-age=86400, s-maxage=86400")

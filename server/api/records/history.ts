@@ -7,7 +7,7 @@ import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import type { ApiResponse } from "~/types/api"
 import type { LiftRecord } from "~/types/records"
 import type { MeetPublic } from "~/types/meets"
-import type { UserPublicWithDecorators } from "~/types/users"
+import type { UserPublic, UserPublicWithDecorators } from "~/types/users"
 import type { RankedDivision } from "~/types/union-types"
 import { eq, and, sql } from "drizzle-orm"
 import type { Result } from "~/types/results"
@@ -58,14 +58,13 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
       hidden: false,
       minYear: year,
       maxYear: year,
-      includeNameDecorators: true,
     })
 
     const meet = returnedMeets[0] || null
 
     if (!meet) {
       return ok(
-        { records: [], meet: null, athletes: [] },
+        { records: [], meet: null, athletes: [] as UserPublicWithDecorators[], results: [] },
         { en: "No national meet found", vi: "Không tìm thấy giải quốc gia" },
       )
     }

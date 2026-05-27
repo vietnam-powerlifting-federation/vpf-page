@@ -28,22 +28,7 @@ describe("API: athletes", () => {
       expect(Array.isArray(res.data)).toBe(true)
     })
 
-    it("returns 200 with decorator1 and decorator2 when includeNameDecorators is true and athlete has active VIP", async () => {
-      const handler = (await import("~/server/api/athletes/index")).default
-      const event = createMockH3Event({
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
-        query: { includeNameDecorators: "true" },
-      })
-      const res = await handler(event)
-      expect(res.success).toBe(true)
-      expect(Array.isArray(res.data)).toBe(true)
-      expect(res.data!.length).toBeGreaterThanOrEqual(1)
-      res.data!.forEach((a: { vpfId: string; decorator1?: string | null; decorator2?: string | null }) => {
-        expect(a).toHaveProperty("vpfId")
-        if ("decorator1" in a) expect(typeof a.decorator1 === "string" || a.decorator1 === null).toBe(true)
-        if ("decorator2" in a) expect(typeof a.decorator2 === "string" || a.decorator2 === null).toBe(true)
-      })
-    })
+
   })
 
   describe("GET /api/athletes/[id]", () => {

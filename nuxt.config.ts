@@ -95,5 +95,16 @@ export default defineNuxtConfig({
     plugins: [
       tailwindcss(),
     ],
+  },
+  routeRules: {
+    "/openvpf/**": {
+      swr: 60 * 10
+    },
+    "/api/meets/**": {
+      swr: 60 * 10
+    },
+    "/api/results": {
+      swr: 60 * 10
+    }
   }
 })

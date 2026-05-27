@@ -193,6 +193,9 @@ import type { Sex, Division } from "~/types/union-types"
 const route = useRoute()
 const router = useRouter()
 
+const { fetchDecorators, applyDecorators } = useNameDecorators()
+onMounted(fetchDecorators)
+
 // View mode: 'current' or 'history'
 const initialViewMode = (route.query.mode as "current" | "history") || "current"
 const viewMode = ref<"current" | "history">(initialViewMode)
@@ -342,7 +345,7 @@ const displayError = computed(() => {
 })
 
 const displayAthletes = computed(() => {
-  return displayData.value?.athletes ?? []
+  return applyDecorators(displayData.value?.athletes ?? [])
 })
 
 const displayMeets = computed(() => {

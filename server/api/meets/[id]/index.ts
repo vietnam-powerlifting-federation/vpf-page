@@ -103,7 +103,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<MeetDetails
     // Query meet, results, and athletes
     const { meets: returnedMeets, results: transformedResults, athletes: publicAthletes } = await getMeetsAndResultsAndAthletes({
       meetIds: [meetId],
-      includeNameDecorators: true,
     })
 
     const meet = foundMeet || returnedMeets[0] || null

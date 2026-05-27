@@ -177,7 +177,6 @@ export async function fetchAthleteRecordStatus(targetVpfId: string): Promise<Lif
 type FetchRecordsOptions = {
   maxYear?: number | null
   minYear?: number
-  includeNameDecorators?: boolean
 }
 
 // Internal type that adds lot for tiebreaking during sorting
@@ -195,7 +194,7 @@ export async function fetchRecordsForYear(
   athletes: UserPublicWithDecorators[]
   results: Result[]
 }> {
-  const { maxYear = null, minYear = RECORD_START_YEAR, includeNameDecorators } = options
+  const { maxYear = null, minYear = RECORD_START_YEAR } = options
 
   const { meets: allMeets, results, athletes } = await getMeetsAndResultsAndAthletes({
     meetType: ["national"],
@@ -203,7 +202,6 @@ export async function fetchRecordsForYear(
     hidden: false,
     minYear,
     maxYear: maxYear !== null && !isNaN(maxYear) ? maxYear : undefined,
-    includeNameDecorators,
   })
 
   if (allMeets.length === 0) {

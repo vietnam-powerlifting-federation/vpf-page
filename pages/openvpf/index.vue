@@ -136,6 +136,8 @@ useSeoMeta({
 
 const filters = useRankingFilters()
 const loading = ref(true)
+const { fetchDecorators, applyDecorators } = useNameDecorators()
+onMounted(fetchDecorators)
 // Computed properties for v-model bindings
 const searchValue = computed({
   get: () => filters.search.value,
@@ -219,10 +221,8 @@ const results = computed(() => {
 })
 
 const athletes = computed(() => {
-  if (response.value?.success && response.value.data) {
-    return response.value.data.athletes
-  }
-  return []
+  const raw = response.value?.success ? (response.value.data?.athletes ?? []) : []
+  return applyDecorators(raw)
 })
 
 // Results with athlete data

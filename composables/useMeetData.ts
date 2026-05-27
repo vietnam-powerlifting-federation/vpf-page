@@ -35,9 +35,12 @@ export function useMeetData(slug: string): MeetDataReturn {
   )
   const data = computed(() => response.value?.success ? response.value.data : null)
 
+  const { fetchDecorators, applyDecorators } = useNameDecorators()
+  onMounted(fetchDecorators)
+
   const meet = computed(() => data.value?.meet ?? null)
   const results = computed<MeetResult[]>(() => (data.value?.results ?? []) as MeetResult[])
-  const athletes = computed(() => data.value?.athletes ?? [])
+  const athletes = computed(() => applyDecorators(data.value?.athletes ?? []))
 
   const athleteMap = computed(() => {
     const map = new Map<string, UserPublicWithDecorators>()
