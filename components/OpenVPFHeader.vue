@@ -7,7 +7,7 @@
         text
         rounded
         severity="secondary"
-        class="md:hidden justify-self-start"
+        class="md:hidden! justify-self-start"
         :aria-label="$t('openvpf.headerNav.openNavigation')"
         @click="mobileNavOpen = true"
       />
