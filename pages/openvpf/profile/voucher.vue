@@ -5,7 +5,7 @@
       <span class="rounded bg-surface-700 px-2 py-0.5">{{ $t("profile.demo") }}</span>
     </p>
 
-    <DataTable :value="demoVouchers" striped-rows show-gridlines>
+    <DataTable :value="demoVouchers" striped-rows class="w-full border border-surface-200 dark:border-surface-700">
       <template #empty>
         <div class="text-surface-400">{{ $t("profile.voucherTable.noVouchers") }}</div>
       </template>

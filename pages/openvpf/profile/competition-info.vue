@@ -9,7 +9,7 @@
       {{ $t("profile.competitionInfoTable.noCompetitions") }}
     </div>
     <div v-else>
-      <DataTable :value="rows" striped-rows show-gridlines>
+      <DataTable :value="rows" striped-rows class="w-full border border-surface-200 dark:border-surface-700">
         <Column field="hostDate" :header="$t('profile.competitionInfoTable.date')">
           <template #body="{ data }">
             {{ formatDate(data.hostDate) }}

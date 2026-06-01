@@ -1,7 +1,7 @@
 <template>
   <div>
     <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("athlete.pbs") }}</h2>
-    <DataTable :value="pbRow" show-gridlines>
+    <DataTable :value="pbRow" class="w-full border border-surface-200 dark:border-surface-700">
       <Column :header="$t('athlete.squatPb')">
         <template #body="{ data }">
           <span class="text-primary font-medium">{{ data.squat !== null ? formatWeight(data.squat) : "-" }}</span>

@@ -1,5 +1,5 @@
 import { logger } from "~/lib/logger/logger"
-import { fetchRecordsForYear } from "~/lib/utils/queries/records"
+import { cachedFetchRecordsForYear } from "~/server/utils/cached-records"
 import type { ApiResponse } from "~/types/api"
 import type { LiftRecord } from "~/types/records"
 import type { MeetPublic } from "~/types/meets"
@@ -20,7 +20,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<RecordsResp
     const year = query.year ? parseInt(query.year as string, 10) : null
 
     // Fetch records using the utility function
-    const { records, meets: allMeets, athletes, results } = await fetchRecordsForYear({
+    const { records, meets: allMeets, athletes, results } = await cachedFetchRecordsForYear({
       maxYear: year,
     })
 

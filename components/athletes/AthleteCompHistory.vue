@@ -1,7 +1,7 @@
 <template>
   <div>
     <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("athlete.competitionHistory") }}</h2>
-    <DataTable :value="enrichedHistory" striped-rows show-gridlines>
+    <DataTable :value="enrichedHistory" striped-rows class="w-full border border-surface-200 dark:border-surface-700">
       <template #empty>
         <div class="px-4 py-6 text-center text-surface-400">-</div>
       </template>
@@ -20,37 +20,44 @@
           {{ formatDivision(data.result.division) }}
         </template>
       </Column>
-      <Column :header="$t('athlete.bestSquat')" style="text-align: right">
+      <Column style="text-align: right">
+        <template #header><div class="w-full text-right">{{ $t('athlete.bestSquat') }}</div></template>
         <template #body="{ data }">
           <span class="text-primary">{{ getBestLift(data.result, "squat") !== null ? formatWeight(getBestLift(data.result, "squat")) : "-" }}</span>
         </template>
       </Column>
-      <Column :header="$t('athlete.bestBench')" style="text-align: right">
+      <Column style="text-align: right">
+        <template #header><div class="w-full text-right">{{ $t('athlete.bestBench') }}</div></template>
         <template #body="{ data }">
           <span class="text-primary">{{ getBestLift(data.result, "bench") !== null ? formatWeight(getBestLift(data.result, "bench")) : "-" }}</span>
         </template>
       </Column>
-      <Column :header="$t('athlete.bestDeadlift')" style="text-align: right">
+      <Column style="text-align: right">
+        <template #header><div class="w-full text-right">{{ $t('athlete.bestDeadlift') }}</div></template>
         <template #body="{ data }">
           <span class="text-primary">{{ getBestLift(data.result, "deadlift") !== null ? formatWeight(getBestLift(data.result, "deadlift")) : "-" }}</span>
         </template>
       </Column>
-      <Column :header="$t('general.total')" style="text-align: right">
+      <Column style="text-align: right">
+        <template #header><div class="w-full text-right">{{ $t('general.total') }}</div></template>
         <template #body="{ data }">
           <span class="font-semibold text-primary">{{ data.result.total !== null && data.result.total !== undefined ? formatWeight(data.result.total) : "-" }}</span>
         </template>
       </Column>
-      <Column :header="$t('general.gl')" style="text-align: right">
+      <Column style="text-align: right">
+        <template #header><div class="w-full text-right">{{ $t('general.gl') }}</div></template>
         <template #body="{ data }">
           {{ data.result.gl !== null && data.result.gl !== undefined ? formatGL(data.result.gl) : "-" }}
         </template>
       </Column>
-      <Column :header="$t('general.bodyWeight')" style="text-align: right">
+      <Column style="text-align: right">
+        <template #header><div class="w-full text-right">{{ $t('general.bodyWeight') }}</div></template>
         <template #body="{ data }">
           {{ data.result.bodyWeight !== null && data.result.bodyWeight !== undefined ? formatWeight(data.result.bodyWeight) : "-" }}
         </template>
       </Column>
-      <Column :header="$t('athlete.placement')" style="text-align: right">
+      <Column style="text-align: right">
+        <template #header><div class="w-full text-right">{{ $t('athlete.placement') }}</div></template>
         <template #body="{ data }">
           {{ data.result.placement ?? "-" }}
         </template>

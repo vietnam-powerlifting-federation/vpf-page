@@ -1,7 +1,7 @@
 <template>
   <div>
     <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("athlete.liftersRecords") }}</h2>
-    <DataTable :value="enrichedRecords" striped-rows show-gridlines>
+    <DataTable :value="enrichedRecords" striped-rows class="w-full border border-surface-200 dark:border-surface-700">
       <template #empty>
         <div class="px-4 py-6 text-center text-surface-400">-</div>
       </template>
@@ -15,36 +15,41 @@
           <span class="font-medium text-primary">{{ liftLabel(data.record.lift) }}</span>
         </template>
       </Column>
-      <Column :header="$t('general.total')" style="text-align: right">
+      <Column :header="$t('general.total')">
         <template #body="{ data }">
           <span class="font-medium text-primary">{{ formatWeight(data.record.recordWeight) }}</span>
         </template>
       </Column>
-      <Column :header="$t('general.weightClass')">
+      <Column style="text-align: right">
+        <template #header><div class="w-full text-right">{{ $t('general.weightClass') }}</div></template>
         <template #body="{ data }">
           {{ data.result ? formatWeightClass(data.result.weightClass, data.result.sex) : "-" }}
         </template>
       </Column>
-      <Column :header="$t('general.division')">
+      <Column style="text-align: right">
+        <template #header><div class="w-full text-right">{{ $t('general.division') }}</div></template>
         <template #body="{ data }">
           {{ formatDivision(data.record.recordDivision) }}
         </template>
       </Column>
-      <Column :header="$t('general.date')">
+      <Column style="text-align: right">
+        <template #header><div class="w-full text-right">{{ $t('general.date') }}</div></template>
         <template #body="{ data }">
           {{ data.hostDate }}
         </template>
       </Column>
-      <Column :header="$t('athlete.state')">
+      <Column style="text-align: right">
+        <template #header><div class="w-full text-right">{{ $t('athlete.state') }}</div></template>
         <template #body="{ data }">
           <span :class="data.record.status === 'holding' ? 'text-teal-400' : 'text-orange-400'" class="font-medium">
             {{ data.record.status === "holding" ? $t("athlete.holding") : $t("athlete.broken") }}
           </span>
         </template>
       </Column>
-      <Column v-if="showCertificate" :header="$t('athlete.recordCertificate')">
+      <Column v-if="showCertificate" style="text-align: right">
+        <template #header><div class="w-full text-right">{{ $t('athlete.recordCertificate') }}</div></template>
         <template #body="{ data }">
-          <Button size="small" :label="$t('athlete.view')" @click="openCertificate(data)" />
+          <Button size="small" variant="text" class="!py-0" :label="$t('athlete.view')" @click="openCertificate(data)" />
         </template>
       </Column>
     </DataTable>

@@ -86,8 +86,7 @@
                 :value="oldMeets"
                 :loading="false"
                 striped-rows
-                class="w-full old-meets-table"
-                show-gridlines
+                class="w-full old-meets-table border border-surface-200 dark:border-surface-700"
               >
                 <Column field="meetName" :header="$t('meets.meetName')" :sortable="true" style="min-width: 200px">
                   <template #body="{ data }">

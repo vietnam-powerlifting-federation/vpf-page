@@ -10,9 +10,7 @@
         :sort-field="'gl'"
         :sort-order="-1"
         striped-rows
-        class="w-full"
-        show-gridlines
-      >
+        class="w-full"      >
         <Column field="rank" header="#" :sortable="false" style="width: 5rem" align="right">
           <template #body="{ data }">
             {{ data.rank }}

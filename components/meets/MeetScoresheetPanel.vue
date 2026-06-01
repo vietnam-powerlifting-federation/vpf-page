@@ -8,9 +8,7 @@
           <DataTable
             :value="divisionGroup.results"
             :loading="false"
-            striped-rows
-            class="w-full"
-            show-gridlines
+            striped-rows            class="w-full border border-surface-200 dark:border-surface-700"
             row-group-mode="subheader"
             :pt="{ rowGroupHeaderCell: { colspan: 12 } }"
             group-rows-by="weightClass"

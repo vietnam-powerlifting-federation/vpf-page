@@ -10,9 +10,7 @@
           :rows-per-page-options="[25, 50, 100]"
           :sort-field="'gl'"
           :sort-order="-1"
-          striped-rows
-          class="w-full"
-          show-gridlines
+          striped-rows          class="w-full border border-surface-200 dark:border-surface-700"
         >
           <Column field="rank" header="#" :sortable="false" style="width: 5rem" align="right">
             <template #body="{ data }">

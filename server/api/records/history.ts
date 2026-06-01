@@ -2,7 +2,8 @@ import { db } from "~/lib/external/drizzle/drizzle"
 import { meets } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
 import { RECORD_DIVISION_OVERRIDE } from "~/lib/constants/constants"
-import { fetchRecordsForYear, getDivisionFromAge, buildAttemptEvents } from "~/lib/utils/queries/records"
+import { getDivisionFromAge, buildAttemptEvents } from "~/lib/utils/queries/records"
+import { cachedFetchRecordsForYear } from "~/server/utils/cached-records"
 import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import type { ApiResponse } from "~/types/api"
 import type { LiftRecord } from "~/types/records"
@@ -37,7 +38,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
     if (year === null || year > maxYear) year = maxYear
 
     const { records: previousYearRecords, results: previousYearResults } =
-      await fetchRecordsForYear({ maxYear: year - 1 })
+      await cachedFetchRecordsForYear({ maxYear: year - 1 })
 
     const previousResultsById = new Map(previousYearResults.map(r => [r.resultId, r]))
 

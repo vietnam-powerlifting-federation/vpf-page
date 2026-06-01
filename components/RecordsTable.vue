@@ -1,6 +1,6 @@
 <template>
   <div class="overflow-x-auto">
-    <DataTable :value="records" striped-rows show-gridlines>
+    <DataTable :value="records" striped-rows class="w-full border border-surface-200 dark:border-surface-700">
       <Column :header="$t('general.weightClass')">
         <template #body="{ data }">
           {{ formatWeightClass(data.weightClass, props.sex) }}
