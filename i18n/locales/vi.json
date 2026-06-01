@@ -208,7 +208,24 @@
     "broken": "Đã phá",
     "recordCertificate": "Chứng nhận kỷ lục",
     "view": "Xem",
-    "placement": "#"
+    "placement": "#",
+    "certificate": {
+      "title": "CHỨNG NHẬN KỶ LỤC",
+      "forAthlete": "đối với vận động viên",
+      "achievedNationalRecord": "Đã đạt thành tích kỷ lục Quốc gia",
+      "inClass": "ở hạng",
+      "setAtChampionship": "Được thiết lập tại Giải Vô địch",
+      "issuedBy": "Ban hành bởi",
+      "approvedBy": "Phê duyệt bởi",
+      "secretaryName": "Dương Tùng Lâm",
+      "secretaryTitle": "(Thư ký liên đoàn)",
+      "presidentName": "Nguyễn Diệu Linh",
+      "presidentTitle": "(Chủ tịch liên đoàn)",
+      "addPhoto": "Thêm ảnh",
+      "changePhoto": "Thay ảnh",
+      "downloadPdf": "Download PDF",
+      "close": "Đóng"
+    }
   },
   "records": {
     "title": "Kỷ lục quốc gia VPF",

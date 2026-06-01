@@ -208,7 +208,24 @@
     "broken": "Broken",
     "recordCertificate": "Record Certificate",
     "view": "View",
-    "placement": "#"
+    "placement": "#",
+    "certificate": {
+      "title": "RECORD CERTIFICATE",
+      "forAthlete": "for the athlete",
+      "achievedNationalRecord": "Has achieved the National record",
+      "inClass": "in the class",
+      "setAtChampionship": "Set at the championship",
+      "issuedBy": "Issued by",
+      "approvedBy": "Approved by",
+      "secretaryName": "Dương Tùng Lâm",
+      "secretaryTitle": "(Federation Secretary)",
+      "presidentName": "Nguyễn Diệu Linh",
+      "presidentTitle": "(Federation President)",
+      "addPhoto": "Add photo",
+      "changePhoto": "Change photo",
+      "downloadPdf": "Download PDF",
+      "close": "Close"
+    }
   },
   "records": {
     "title": "VPF National Records",

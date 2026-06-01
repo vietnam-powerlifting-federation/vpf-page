@@ -15,7 +15,7 @@
         </div>
 
         <div v-if="records.length > 0">
-          <AthleteRecords :records="records" :comp-history="compHistory" :meets="meets" />
+          <AthleteRecords :records="records" :comp-history="compHistory" :meets="meets" :athlete="athlete" :show-certificate="true" />
         </div>
       </div>
     </section>

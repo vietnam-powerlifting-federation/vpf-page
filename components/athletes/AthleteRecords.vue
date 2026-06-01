@@ -38,7 +38,10 @@
               </span>
             </td>
             <td v-if="showCertificate" class="border border-surface-300 dark:border-surface-700 px-4 py-2">
-              <button class="px-3 py-1 bg-primary text-primary-contrast rounded text-sm font-medium hover:opacity-90 transition-opacity">
+              <button
+                class="px-3 py-1 bg-primary text-primary-contrast rounded text-sm font-medium hover:opacity-90 transition-opacity"
+                @click="openCertificate(row)"
+              >
                 {{ $t("athlete.view") }}
               </button>
             </td>
@@ -49,21 +52,32 @@
         </tbody>
       </table>
     </div>
+
+    <RecordCertificateDialog
+      v-if="selectedCert"
+      v-model:visible="dialogVisible"
+      :cert="selectedCert"
+      :can-attach="canAttach"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue"
+import { computed, ref } from "vue"
 import { formatWeightClass, formatDivision, formatWeight } from "~/lib/utils/client"
+import RecordCertificateDialog, { type CertificateData } from "~/components/athletes/RecordCertificateDialog.vue"
 import type { LiftRecord } from "~/types/records"
 import type { Result } from "~/types/results"
 import type { MeetPublic } from "~/types/meets"
+import type { UserPublic } from "~/types/users"
 
 const props = defineProps<{
   records: LiftRecord[]
   compHistory: Result[]
   meets: MeetPublic[]
+  athlete: UserPublic
   showCertificate?: boolean
+  canAttach?: boolean
 }>()
 
 function liftLabel(lift: LiftRecord["lift"]): string {
@@ -105,7 +119,27 @@ const enrichedRecords = computed(() => {
       result,
       meetName: meet?.meetName ?? "-",
       hostDate: formatDate(meet?.hostDate),
+      hostDateRaw: meet?.hostDate ?? null,
     }
   })
 })
+
+type EnrichedRecord = (typeof enrichedRecords.value)[number]
+
+const dialogVisible = ref(false)
+const selectedCert = ref<CertificateData | null>(null)
+
+function openCertificate(row: EnrichedRecord) {
+  selectedCert.value = {
+    fullName: props.athlete.fullName,
+    liftLabel: liftLabel(row.record.lift),
+    weight: row.record.recordWeight,
+    sex: row.result?.sex ?? null,
+    division: row.record.recordDivision,
+    weightClass: row.result?.weightClass ?? null,
+    meetName: row.meetName,
+    hostDate: row.hostDateRaw,
+  }
+  dialogVisible.value = true
+}
 </script>

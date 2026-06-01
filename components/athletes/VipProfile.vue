@@ -47,7 +47,7 @@
       </div>
 
       <div v-if="records.length > 0">
-        <AthleteRecords :records="records" :comp-history="compHistory" :meets="meets" :show-certificate="true" />
+        <AthleteRecords :records="records" :comp-history="compHistory" :meets="meets" :athlete="athlete" :show-certificate="true" :can-attach="isOwner" />
       </div>
     </div>
   </div>
@@ -81,6 +81,15 @@ const sexLabel = computed(() => {
   if (!sex) return null
   return sex === "male" ? "M" : "F"
 })
+
+// The logged-in owner of this profile may attach a photo to their own certificates (client-side only).
+// Auth is an HttpOnly cookie, so forward it during SSR (see middleware/auth.ts).
+const sessionHeaders = import.meta.server ? useRequestHeaders(["cookie"]) : undefined
+const { data: session } = await useFetch<{ success: boolean; data: { vpfId: string } | null }>(
+  "/api/auth/session",
+  { credentials: "include", headers: sessionHeaders },
+)
+const isOwner = computed(() => session.value?.data?.vpfId === props.athlete.vpfId)
 
 const banners = computed(() =>
   [
