@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import Toast from "@/components/volt/Toast.vue"
+import Toast from "primevue/toast"
 import Button from "primevue/button"
 import Card from "primevue/card"
 

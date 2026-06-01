@@ -74,7 +74,7 @@ export default defineNuxtConfig({
     ],
     defaultLocale: "en",
   },
-  css: ["~/assets/styles/main.css", "~/assets/styles/volt.css", "~/assets/styles/vpf-components.css", "primeicons/primeicons.css"],
+  css: ["~/assets/styles/main.css", "~/assets/styles/vpf-components.css", "primeicons/primeicons.css"],
   primevue: {
     options: {
       theme: {

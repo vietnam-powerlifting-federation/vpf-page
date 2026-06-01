@@ -125,10 +125,10 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue"
-import InputText from "@/components/volt/InputText.vue"
-import Password from "@/components/volt/Password.vue"
-import Button from "@/components/volt/Button.vue"
-import Dialog from "@/components/volt/Dialog.vue"
+import InputText from "primevue/inputtext"
+import Password from "primevue/password"
+import Button from "primevue/button"
+import Dialog from "primevue/dialog"
 import type { ApiResponse, LoginResponse } from "~/types/api"
 import loginBg from "~/assets/img/login-bg.png"
 

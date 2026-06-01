@@ -1,68 +1,52 @@
 <template>
   <div class="overflow-x-auto">
-    <table class="w-full border-collapse border border-surface-300 dark:border-surface-700">
-      <thead>
-        <tr class="bg-surface-100 dark:bg-surface-800">
-          <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">
-            {{ $t("general.weightClass") }}
-          </th>
-          <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">
-            {{ $t("general.name") }}
-          </th>
-          <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">
-            {{ $t("general.yearOfBirth") }}
-          </th>
-          <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">
-            {{ $t("general.bodyWeight") }}
-          </th>
-          <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">
-            {{ $t("general.result") }}
-          </th>
-          <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">
-            {{ $t("general.date") }}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="record in records"
-          :key="record.weightClass"
-          class="hover:bg-surface-50 dark:hover:bg-surface-900"
-        >
-          <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">
-            {{ formatWeightClass(record.weightClass, props.sex) }}
-          </td>
-          <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">
-            <template v-if="record.athlete">
-              <NuxtLinkLocale
-                :to="`/openvpf/athletes/${record.athlete.slug || record.athlete.vpfId}`"
-                class="text-primary hover:underline"
-                :style="nameGradientStyle(record.athlete.decorator1, record.athlete.decorator2)"
-              >
-                {{ record.athlete.fullName }}
-              </NuxtLinkLocale>
-            </template>
-            <span v-else class="text-surface-400">-</span>
-          </td>
-          <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">
-            {{ record.athlete?.dob || "-" }}
-          </td>
-          <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">
-            {{ record.bodyWeight ? formatWeight(record.bodyWeight) : "-" }}
-          </td>
-          <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">
-            {{ record.weight ? formatWeight(record.weight) : "-" }}
-          </td>
-          <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">
-            {{ record.meet?.hostDate ? formatDate(record.meet.hostDate) : "-" }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <DataTable :value="records" striped-rows show-gridlines>
+      <Column :header="$t('general.weightClass')">
+        <template #body="{ data }">
+          {{ formatWeightClass(data.weightClass, props.sex) }}
+        </template>
+      </Column>
+      <Column :header="$t('general.name')">
+        <template #body="{ data }">
+          <template v-if="data.athlete">
+            <NuxtLinkLocale
+              :to="`/openvpf/athletes/${data.athlete.slug || data.athlete.vpfId}`"
+              class="text-primary hover:underline"
+              :style="nameGradientStyle(data.athlete.decorator1, data.athlete.decorator2)"
+            >
+              {{ data.athlete.fullName }}
+            </NuxtLinkLocale>
+          </template>
+          <span v-else class="text-surface-400">-</span>
+        </template>
+      </Column>
+      <Column :header="$t('general.yearOfBirth')">
+        <template #body="{ data }">
+          {{ data.athlete?.dob || "-" }}
+        </template>
+      </Column>
+      <Column :header="$t('general.bodyWeight')">
+        <template #body="{ data }">
+          {{ data.bodyWeight ? formatWeight(data.bodyWeight) : "-" }}
+        </template>
+      </Column>
+      <Column :header="$t('general.result')">
+        <template #body="{ data }">
+          {{ data.weight ? formatWeight(data.weight) : "-" }}
+        </template>
+      </Column>
+      <Column :header="$t('general.date')">
+        <template #body="{ data }">
+          {{ data.meet?.hostDate ? formatDate(data.meet.hostDate) : "-" }}
+        </template>
+      </Column>
+    </DataTable>
   </div>
 </template>
 
 <script setup lang="ts">
+import DataTable from "primevue/datatable"
+import Column from "primevue/column"
 import type { UserPublicWithDecorators } from "~/types/users"
 import type { MeetPublic } from "~/types/meets"
 import type { Sex } from "~/types/union-types"

@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import ProgressSpinner from "@/components/volt/ProgressSpinner.vue"
+import ProgressSpinner from "primevue/progressspinner"
 import NormalProfile from "~/components/athletes/NormalProfile.vue"
 import VipProfile from "~/components/athletes/VipProfile.vue"
 import type { UserPublic } from "~/types/users"

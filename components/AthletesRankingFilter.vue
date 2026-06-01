@@ -79,8 +79,8 @@
 </template>
 
 <script setup lang="ts">
-import InputText from "@/components/volt/InputText.vue"
-import Select from "@/components/volt/Select.vue"
+import InputText from "primevue/inputtext"
+import Select from "primevue/select"
 import type { Sex, Division, MeetType } from "~/types/union-types"
 
 interface Props {

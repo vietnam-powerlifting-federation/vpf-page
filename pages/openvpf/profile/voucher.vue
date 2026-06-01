@@ -5,41 +5,35 @@
       <span class="rounded bg-surface-700 px-2 py-0.5">{{ $t("profile.demo") }}</span>
     </p>
 
-    <div class="overflow-x-auto">
-      <table class="w-full border border-surface-700 rounded-lg overflow-hidden">
-        <thead class="bg-surface-800 text-surface-300 text-left text-sm">
-          <tr>
-            <th class="p-3 font-medium">{{ $t("profile.voucherTable.receivedDate") }}</th>
-            <th class="p-3 font-medium">{{ $t("profile.voucherTable.expiryDate") }}</th>
-            <th class="p-3 font-medium">{{ $t("profile.voucherTable.voucherType") }}</th>
-            <th class="p-3 font-medium">{{ $t("profile.voucherTable.status") }}</th>
-            <th class="p-3 font-medium">{{ $t("profile.voucherTable.action") }}</th>
-          </tr>
-        </thead>
-        <tbody class="text-surface-200">
-          <tr v-for="(v, i) in demoVouchers" :key="i" class="border-t border-surface-700 hover:bg-surface-800/50">
-            <td class="p-3">{{ v.receivedDate }}</td>
-            <td class="p-3">{{ v.expiryDate }}</td>
-            <td class="p-3" :class="v.active ? 'text-primary' : ''">{{ v.type }}</td>
-            <td class="p-3" :class="v.active ? 'text-primary' : 'text-surface-400'">{{ v.statusLabel }}</td>
-            <td class="p-3">
-              <Button
-                size="small"
-                :label="$t('profile.voucherTable.viewDetail')"
-                :disabled="!v.active"
-                @click="() => {}"
-              />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <p v-if="!demoVouchers.length" class="text-surface-400">{{ $t("profile.voucherTable.noVouchers") }}</p>
+    <DataTable :value="demoVouchers" striped-rows show-gridlines>
+      <template #empty>
+        <div class="text-surface-400">{{ $t("profile.voucherTable.noVouchers") }}</div>
+      </template>
+      <Column field="receivedDate" :header="$t('profile.voucherTable.receivedDate')" />
+      <Column field="expiryDate" :header="$t('profile.voucherTable.expiryDate')" />
+      <Column :header="$t('profile.voucherTable.voucherType')">
+        <template #body="{ data }">
+          <span :class="data.active ? 'text-primary' : ''">{{ data.type }}</span>
+        </template>
+      </Column>
+      <Column :header="$t('profile.voucherTable.status')">
+        <template #body="{ data }">
+          <span :class="data.active ? 'text-primary' : 'text-surface-400'">{{ data.statusLabel }}</span>
+        </template>
+      </Column>
+      <Column :header="$t('profile.voucherTable.action')">
+        <template #body="{ data }">
+          <Button size="small" :label="$t('profile.voucherTable.viewDetail')" :disabled="!data.active" @click="() => {}" />
+        </template>
+      </Column>
+    </DataTable>
   </div>
 </template>
 
 <script setup lang="ts">
-import Button from "@/components/volt/Button.vue"
+import Button from "primevue/button"
+import DataTable from "primevue/datatable"
+import Column from "primevue/column"
 
 definePageMeta({
   layout: "openvpf-profile",

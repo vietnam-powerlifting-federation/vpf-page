@@ -121,7 +121,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useI18n } from "vue-i18n"
-import Dialog from "~/components/volt/Dialog.vue"
+import Dialog from "primevue/dialog"
 import { formatDivision, formatSex, formatWeightClass } from "~/lib/utils/client"
 import borderUrl from "~/assets/img/record-certificate/border.png"
 import canvaUrl from "~/assets/img/record-certificate/canva.png"

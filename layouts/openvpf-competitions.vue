@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import Toast from "@/components/volt/Toast.vue"
+import Toast from "primevue/toast"
 import Card from "primevue/card"
 import MeetCompetitionShell from "@/components/meets/MeetCompetitionShell.vue"
 import { useMeetsList } from "~/composables/useMeetsList"

@@ -74,9 +74,9 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue"
 import { useToast } from "primevue/usetoast"
-import Button from "@/components/volt/Button.vue"
-import ToggleSwitch from "@/components/volt/ToggleSwitch.vue"
-import ProgressSpinner from "@/components/volt/ProgressSpinner.vue"
+import Button from "primevue/button"
+import ToggleSwitch from "primevue/toggleswitch"
+import ProgressSpinner from "primevue/progressspinner"
 import { buildPatchPayload } from "~/lib/utils/client"
 import { isVipActive } from "~/lib/utils/vip"
 import vipPreview from "~/assets/img/vip-preview.png"

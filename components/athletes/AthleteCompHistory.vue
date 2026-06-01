@@ -1,70 +1,68 @@
 <template>
   <div>
     <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("athlete.competitionHistory") }}</h2>
-    <div class="overflow-x-auto">
-      <table class="w-full border-collapse border border-surface-300 dark:border-surface-700">
-        <thead>
-          <tr class="bg-surface-100 dark:bg-surface-800">
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">{{ $t("athlete.competition") }}</th>
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">{{ $t("general.weightClass") }}</th>
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">{{ $t("general.division") }}</th>
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right font-semibold">{{ $t("athlete.bestSquat") }}</th>
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right font-semibold">{{ $t("athlete.bestBench") }}</th>
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right font-semibold">{{ $t("athlete.bestDeadlift") }}</th>
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right font-semibold">{{ $t("general.total") }}</th>
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right font-semibold">{{ $t("general.gl") }}</th>
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right font-semibold">{{ $t("general.bodyWeight") }}</th>
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right font-semibold">{{ $t("athlete.placement") }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="row in enrichedHistory"
-            :key="row.result.resultId ?? row.result.legacyResultId"
-            class="hover:bg-surface-50 dark:hover:bg-surface-900"
-          >
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">
-              {{ row.meetName }}
-            </td>
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">
-              {{ formatWeightClass(row.result.weightClass, row.result.sex) }}
-            </td>
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">
-              {{ formatDivision(row.result.division) }}
-            </td>
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right text-primary">
-              {{ getBestLift(row.result, "squat") !== null ? formatWeight(getBestLift(row.result, "squat")) : "-" }}
-            </td>
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right text-primary">
-              {{ getBestLift(row.result, "bench") !== null ? formatWeight(getBestLift(row.result, "bench")) : "-" }}
-            </td>
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right text-primary">
-              {{ getBestLift(row.result, "deadlift") !== null ? formatWeight(getBestLift(row.result, "deadlift")) : "-" }}
-            </td>
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right font-semibold text-primary">
-              {{ row.result.total !== null && row.result.total !== undefined ? formatWeight(row.result.total) : "-" }}
-            </td>
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right">
-              {{ row.result.gl !== null && row.result.gl !== undefined ? formatGL(row.result.gl) : "-" }}
-            </td>
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right">
-              {{ row.result.bodyWeight !== null && row.result.bodyWeight !== undefined ? formatWeight(row.result.bodyWeight) : "-" }}
-            </td>
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right">
-              {{ row.result.placement ?? "-" }}
-            </td>
-          </tr>
-          <tr v-if="enrichedHistory.length === 0">
-            <td colspan="10" class="border border-surface-300 dark:border-surface-700 px-4 py-6 text-center text-surface-400">-</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <DataTable :value="enrichedHistory" striped-rows show-gridlines>
+      <template #empty>
+        <div class="px-4 py-6 text-center text-surface-400">-</div>
+      </template>
+      <Column :header="$t('athlete.competition')">
+        <template #body="{ data }">
+          {{ data.meetName }}
+        </template>
+      </Column>
+      <Column :header="$t('general.weightClass')">
+        <template #body="{ data }">
+          {{ formatWeightClass(data.result.weightClass, data.result.sex) }}
+        </template>
+      </Column>
+      <Column :header="$t('general.division')">
+        <template #body="{ data }">
+          {{ formatDivision(data.result.division) }}
+        </template>
+      </Column>
+      <Column :header="$t('athlete.bestSquat')" style="text-align: right">
+        <template #body="{ data }">
+          <span class="text-primary">{{ getBestLift(data.result, "squat") !== null ? formatWeight(getBestLift(data.result, "squat")) : "-" }}</span>
+        </template>
+      </Column>
+      <Column :header="$t('athlete.bestBench')" style="text-align: right">
+        <template #body="{ data }">
+          <span class="text-primary">{{ getBestLift(data.result, "bench") !== null ? formatWeight(getBestLift(data.result, "bench")) : "-" }}</span>
+        </template>
+      </Column>
+      <Column :header="$t('athlete.bestDeadlift')" style="text-align: right">
+        <template #body="{ data }">
+          <span class="text-primary">{{ getBestLift(data.result, "deadlift") !== null ? formatWeight(getBestLift(data.result, "deadlift")) : "-" }}</span>
+        </template>
+      </Column>
+      <Column :header="$t('general.total')" style="text-align: right">
+        <template #body="{ data }">
+          <span class="font-semibold text-primary">{{ data.result.total !== null && data.result.total !== undefined ? formatWeight(data.result.total) : "-" }}</span>
+        </template>
+      </Column>
+      <Column :header="$t('general.gl')" style="text-align: right">
+        <template #body="{ data }">
+          {{ data.result.gl !== null && data.result.gl !== undefined ? formatGL(data.result.gl) : "-" }}
+        </template>
+      </Column>
+      <Column :header="$t('general.bodyWeight')" style="text-align: right">
+        <template #body="{ data }">
+          {{ data.result.bodyWeight !== null && data.result.bodyWeight !== undefined ? formatWeight(data.result.bodyWeight) : "-" }}
+        </template>
+      </Column>
+      <Column :header="$t('athlete.placement')" style="text-align: right">
+        <template #body="{ data }">
+          {{ data.result.placement ?? "-" }}
+        </template>
+      </Column>
+    </DataTable>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue"
+import DataTable from "primevue/datatable"
+import Column from "primevue/column"
 import { formatWeightClass, formatDivision, formatWeight, formatGL } from "~/lib/utils/client"
 import type { Result } from "~/types/results"
 import type { MeetPublic } from "~/types/meets"

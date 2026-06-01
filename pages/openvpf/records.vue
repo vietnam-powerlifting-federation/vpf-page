@@ -8,29 +8,17 @@
         <div class="max-w-5xl mx-auto mb-6">
           <div class="flex gap-4 justify-center">
             <Button
-              v-if="viewMode === 'current'"
+              :severity="viewMode === 'current' ? undefined : 'secondary'"
               @click="viewMode = 'current'"
             >
               {{ $t("records.currentRecords") }}
             </Button>
-            <SecondaryButton
-              v-else
-              @click="viewMode = 'current'"
-            >
-              {{ $t("records.currentRecords") }}
-            </SecondaryButton>
             <Button
-              v-if="viewMode === 'history'"
+              :severity="viewMode === 'history' ? undefined : 'secondary'"
               @click="viewMode = 'history'"
             >
               {{ $t("records.recordHistory") }}
             </Button>
-            <SecondaryButton
-              v-else
-              @click="viewMode = 'history'"
-            >
-              {{ $t("records.recordHistory") }}
-            </SecondaryButton>
           </div>
           <p v-if="viewMode === 'history'" class="text-sm text-surface-600 dark:text-surface-400 text-center mt-2">
             {{ $t("records.historyDescription") }}
@@ -177,10 +165,9 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue"
-import Select from "@/components/volt/Select.vue"
-import ProgressSpinner from "@/components/volt/ProgressSpinner.vue"
-import Button from "@/components/volt/Button.vue"
-import SecondaryButton from "@/components/volt/SecondaryButton.vue"
+import Select from "primevue/select"
+import ProgressSpinner from "primevue/progressspinner"
+import Button from "primevue/button"
 import RecordsTable from "@/components/RecordsTable.vue"
 import RecordsHistoryList from "@/components/RecordsHistoryList.vue"
 import { WEIGHT_CLASS_MALE, WEIGHT_CLASS_FEMALE, RECORD_START_YEAR } from "~/lib/constants/constants"

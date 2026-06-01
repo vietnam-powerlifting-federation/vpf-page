@@ -9,7 +9,7 @@
 </template>
 
 <script setup>
-import Toast from "@/components/volt/Toast.vue"
+import Toast from "primevue/toast"
 </script>
 
 <style scoped>

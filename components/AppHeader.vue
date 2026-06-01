@@ -33,7 +33,7 @@
 
 <script setup>
 import { computed } from "vue"
-import Select from "@/components/volt/Select.vue"
+import Select from "primevue/select"
 
 const { locale, locales, setLocale, t } = useI18n()
 

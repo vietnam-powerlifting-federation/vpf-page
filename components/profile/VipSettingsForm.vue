@@ -232,10 +232,10 @@
 </template>
 
 <script setup lang="ts">
-import Button from "@/components/volt/Button.vue"
-import InputText from "@/components/volt/InputText.vue"
-import Textarea from "@/components/volt/Textarea.vue"
-import ToggleSwitch from "@/components/volt/ToggleSwitch.vue"
+import Button from "primevue/button"
+import InputText from "primevue/inputtext"
+import Textarea from "primevue/textarea"
+import ToggleSwitch from "primevue/toggleswitch"
 import type { VipBenefits } from "~/types/vip"
 
 type FormState = Partial<

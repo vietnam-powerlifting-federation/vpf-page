@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import Button from "@/components/volt/Button.vue"
+import Button from "primevue/button"
 import { useToast } from "primevue/usetoast"
 
 const toast = useToast()

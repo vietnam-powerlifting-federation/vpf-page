@@ -27,8 +27,8 @@
 
 <script setup lang="ts">
 import { ref } from "vue"
-import Button from "@/components/volt/Button.vue"
-import Password from "@/components/volt/Password.vue"
+import Button from "primevue/button"
+import Password from "primevue/password"
 
 definePageMeta({
   layout: "openvpf-profile",

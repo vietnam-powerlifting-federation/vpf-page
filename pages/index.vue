@@ -12,8 +12,8 @@
           <h1 class="text-4xl md:text-6xl font-bold mb-4 text-white text-shadow-lg text-surface-800">{{ $t("home.title") }}</h1>
           <p class="text-xl md:text-2xl mb-8 text-white/90 text-shadow-lg">{{ $t("home.subtitle") }}</p>
           <div class="flex flex-col md:flex-row gap-4 justify-center">
-            <Button :label="$t('membership.joinNow')" class="p-button-primary" @click="navigateTo('/membership')" />
-            <SecondaryButton :label="$t('home.viewAll')" class="p-button-secondary" @click="navigateTo('/news')" />
+            <Button :label="$t('membership.joinNow')" @click="navigateTo('/membership')" />
+            <Button severity="secondary" :label="$t('home.viewAll')" @click="navigateTo('/news')" />
           </div>
         </div>
       </div>
@@ -52,7 +52,7 @@
           </Card>
         </div>
         <div class="text-center mt-8">
-          <Button :label="$t('home.viewAll')" class="p-button-primary" @click="navigateTo('/news')" />
+          <Button :label="$t('home.viewAll')" @click="navigateTo('/news')" />
         </div>
       </div>
     </section>
@@ -81,9 +81,8 @@
 </template>
 
 <script setup>
-import Button from "@/components/volt/Button.vue"
-import SecondaryButton from "@/components/volt/SecondaryButton.vue"
-import Card from "@/components/volt/Card.vue"
+import Button from "primevue/button"
+import Card from "primevue/card"
 import heroBg from "~/assets/img/hero-bg.jpg"
 
 definePageMeta({

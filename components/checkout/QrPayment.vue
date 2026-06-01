@@ -42,8 +42,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue"
 import { useToast } from "primevue/usetoast"
-import Button from "@/components/volt/Button.vue"
-import ProgressSpinner from "@/components/volt/ProgressSpinner.vue"
+import Button from "primevue/button"
+import ProgressSpinner from "primevue/progressspinner"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseStatus } from "~/types/purchases"
 

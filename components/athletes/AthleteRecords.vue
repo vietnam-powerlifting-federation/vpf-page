@@ -1,57 +1,53 @@
 <template>
   <div>
     <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("athlete.liftersRecords") }}</h2>
-    <div class="overflow-x-auto">
-      <table class="w-full border-collapse border border-surface-300 dark:border-surface-700">
-        <thead>
-          <tr class="bg-surface-100 dark:bg-surface-800">
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">{{ $t("athlete.competition") }}</th>
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">{{ $t("athlete.record") }}</th>
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right font-semibold">{{ $t("general.total") }}</th>
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">{{ $t("general.weightClass") }}</th>
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">{{ $t("general.division") }}</th>
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">{{ $t("general.date") }}</th>
-            <th class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">{{ $t("athlete.state") }}</th>
-            <th v-if="showCertificate" class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-left font-semibold">{{ $t("athlete.recordCertificate") }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="row in enrichedRecords"
-            :key="`${row.record.resultId}-${row.record.lift}`"
-            class="hover:bg-surface-50 dark:hover:bg-surface-900"
-          >
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">{{ row.meetName }}</td>
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2 font-medium text-primary">{{ liftLabel(row.record.lift) }}</td>
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2 text-right text-primary font-medium">{{ formatWeight(row.record.recordWeight) }}</td>
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">
-              {{ row.result ? formatWeightClass(row.result.weightClass, row.result.sex) : "-" }}
-            </td>
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">{{ formatDivision(row.record.recordDivision) }}</td>
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">{{ row.hostDate }}</td>
-            <td class="border border-surface-300 dark:border-surface-700 px-4 py-2">
-              <span
-                :class="row.record.status === 'holding' ? 'text-teal-400' : 'text-orange-400'"
-                class="font-medium"
-              >
-                {{ row.record.status === "holding" ? $t("athlete.holding") : $t("athlete.broken") }}
-              </span>
-            </td>
-            <td v-if="showCertificate" class="border border-surface-300 dark:border-surface-700 px-4 py-2">
-              <button
-                class="px-3 py-1 bg-primary text-primary-contrast rounded text-sm font-medium hover:opacity-90 transition-opacity"
-                @click="openCertificate(row)"
-              >
-                {{ $t("athlete.view") }}
-              </button>
-            </td>
-          </tr>
-          <tr v-if="enrichedRecords.length === 0">
-            <td :colspan="showCertificate ? 8 : 7" class="border border-surface-300 dark:border-surface-700 px-4 py-6 text-center text-surface-400">-</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <DataTable :value="enrichedRecords" striped-rows show-gridlines>
+      <template #empty>
+        <div class="px-4 py-6 text-center text-surface-400">-</div>
+      </template>
+      <Column :header="$t('athlete.competition')">
+        <template #body="{ data }">
+          {{ data.meetName }}
+        </template>
+      </Column>
+      <Column :header="$t('athlete.record')">
+        <template #body="{ data }">
+          <span class="font-medium text-primary">{{ liftLabel(data.record.lift) }}</span>
+        </template>
+      </Column>
+      <Column :header="$t('general.total')" style="text-align: right">
+        <template #body="{ data }">
+          <span class="font-medium text-primary">{{ formatWeight(data.record.recordWeight) }}</span>
+        </template>
+      </Column>
+      <Column :header="$t('general.weightClass')">
+        <template #body="{ data }">
+          {{ data.result ? formatWeightClass(data.result.weightClass, data.result.sex) : "-" }}
+        </template>
+      </Column>
+      <Column :header="$t('general.division')">
+        <template #body="{ data }">
+          {{ formatDivision(data.record.recordDivision) }}
+        </template>
+      </Column>
+      <Column :header="$t('general.date')">
+        <template #body="{ data }">
+          {{ data.hostDate }}
+        </template>
+      </Column>
+      <Column :header="$t('athlete.state')">
+        <template #body="{ data }">
+          <span :class="data.record.status === 'holding' ? 'text-teal-400' : 'text-orange-400'" class="font-medium">
+            {{ data.record.status === "holding" ? $t("athlete.holding") : $t("athlete.broken") }}
+          </span>
+        </template>
+      </Column>
+      <Column v-if="showCertificate" :header="$t('athlete.recordCertificate')">
+        <template #body="{ data }">
+          <Button size="small" :label="$t('athlete.view')" @click="openCertificate(data)" />
+        </template>
+      </Column>
+    </DataTable>
 
     <RecordCertificateDialog
       v-if="selectedCert"
@@ -64,6 +60,9 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue"
+import DataTable from "primevue/datatable"
+import Column from "primevue/column"
+import Button from "primevue/button"
 import { formatWeightClass, formatDivision, formatWeight } from "~/lib/utils/client"
 import RecordCertificateDialog, { type CertificateData } from "~/components/athletes/RecordCertificateDialog.vue"
 import type { LiftRecord } from "~/types/records"

@@ -9,29 +9,21 @@
         <div class="flex-1 border border-surface-600 rounded-lg p-5 bg-surface-800">
           <h2 class="text-base font-semibold text-surface-0 mb-4">{{ $t("checkout.itemsTitle") }}</h2>
 
-          <div v-if="items.length === 0" class="text-surface-400 text-sm py-8 text-center">
-            {{ $t("checkout.emptyCart") }}
-          </div>
-          <table v-else class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-surface-600">
-                <th class="text-left py-2 pb-3 text-surface-400 font-medium">{{ $t("checkout.item") }}</th>
-                <th class="text-right py-2 pb-3 text-surface-400 font-medium">{{ $t("checkout.price") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="item in items"
-                :key="item.id"
-                class="border-b border-surface-700 last:border-0"
-              >
-                <td class="py-3 text-surface-0">{{ item.name[locale as 'en' | 'vi'] ?? item.name.en }}</td>
-                <td class="py-3 text-right text-surface-0 font-semibold whitespace-nowrap">
-                  {{ formatAmount(item.amount) }} VND
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <DataTable :value="items" class="text-sm">
+            <template #empty>
+              <div class="text-surface-400 text-sm py-8 text-center">{{ $t("checkout.emptyCart") }}</div>
+            </template>
+            <Column :header="$t('checkout.item')">
+              <template #body="{ data }">
+                {{ data.name[locale as 'en' | 'vi'] ?? data.name.en }}
+              </template>
+            </Column>
+            <Column :header="$t('checkout.price')" style="text-align: right">
+              <template #body="{ data }">
+                <span class="font-semibold whitespace-nowrap">{{ formatAmount(data.amount) }} VND</span>
+              </template>
+            </Column>
+          </DataTable>
         </div>
 
         <!-- Right card: Total + confirm button -->
@@ -85,7 +77,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue"
 import { useToast } from "primevue/usetoast"
-import Button from "@/components/volt/Button.vue"
+import Button from "primevue/button"
+import DataTable from "primevue/datatable"
+import Column from "primevue/column"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseCreated } from "~/types/purchases"
 import type { CheckoutItem } from "~/types/checkout"

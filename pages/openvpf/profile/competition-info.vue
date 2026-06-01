@@ -8,67 +8,60 @@
     <div v-else-if="!rows.length" class="text-surface-400">
       {{ $t("profile.competitionInfoTable.noCompetitions") }}
     </div>
-    <div v-else class="overflow-x-auto">
-      <table class="w-full min-w-[640px] border border-surface-700 rounded-lg overflow-hidden">
-        <thead class="bg-surface-800 text-surface-300 text-left text-sm">
-          <tr>
-            <th class="p-3 font-medium">{{ $t("profile.competitionInfoTable.date") }}</th>
-            <th class="p-3 font-medium">{{ $t("profile.competitionInfoTable.competition") }}</th>
-            <th class="p-3 font-medium">{{ $t("profile.competitionInfoTable.status") }}</th>
-            <th class="p-3 font-medium">{{ $t("profile.competitionInfoTable.action") }}</th>
-            <th class="hidden md:table-cell p-3 font-medium">{{ $t("profile.competitionInfoTable.displayOnProfile") }}</th>
-          </tr>
-        </thead>
-        <tbody class="text-surface-200">
-          <tr v-for="row in rows" :key="row.meetId" class="border-t border-surface-700 hover:bg-surface-800/50">
-            <td class="p-3">{{ formatDate(row.hostDate) }}</td>
-            <td class="p-3">
-              <NuxtLinkLocale :to="`/openvpf/competitions/${row.meetSlug}`" class="hover:underline">
-                {{ row.meetName }}
-              </NuxtLinkLocale>
-            </td>
-            <td class="p-3" :class="row.completed ? 'text-surface-400' : 'text-primary'">
-              {{ row.completed ? $t("profile.competitionInfoTable.completed") : $t("profile.competitionInfoTable.registered") }}
-            </td>
-            <td class="p-3">
-              <template v-if="row.completed">
-                <Button
-                  size="small"
-                  :label="$t('profile.competitionInfoTable.viewDetail')"
-                  class="mr-2"
-                  @click="() => {}"
-                />
-                <span class="text-surface-500 text-sm">({{ $t("profile.demo") }})</span>
-              </template>
-              <template v-else>
-                <Button
-                  size="small"
-                  :label="$t('profile.competitionInfoTable.change')"
-                  class="mr-2"
-                  @click="() => {}"
-                />
-                <span class="text-surface-500 text-sm">({{ $t("profile.demo") }})</span>
-              </template>
-            </td>
-            <td class="hidden md:table-cell p-3">
-              <template v-if="row.completed">
-                <Checkbox :model-value="row.displayOnProfile" :binary="true" disabled />
-                <span class="ml-2 text-surface-500 text-sm">({{ $t("profile.demo") }})</span>
-              </template>
-              <span v-else class="text-surface-600">—</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div v-else>
+      <DataTable :value="rows" striped-rows show-gridlines>
+        <Column field="hostDate" :header="$t('profile.competitionInfoTable.date')">
+          <template #body="{ data }">
+            {{ formatDate(data.hostDate) }}
+          </template>
+        </Column>
+        <Column field="meetName" :header="$t('profile.competitionInfoTable.competition')">
+          <template #body="{ data }">
+            <NuxtLinkLocale :to="`/openvpf/competitions/${data.meetSlug}`" class="hover:underline">
+              {{ data.meetName }}
+            </NuxtLinkLocale>
+          </template>
+        </Column>
+        <Column :header="$t('profile.competitionInfoTable.status')">
+          <template #body="{ data }">
+            <span :class="data.completed ? 'text-surface-400' : 'text-primary'">
+              {{ data.completed ? $t("profile.competitionInfoTable.completed") : $t("profile.competitionInfoTable.registered") }}
+            </span>
+          </template>
+        </Column>
+        <Column :header="$t('profile.competitionInfoTable.action')">
+          <template #body="{ data }">
+            <template v-if="data.completed">
+              <Button size="small" :label="$t('profile.competitionInfoTable.viewDetail')" class="mr-2" @click="() => {}" />
+              <span class="text-surface-500 text-sm">({{ $t("profile.demo") }})</span>
+            </template>
+            <template v-else>
+              <Button size="small" :label="$t('profile.competitionInfoTable.change')" class="mr-2" @click="() => {}" />
+              <span class="text-surface-500 text-sm">({{ $t("profile.demo") }})</span>
+            </template>
+          </template>
+        </Column>
+        <Column :header="$t('profile.competitionInfoTable.displayOnProfile')">
+          <template #body="{ data }">
+            <template v-if="data.completed">
+              <Checkbox :model-value="data.displayOnProfile" :binary="true" disabled />
+              <span class="ml-2 text-surface-500 text-sm">({{ $t("profile.demo") }})</span>
+            </template>
+            <span v-else class="text-surface-600">—</span>
+          </template>
+        </Column>
+      </DataTable>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue"
-import Button from "@/components/volt/Button.vue"
-import Checkbox from "@/components/volt/Checkbox.vue"
-import ProgressSpinner from "@/components/volt/ProgressSpinner.vue"
+import Button from "primevue/button"
+import Checkbox from "primevue/checkbox"
+import ProgressSpinner from "primevue/progressspinner"
+import DataTable from "primevue/datatable"
+import Column from "primevue/column"
 import { useProfileAthlete } from "~/composables/useProfileData"
 import type { MeetPublic } from "~/types/meets"
 import type { Result } from "~/types/results"

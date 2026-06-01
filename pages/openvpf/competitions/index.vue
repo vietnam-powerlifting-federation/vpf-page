@@ -166,7 +166,7 @@
 </template>
 
 <script setup lang="ts">
-import Button from "@/components/volt/Button.vue"
+import Button from "primevue/button"
 import DataTable from "primevue/datatable"
 import Column from "primevue/column"
 import type { MeetPublic } from "~/types/meets"
