@@ -93,6 +93,26 @@ export async function sendVerificationCodeEmail(to: string, code: string): Promi
   })
 }
 
+/** Send the password-reset code (bilingual en/vi). */
+export async function sendPasswordResetCodeEmail(to: string, code: string): Promise<void> {
+  await sendEmail({
+    to,
+    subject: "Reset your password / Đặt lại mật khẩu của bạn",
+    text: `Your password reset code is ${code}. It expires in 30 minutes. If you did not request a reset, ignore this email.\n\nMã đặt lại mật khẩu của bạn là ${code}. Mã hết hạn sau 30 phút. Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.`,
+    html: layout(
+      `<h2>Reset your password</h2>
+       <p>Your password reset code is:</p>
+       <p style="font-size:28px;font-weight:bold;letter-spacing:4px">${code}</p>
+       <p style="color:#6b7280">This code expires in 30 minutes. If you did not request a reset, ignore this email.</p>
+       <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"/>
+       <h2>Đặt lại mật khẩu của bạn</h2>
+       <p>Mã đặt lại mật khẩu của bạn là:</p>
+       <p style="font-size:28px;font-weight:bold;letter-spacing:4px">${code}</p>
+       <p style="color:#6b7280">Mã này hết hạn sau 30 phút. Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.</p>`,
+    ),
+  })
+}
+
 /** Notify the athlete that their identity verification was approved. */
 export async function sendVerificationApprovedEmail(to: string): Promise<void> {
   await sendEmail({

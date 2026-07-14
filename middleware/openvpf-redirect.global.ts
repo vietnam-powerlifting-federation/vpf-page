@@ -1,5 +1,5 @@
 /** Top-level routes that are served as-is instead of being redirected under /openvpf. */
-const ALLOWED_TOP_LEVEL_PREFIXES = ["/openvpf", "/login", "/register", "/verify-email", "/verification"]
+const ALLOWED_TOP_LEVEL_PREFIXES = ["/openvpf", "/login", "/register", "/verify-email", "/verification", "/forgot-password"]
 
 export default defineNuxtRouteMiddleware((to) => {
   // Strip a leading locale segment (e.g. /vi) so the check works for all locales.

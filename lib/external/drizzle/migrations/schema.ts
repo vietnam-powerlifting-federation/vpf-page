@@ -59,6 +59,8 @@ export const users = pgTable("users", {
   emailVerified: boolean("email_verified").default(false).notNull(),
   emailVerificationCode: text("email_verification_code"),
   emailVerificationExpiresAt: timestamp("email_verification_expires_at", { withTimezone: true, mode: "string" }),
+  passwordResetCode: text("password_reset_code"),
+  passwordResetExpiresAt: timestamp("password_reset_expires_at", { withTimezone: true, mode: "string" }),
 
 }, (table) => [
   unique("members_slug_key").on(table.slug),
