@@ -5,8 +5,10 @@ import type { Result, PersonalBestSummary } from "~/types/results"
 import type { VipBenefits } from "~/types/vip"
 
 type User = InferSelectModel<typeof users>
-type UserPrivate = Omit<User, "password">
-type UserPublic = Omit<User, "password" | "nationalId" | "phoneNumber" | "address" | "squatRackPin" | "benchRackPin" | "benchSafetyPin" | "benchFootBlock" | "legacyEmail" | "email" | "vpfMembershipExpiresAt" | "vipMembershipExpiresAt" | "legacyEmail" | "notes" | "drugViolate" | "role">
+// Internal email-verification fields are never part of the user-facing profile.
+type UserInternal = "password" | "emailVerified" | "emailVerificationCode" | "emailVerificationExpiresAt"
+type UserPrivate = Omit<User, UserInternal>
+type UserPublic = Omit<User, UserInternal | "nationalId" | "phoneNumber" | "address" | "squatRackPin" | "benchRackPin" | "benchSafetyPin" | "benchFootBlock" | "legacyEmail" | "email" | "vpfMembershipExpiresAt" | "vipMembershipExpiresAt" | "legacyEmail" | "notes" | "drugViolate" | "role">
 
 type AthleteDetailsData = {
   athlete: UserPrivate

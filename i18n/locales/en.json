@@ -395,6 +395,15 @@
         "vpf_membership": "VPF Membership",
         "competition": "Competition"
       }
+    },
+    "verification": {
+      "label": "Account verification",
+      "verified": "Verified",
+      "pending": "Pending review",
+      "rejected": "Not approved",
+      "notVerified": "Not verified",
+      "verifyButton": "Verify account",
+      "reverifyButton": "Update & resubmit"
     }
   },
   "checkout": {
@@ -415,6 +424,77 @@
     "cancelButton": "Cancel Purchase",
     "cancelled": "Your purchase has been cancelled.",
     "paymentSuccess": "Payment successful!"
+  },
+  "register": {
+    "title": "Register",
+    "subtitle": "Create your account to get started.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password",
+    "passwordPlaceholder": "At least 8 characters",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Re-enter your password",
+    "registerButton": "Register",
+    "haveAccount": "Already have an account?",
+    "loginNow": "Login now",
+    "emailRequired": "Please enter your email",
+    "emailInvalid": "Please enter a valid email",
+    "passwordRequired": "Please enter a password",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "passwordMismatch": "Passwords do not match"
+  },
+  "verifyEmail": {
+    "title": "Verify your email",
+    "subtitle": "We sent a verification code to your email. Enter it below to continue.",
+    "codeLabel": "Verification code",
+    "codePlaceholder": "Enter the 6-digit code",
+    "verifyButton": "Verify",
+    "noCode": "Didn't receive a code?",
+    "resend": "Resend code",
+    "resent": "A new code has been sent.",
+    "codeRequired": "Please enter the verification code"
+  },
+  "verification": {
+    "title": "Identity verification",
+    "subtitle": "Provide your personal information and a photo of your national ID card (front) for review.",
+    "fullName": "Full name",
+    "nationality": "Nationality",
+    "dob": "Year of birth",
+    "nationalId": "National ID number",
+    "address": "Address",
+    "phoneNumber": "Phone number",
+    "idCardFront": "National ID card (front)",
+    "idCardHint": "Upload or take a clear photo of the front of your national ID card. JPEG, PNG or WebP.",
+    "idCardRequired": "A photo of your national ID card (front) is required",
+    "required": "This field is required",
+    "submitButton": "Submit for review",
+    "reason": "Reason",
+    "statusPending": "Your verification is pending review.",
+    "statusApproved": "Your verification has been approved.",
+    "statusRejected": "Your verification was not approved. Please update your information and resubmit.",
+    "competeNotice": "If you intend to compete soon, please verify your account now. Verification is reviewed by an admin and can take some time.",
+    "skip": "Skip for now"
+  },
+  "adminVerifications": {
+    "title": "Identity verifications",
+    "subtitle": "Review athlete identity verification submissions.",
+    "refresh": "Refresh",
+    "empty": "No submissions found.",
+    "athlete": "Athlete",
+    "idCard": "ID card",
+    "viewImage": "View image",
+    "status": "Status",
+    "action": "Action",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectTitle": "Reject verification",
+    "rejectPrompt": "Optionally provide a reason. It will be included in the email to the athlete.",
+    "rejectPlaceholder": "Reason (optional)",
+    "cancel": "Cancel",
+    "confirmReject": "Reject",
+    "filterPending": "Pending",
+    "filterApproved": "Approved",
+    "filterRejected": "Rejected",
+    "filterAll": "All"
   }
 }
-

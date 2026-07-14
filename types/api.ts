@@ -18,3 +18,7 @@ export type LoginResponse = {
   user: import("~/types/users").UserPublic
   token: string
 }
+
+export type RegisterResponse = LoginResponse & {
+  emailVerified: boolean
+}

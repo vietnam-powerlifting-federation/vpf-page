@@ -1,9 +1,11 @@
+/** Top-level routes that are served as-is instead of being redirected under /openvpf. */
+const ALLOWED_TOP_LEVEL_PREFIXES = ["/openvpf", "/login", "/register", "/verify-email", "/verification"]
+
 export default defineNuxtRouteMiddleware((to) => {
-  const path = to.path
-  console.log(path)
+  // Strip a leading locale segment (e.g. /vi) so the check works for all locales.
+  const path = to.path.replace(/^\/vi(?=\/|$)/, "") || "/"
 
-  if (path.startsWith("/openvpf")) return
-  if (path.startsWith("/login")) return
+  if (ALLOWED_TOP_LEVEL_PREFIXES.some((prefix) => path === prefix || path.startsWith(prefix + "/"))) return
 
-  return navigateTo("/openvpf" + path, { redirectCode: 301 })
+  return navigateTo("/openvpf" + to.path, { redirectCode: 301 })
 })

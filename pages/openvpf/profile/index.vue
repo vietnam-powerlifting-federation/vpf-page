@@ -2,6 +2,21 @@
   <div class="min-h-full">
     <h1 class="text-2xl font-bold mb-6 text-surface-0 text-center">{{ $t("profile.tabs.personalInfo") }}</h1>
 
+    <!-- Identity verification status -->
+    <div class="mb-6 p-4 rounded-lg border border-surface-700 bg-surface-800/40 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <span class="text-sm font-medium text-surface-200">{{ $t("profile.verification.label") }}</span>
+        <Tag :value="verifyStatusText" :severity="verifyStatusSeverity" />
+      </div>
+      <Button
+        v-if="!isVerified"
+        size="small"
+        :label="verifyButtonLabel"
+        class="bg-primary text-primary-contrast"
+        @click="goVerify"
+      />
+    </div>
+
     <div v-if="pending" class="flex justify-center py-12">
       <ProgressSpinner />
     </div>
@@ -107,11 +122,13 @@ import InputText from "primevue/inputtext"
 import InputNumber from "primevue/inputnumber"
 import Textarea from "primevue/textarea"
 import Button from "primevue/button"
+import Tag from "primevue/tag"
 import ProgressSpinner from "primevue/progressspinner"
 import { useProfileAthlete } from "~/composables/useProfileData"
 import { buildPatchPayload } from "~/lib/utils/client"
 import type { ApiResponse } from "~/types/api"
 import type { UserPrivate } from "~/types/users"
+import type { IdentityVerification } from "~/types/verifications"
 import type { UserSelfPatchSchema } from "~/lib/zod/schemas/users.schema"
 import type { z } from "zod"
 
@@ -124,6 +141,33 @@ const toast = useToast()
 const { t, locale } = useI18n()
 const { data: profileResponse, pending, error } = useProfileAthlete()
 const userData = computed(() => profileResponse.value?.athlete ?? null)
+
+// Identity verification status, surfaced on the profile with a link back to the verification page.
+type SelfVerification = { emailVerified: boolean; verification: IdentityVerification | null }
+const { data: verifyResponse } = useFetch<ApiResponse<SelfVerification>>("/api/verifications/self", {
+  credentials: "include",
+  ignoreResponseError: true,
+})
+const verifyStatus = computed<IdentityVerification["status"] | null>(() =>
+  verifyResponse.value?.success ? verifyResponse.value.data.verification?.status ?? null : null,
+)
+const isVerified = computed(() => verifyStatus.value === "approved")
+const verifyStatusText = computed(() => {
+  if (verifyStatus.value === "approved") return t("profile.verification.verified")
+  if (verifyStatus.value === "pending") return t("profile.verification.pending")
+  if (verifyStatus.value === "rejected") return t("profile.verification.rejected")
+  return t("profile.verification.notVerified")
+})
+const verifyStatusSeverity = computed(() => {
+  if (verifyStatus.value === "approved") return "success"
+  if (verifyStatus.value === "pending") return "warn"
+  if (verifyStatus.value === "rejected") return "danger"
+  return "secondary"
+})
+const verifyButtonLabel = computed(() =>
+  verifyStatus.value === "rejected" ? t("profile.verification.reverifyButton") : t("profile.verification.verifyButton"),
+)
+const goVerify = () => navigateTo("/verification")
 
 type FormData = Required<z.infer<typeof UserSelfPatchSchema>>
 const formData = ref<FormData>({

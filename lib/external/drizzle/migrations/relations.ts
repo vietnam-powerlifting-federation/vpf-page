@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations"
-import { users, userViolations, meets, legacyMeetResults, teams, meetResults, vipBenefits, purchases, vipPurchaseMetadata, vpfMembershipPurchaseMetadata, competitionPurchaseMetadata } from "./schema"
+import { users, userViolations, meets, legacyMeetResults, teams, meetResults, vipBenefits, purchases, vipPurchaseMetadata, vpfMembershipPurchaseMetadata, competitionPurchaseMetadata, identityVerifications } from "./schema"
 
 export const userViolationsRelations = relations(userViolations, ({ one }) => ({
   user: one(users, {
@@ -14,6 +14,23 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   legacyMeetResults: many(legacyMeetResults),
   meetResults: many(meetResults),
   purchases: many(purchases),
+  identityVerification: one(identityVerifications, {
+    fields: [users.vpfId],
+    references: [identityVerifications.vpfId],
+  }),
+  reviewedIdentityVerifications: many(identityVerifications, { relationName: "reviewer" }),
+}))
+
+export const identityVerificationsRelations = relations(identityVerifications, ({ one }) => ({
+  user: one(users, {
+    fields: [identityVerifications.vpfId],
+    references: [users.vpfId],
+  }),
+  reviewer: one(users, {
+    fields: [identityVerifications.reviewedBy],
+    references: [users.vpfId],
+    relationName: "reviewer",
+  }),
 }))
 
 export const vipBenefitsRelations = relations(vipBenefits, ({ one }) => ({

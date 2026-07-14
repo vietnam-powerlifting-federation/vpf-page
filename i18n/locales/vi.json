@@ -395,6 +395,15 @@
         "vpf_membership": "Hội viên VPF",
         "competition": "Thi đấu"
       }
+    },
+    "verification": {
+      "label": "Xác minh tài khoản",
+      "verified": "Đã xác minh",
+      "pending": "Đang chờ duyệt",
+      "rejected": "Chưa được duyệt",
+      "notVerified": "Chưa xác minh",
+      "verifyButton": "Xác minh tài khoản",
+      "reverifyButton": "Cập nhật & gửi lại"
     }
   },
   "checkout": {
@@ -415,6 +424,77 @@
     "cancelButton": "Hủy giao dịch",
     "cancelled": "Giao dịch của bạn đã bị hủy.",
     "paymentSuccess": "Thanh toán thành công!"
+  },
+  "register": {
+    "title": "Đăng ký",
+    "subtitle": "Tạo tài khoản để bắt đầu.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Nhập email của bạn",
+    "password": "Mật khẩu",
+    "passwordPlaceholder": "Ít nhất 8 ký tự",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "confirmPasswordPlaceholder": "Nhập lại mật khẩu",
+    "registerButton": "Đăng ký",
+    "haveAccount": "Đã có tài khoản?",
+    "loginNow": "Đăng nhập ngay",
+    "emailRequired": "Vui lòng nhập email",
+    "emailInvalid": "Vui lòng nhập email hợp lệ",
+    "passwordRequired": "Vui lòng nhập mật khẩu",
+    "passwordTooShort": "Mật khẩu phải có ít nhất 8 ký tự",
+    "passwordMismatch": "Mật khẩu không khớp"
+  },
+  "verifyEmail": {
+    "title": "Xác minh email",
+    "subtitle": "Chúng tôi đã gửi mã xác minh đến email của bạn. Nhập mã bên dưới để tiếp tục.",
+    "codeLabel": "Mã xác minh",
+    "codePlaceholder": "Nhập mã gồm 6 chữ số",
+    "verifyButton": "Xác minh",
+    "noCode": "Chưa nhận được mã?",
+    "resend": "Gửi lại mã",
+    "resent": "Mã mới đã được gửi.",
+    "codeRequired": "Vui lòng nhập mã xác minh"
+  },
+  "verification": {
+    "title": "Xác minh danh tính",
+    "subtitle": "Cung cấp thông tin cá nhân và ảnh mặt trước căn cước công dân để được duyệt.",
+    "fullName": "Họ và tên",
+    "nationality": "Quốc tịch",
+    "dob": "Năm sinh",
+    "nationalId": "Số căn cước công dân",
+    "address": "Địa chỉ",
+    "phoneNumber": "Số điện thoại",
+    "idCardFront": "Căn cước công dân (mặt trước)",
+    "idCardHint": "Tải lên hoặc chụp ảnh rõ nét mặt trước căn cước công dân. JPEG, PNG hoặc WebP.",
+    "idCardRequired": "Cần ảnh mặt trước căn cước công dân",
+    "required": "Trường này là bắt buộc",
+    "submitButton": "Gửi để duyệt",
+    "reason": "Lý do",
+    "statusPending": "Hồ sơ của bạn đang chờ duyệt.",
+    "statusApproved": "Hồ sơ của bạn đã được duyệt.",
+    "statusRejected": "Hồ sơ của bạn chưa được duyệt. Vui lòng cập nhật thông tin và gửi lại.",
+    "competeNotice": "Nếu bạn dự định thi đấu trong thời gian tới, vui lòng xác minh tài khoản ngay. Hồ sơ xác minh sẽ được quản trị viên duyệt và có thể mất một khoảng thời gian.",
+    "skip": "Bỏ qua"
+  },
+  "adminVerifications": {
+    "title": "Xác minh danh tính",
+    "subtitle": "Duyệt các hồ sơ xác minh danh tính của vận động viên.",
+    "refresh": "Làm mới",
+    "empty": "Không có hồ sơ nào.",
+    "athlete": "Vận động viên",
+    "idCard": "Căn cước",
+    "viewImage": "Xem ảnh",
+    "status": "Trạng thái",
+    "action": "Thao tác",
+    "approve": "Duyệt",
+    "reject": "Từ chối",
+    "rejectTitle": "Từ chối hồ sơ",
+    "rejectPrompt": "Bạn có thể nhập lý do. Lý do sẽ được gửi kèm trong email đến vận động viên.",
+    "rejectPlaceholder": "Lý do (không bắt buộc)",
+    "cancel": "Hủy",
+    "confirmReject": "Từ chối",
+    "filterPending": "Chờ duyệt",
+    "filterApproved": "Đã duyệt",
+    "filterRejected": "Đã từ chối",
+    "filterAll": "Tất cả"
   }
 }
-

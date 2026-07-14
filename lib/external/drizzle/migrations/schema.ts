@@ -7,6 +7,7 @@ export const roles = pgEnum("roles", ["user", "admin"])
 export const sexes = pgEnum("sexes", ["female", "male"])
 export const purchaseType = pgEnum("purchase_type", ["vip", "vpf_membership", "competition"])
 export const purchaseStatus = pgEnum("purchase_status", ["pending", "active", "expired", "cancelled"])
+export const identityVerificationStatus = pgEnum("identity_verification_status", ["pending", "approved", "rejected"])
 
 export const vpfSeq = pgSequence("vpf_seq", { startWith: "889", increment: "1", minValue: "1", maxValue: "9223372036854775807", cache: "1", cycle: false })
 
@@ -55,11 +56,44 @@ export const users = pgTable("users", {
   slug: text(),
   email: text(),
   role: roles().default("user").notNull(),
+  emailVerified: boolean("email_verified").default(false).notNull(),
+  emailVerificationCode: text("email_verification_code"),
+  emailVerificationExpiresAt: timestamp("email_verification_expires_at", { withTimezone: true, mode: "string" }),
 
 }, (table) => [
   unique("members_slug_key").on(table.slug),
   unique("users_email_key").on(table.email),
   check("members_dob_check", sql`(dob >= 1900) AND ((dob)::numeric <= EXTRACT(year FROM CURRENT_DATE))`),
+])
+
+export const identityVerifications = pgTable("identity_verifications", {
+  id: serial().primaryKey().notNull(),
+  vpfId: text("vpf_id").notNull(),
+  fullName: text("full_name").notNull(),
+  nationality: text().notNull(),
+  dob: smallint().notNull(),
+  nationalId: text("national_id").notNull(),
+  address: text().notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  idCardFrontUrl: text("id_card_front_url").notNull(),
+  status: identityVerificationStatus().default("pending").notNull(),
+  reviewedBy: text("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true, mode: "string" }),
+  reviewNote: text("review_note"),
+  submittedAt: timestamp("submitted_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
+}, (table) => [
+  unique("identity_verifications_vpf_id_key").on(table.vpfId),
+  foreignKey({
+    columns: [table.vpfId],
+    foreignColumns: [users.vpfId],
+    name: "identity_verifications_vpf_id_fkey"
+  }).onUpdate("cascade").onDelete("cascade"),
+  foreignKey({
+    columns: [table.reviewedBy],
+    foreignColumns: [users.vpfId],
+    name: "identity_verifications_reviewed_by_fkey"
+  }).onUpdate("cascade").onDelete("set null"),
 ])
 
 export const vipBenefits = pgTable("vip_benefits", {

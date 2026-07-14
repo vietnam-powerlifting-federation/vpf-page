@@ -1,6 +1,5 @@
 import { eq } from "drizzle-orm"
 import bcrypt from "bcryptjs"
-import { setCookie } from "h3"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { users } from "~/lib/external/drizzle/migrations/schema"
 import { userPublicSelect } from "~/lib/utils/queries/users"
@@ -9,6 +8,7 @@ import { signToken } from "~/lib/utils/jwt"
 import type { ApiResponse, LoginResponse } from "~/types/api"
 import { z } from "zod"
 import { ok, fail } from "~/server/utils/api-response"
+import { setAuthCookie } from "~/server/utils/auth-cookie"
 
 export default defineEventHandler(async (event): Promise<ApiResponse<LoginResponse>> => {
   try {
@@ -124,18 +124,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
 
     logger.debug("User logged in successfully", { vpfId: user.vpfId, email: user.email })
 
-    const isSecure = process.env.NODE_ENV === "production"
-    // In unit tests, `event.node.res` is a minimal stub and may not support cookie helpers.
-    const res = (event as unknown as { node?: { res?: unknown } }).node?.res as { getHeader?: unknown } | undefined
-    if (typeof res?.getHeader === "function") {
-      setCookie(event, "auth-token", token, {
-        maxAge: 60 * 60 * 24 * 7,
-        secure: isSecure,
-        sameSite: "strict",
-        httpOnly: true,
-        path: "/",
-      })
-    }
+    setAuthCookie(event, token)
 
     return ok(
       { user: userPublic, token },

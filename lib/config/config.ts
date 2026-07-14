@@ -17,6 +17,33 @@ if (!jwtSecret) {
 }
 const jwtExpiresIn = process.env.JWT_EXPIRES_IN || "30d"
 
+/**
+ * When enabled, email verification is skipped: newly registered users are marked
+ * verified immediately and no verification code email is sent. Intended for local
+ * development only — see the email service for the production warning.
+ */
+const emailVerificationSkip = process.env.EMAIL_VERIFICATION_SKIP === "true"
+
+/** SMTP config for outbound email. When incomplete, the email service logs instead of sending. */
+const smtpHost = process.env.SMTP_HOST || ""
+const smtpPort = Number(process.env.SMTP_PORT || "587")
+const smtpUser = process.env.SMTP_USER || ""
+const smtpPassword = process.env.SMTP_PASSWORD || ""
+const smtpSecure = process.env.SMTP_SECURE === "true"
+const smtpFrom = process.env.SMTP_FROM || ""
+
+// When email verification is active, SMTP credentials must be provided to actually deliver codes.
+if (!emailVerificationSkip) {
+  const missingSmtp = []
+  if (!smtpPassword) missingSmtp.push("SMTP_PASSWORD")
+  if (!smtpFrom) missingSmtp.push("SMTP_FROM")
+  if (missingSmtp.length > 0) {
+    throw new Error(
+      `SMTP is not configured. Missing env var(s): ${missingSmtp.join(", ")}. Set EMAIL_VERIFICATION_SKIP=true to disable email verification in development.`
+    )
+  }
+}
+
 const vietqrBankId = process.env.VIETQR_BANK_ID || ""
 const vietqrAccountNo = process.env.VIETQR_ACCOUNT_NO || ""
 const vietqrAccountName = process.env.VIETQR_ACCOUNT_NAME || ""
@@ -53,6 +80,15 @@ export const config = {
   nodeEnv,
   jwtSecret,
   jwtExpiresIn,
+  emailVerificationSkip,
+  smtp: {
+    host: smtpHost,
+    port: smtpPort,
+    user: smtpUser,
+    password: smtpPassword,
+    secure: smtpSecure,
+    from: smtpFrom,
+  },
   r2: {
     accountId: r2AccountId!,
     accessKeyId: r2AccessKeyId!,
