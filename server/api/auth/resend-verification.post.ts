@@ -5,6 +5,8 @@ import { logger } from "~/lib/logger/logger"
 import { sendVerificationCodeEmail } from "~/lib/utils/email"
 import type { ApiResponse } from "~/types/api"
 import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
+import { requireUser } from "~/server/utils/auth-guard"
 
 /** Verification codes are valid for 30 minutes. */
 const VERIFICATION_CODE_TTL_MS = 30 * 60 * 1000
@@ -15,10 +17,9 @@ function generateVerificationCode(): string {
 
 export default defineEventHandler(async (event): Promise<ApiResponse<null>> => {
   try {
-    const currentUser = event.context.user
-    if (!currentUser?.vpfId) {
-      return fail(event, 401, { en: "Unauthorized", vi: "Không được phép" }) as ApiResponse<null>
-    }
+    const auth = requireUser(event)
+    if (!auth.ok) return auth.error
+    const currentUser = auth.user
 
     const user = await db
       .select({ email: users.email, emailVerified: users.emailVerified })
@@ -28,15 +29,15 @@ export default defineEventHandler(async (event): Promise<ApiResponse<null>> => {
       .then((rows) => rows[0])
 
     if (!user) {
-      return fail(event, 404, { en: "User not found", vi: "Không tìm thấy người dùng" }) as ApiResponse<null>
+      return fail(event, 404, MSG.userNotFound)
     }
 
     if (user.emailVerified) {
-      return ok(null, { en: "Email already verified", vi: "Email đã được xác minh" })
+      return ok(null, MSG.emailAlreadyVerified)
     }
 
     if (!user.email) {
-      return fail(event, 400, { en: "No email on file", vi: "Không có email" }) as ApiResponse<null>
+      return fail(event, 400, { en: "No email on file", vi: "Không có email" })
     }
 
     const code = generateVerificationCode()
@@ -53,6 +54,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<null>> => {
     return ok(null, { en: "Verification code sent", vi: "Đã gửi mã xác minh" })
   } catch (error) {
     logger.error("Resend verification error", { error: (error as Error).message })
-    return fail(event, 500, { en: "Internal server error", vi: "Lỗi máy chủ" }) as ApiResponse<null>
+    return fail(event, 500, MSG.internalError)
   }
 })

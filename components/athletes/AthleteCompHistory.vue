@@ -68,8 +68,6 @@
 
 <script setup lang="ts">
 import { computed } from "vue"
-import DataTable from "primevue/datatable"
-import Column from "primevue/column"
 import { formatWeightClass, formatDivision, formatWeight, formatGL } from "~/lib/utils/client"
 import type { Result } from "~/types/results"
 import type { MeetPublic } from "~/types/meets"

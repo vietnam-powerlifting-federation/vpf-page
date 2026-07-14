@@ -7,16 +7,17 @@ import { IdentityVerificationSubmitSchema } from "~/lib/zod/schemas/identity-ver
 import type { ApiResponse } from "~/types/api"
 import type { IdentityVerification } from "~/types/verifications"
 import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
+import { requireUser } from "~/server/utils/auth-guard"
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"]
 const ID_CARD_FIELD = "idCardFront"
 
 export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVerification>> => {
   try {
-    const currentUser = event.context.user
-    if (!currentUser?.vpfId) {
-      return fail(event, 401, { en: "Unauthorized", vi: "Không được phép" }) as ApiResponse<IdentityVerification>
-    }
+    const auth = requireUser(event)
+    if (!auth.ok) return auth.error
+    const currentUser = auth.user
 
     // Email must be verified before an athlete can submit identity verification.
     const account = await db
@@ -27,14 +28,14 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
       .then((rows) => rows[0])
 
     if (!account) {
-      return fail(event, 404, { en: "User not found", vi: "Không tìm thấy người dùng" }) as ApiResponse<IdentityVerification>
+      return fail(event, 404, MSG.userNotFound)
     }
 
     if (!account.emailVerified) {
       return fail(event, 403, {
         en: "Please verify your email before submitting verification",
         vi: "Vui lòng xác minh email trước khi gửi hồ sơ xác minh",
-      }) as ApiResponse<IdentityVerification>
+      })
     }
 
     const existing = await db
@@ -49,7 +50,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
       return fail(event, 403, {
         en: "Your verification is already approved and cannot be changed",
         vi: "Hồ sơ của bạn đã được duyệt và không thể thay đổi",
-      }) as ApiResponse<IdentityVerification>
+      })
     }
 
     const contentType = getRequestHeader(event, "content-type") || ""
@@ -57,12 +58,12 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
       return fail(event, 400, {
         en: "Expected multipart form data",
         vi: "Yêu cầu dữ liệu multipart",
-      }) as ApiResponse<IdentityVerification>
+      })
     }
 
     const form = await readMultipartFormData(event)
     if (!form?.length) {
-      return fail(event, 400, { en: "Invalid or empty form data", vi: "Dữ liệu form không hợp lệ hoặc trống" }) as ApiResponse<IdentityVerification>
+      return fail(event, 400, { en: "Invalid or empty form data", vi: "Dữ liệu form không hợp lệ hoặc trống" })
     }
 
     const textFields: Record<string, string> = {}
@@ -76,7 +77,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
           return fail(event, 400, {
             en: "Invalid image type. Allowed: JPEG, PNG, WebP",
             vi: "Loại ảnh không hợp lệ. Cho phép: JPEG, PNG, WebP",
-          }) as ApiResponse<IdentityVerification>
+          })
         }
         idCardFile = { data: part.data, filename: part.filename, type: part.type }
       } else if (typeof part.data !== "undefined") {
@@ -89,7 +90,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
       return fail(event, 400, {
         en: "Invalid verification information",
         vi: "Thông tin xác minh không hợp lệ",
-      }) as ApiResponse<IdentityVerification>
+      })
     }
 
     // A photo is required on first submission; on resubmission the existing one is kept if none is provided.
@@ -105,7 +106,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
       return fail(event, 400, {
         en: "A photo of your national ID card (front) is required",
         vi: "Cần ảnh mặt trước căn cước công dân",
-      }) as ApiResponse<IdentityVerification>
+      })
     }
 
     const nowIso = new Date().toISOString()
@@ -145,7 +146,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
       .then((rows) => rows[0])
 
     if (!saved) {
-      return fail(event, 500, { en: "Failed to save verification", vi: "Lưu hồ sơ thất bại" }) as ApiResponse<IdentityVerification>
+      return fail(event, 500, { en: "Failed to save verification", vi: "Lưu hồ sơ thất bại" })
     }
 
     logger.info("Identity verification submitted", { vpfId: currentUser.vpfId })
@@ -153,6 +154,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
     return ok(saved, { en: "Verification submitted successfully", vi: "Gửi hồ sơ xác minh thành công" })
   } catch (error) {
     logger.error("Error submitting verification", { error: (error as Error).message })
-    return fail(event, 500, { en: "Internal server error", vi: "Lỗi máy chủ" }) as ApiResponse<IdentityVerification>
+    return fail(event, 500, MSG.internalError)
   }
 })

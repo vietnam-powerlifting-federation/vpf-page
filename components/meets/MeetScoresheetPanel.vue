@@ -104,8 +104,6 @@
 </template>
 
 <script setup lang="ts">
-import DataTable from "primevue/datatable"
-import Column from "primevue/column"
 import { DISQUALIFIED } from "~/lib/constants/constants"
 import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL, formatSexAlternative, nameGradientStyle } from "@/lib/utils/client"
 

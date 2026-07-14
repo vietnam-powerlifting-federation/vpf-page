@@ -235,6 +235,7 @@
     "selectGender": "Select Gender",
     "selectDivision": "Select Division",
     "selectYear": "Select Year",
+    "allYears": "All Years",
     "noHistoryFound": "No record history found for the specified year",
     "historyDescription": "View records broken during a specific year's national meet",
     "previousRecord": "Previous Record",

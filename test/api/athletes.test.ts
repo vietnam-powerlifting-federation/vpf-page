@@ -28,7 +28,6 @@ describe("API: athletes", () => {
       expect(Array.isArray(res.data)).toBe(true)
     })
 
-
   })
 
   describe("GET /api/athletes/[id]", () => {

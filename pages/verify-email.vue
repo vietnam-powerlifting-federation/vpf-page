@@ -54,11 +54,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue"
-import InputText from "primevue/inputtext"
-import Button from "primevue/button"
 import type { ApiResponse } from "~/types/api"
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 
 const code = ref("")
 const isLoading = ref(false)
@@ -68,7 +66,7 @@ const info = ref<string | null>(null)
 
 type StatusData = { emailVerified: boolean; verification: unknown }
 
-const msg = (r: ApiResponse<unknown>) => r.message[locale.value as "en" | "vi"] || r.message.en
+const msg = useApiMessage()
 
 onMounted(async () => {
   // If already verified, skip straight to the identity verification form.

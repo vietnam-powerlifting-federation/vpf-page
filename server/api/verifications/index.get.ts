@@ -6,22 +6,18 @@ import { logger } from "~/lib/logger/logger"
 import type { ApiResponse } from "~/types/api"
 import type { IdentityVerificationWithUser } from "~/types/verifications"
 import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
+import { requireAdmin } from "~/server/utils/auth-guard"
 
 const StatusFilter = z.enum(["pending", "approved", "rejected"]).optional()
 
 export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVerificationWithUser[]>> => {
   try {
-    const currentUser = event.context.user
-    if (!currentUser?.vpfId) {
-      return fail(event, 401, { en: "Unauthorized", vi: "Không được phép" }) as ApiResponse<IdentityVerificationWithUser[]>
-    }
-
-    if (currentUser.role !== "admin") {
-      return fail(event, 403, {
-        en: "Only admins can view verification submissions",
-        vi: "Chỉ quản trị viên mới có thể xem hồ sơ xác minh",
-      }) as ApiResponse<IdentityVerificationWithUser[]>
-    }
+    const auth = requireAdmin(event, {
+      en: "Only admins can view verification submissions",
+      vi: "Chỉ quản trị viên mới có thể xem hồ sơ xác minh",
+    })
+    if (!auth.ok) return auth.error
 
     const query = getQuery(event)
     const statusParsed = StatusFilter.safeParse(query.status)
@@ -47,6 +43,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
     return ok(data, { en: "Verifications retrieved", vi: "Lấy danh sách hồ sơ thành công" })
   } catch (error) {
     logger.error("Error listing verifications", { error: (error as Error).message })
-    return fail(event, 500, { en: "Internal server error", vi: "Lỗi máy chủ" }) as ApiResponse<IdentityVerificationWithUser[]>
+    return fail(event, 500, MSG.internalError)
   }
 })

@@ -49,7 +49,6 @@
 
 <script setup>
 import { ref } from "vue"
-import { useToast } from "primevue/usetoast"
 
 const { t } = useI18n()
 const toast = useToast()

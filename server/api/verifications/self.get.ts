@@ -5,6 +5,8 @@ import { logger } from "~/lib/logger/logger"
 import type { ApiResponse } from "~/types/api"
 import type { IdentityVerification } from "~/types/verifications"
 import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
+import { requireUser } from "~/server/utils/auth-guard"
 
 type SelfVerification = {
   emailVerified: boolean
@@ -13,10 +15,9 @@ type SelfVerification = {
 
 export default defineEventHandler(async (event): Promise<ApiResponse<SelfVerification>> => {
   try {
-    const currentUser = event.context.user
-    if (!currentUser?.vpfId) {
-      return fail(event, 401, { en: "Unauthorized", vi: "Không được phép" }) as ApiResponse<SelfVerification>
-    }
+    const auth = requireUser(event)
+    if (!auth.ok) return auth.error
+    const currentUser = auth.user
 
     const account = await db
       .select({ emailVerified: users.emailVerified })
@@ -26,7 +27,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<SelfVerific
       .then((rows) => rows[0])
 
     if (!account) {
-      return fail(event, 404, { en: "User not found", vi: "Không tìm thấy người dùng" }) as ApiResponse<SelfVerification>
+      return fail(event, 404, MSG.userNotFound)
     }
 
     const verification = await db
@@ -42,6 +43,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<SelfVerific
     )
   } catch (error) {
     logger.error("Error fetching verification status", { error: (error as Error).message })
-    return fail(event, 500, { en: "Internal server error", vi: "Lỗi máy chủ" }) as ApiResponse<SelfVerification>
+    return fail(event, 500, MSG.internalError)
   }
 })

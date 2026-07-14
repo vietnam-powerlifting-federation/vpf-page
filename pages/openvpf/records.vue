@@ -90,7 +90,7 @@
           <div v-if="viewMode === 'history' && historyData?.data?.meet" class="mb-8 p-4 bg-surface-100 dark:bg-surface-800 rounded-lg">
             <h3 class="text-lg font-semibold mb-2">{{ historyData.data.meet.meetName }}</h3>
             <p v-if="historyData.data.meet.hostDate" class="text-sm text-surface-600 dark:text-surface-400">
-              {{ $t("general.date") }}: {{ formatDate(historyData.data.meet.hostDate) }}
+              {{ $t("general.date") }}: {{ formatDateDMY(historyData.data.meet.hostDate) }}
             </p>
           </div>
 
@@ -111,10 +111,10 @@
 
           <!-- Current Records Mode: Show table view -->
           <!-- Squat Records -->
-          <div v-if="viewMode === 'current' && displayRecords.squat.length > 0" class="mb-12">
+          <div v-if="viewMode === 'current' && filteredRecords.squat.length > 0" class="mb-12">
             <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("general.squat") }}</h2>
             <RecordsTable
-              :records="displayRecords.squat"
+              :records="filteredRecords.squat"
               :athletes="displayAthletes"
               :meets="displayMeets"
               :weight-classes="weightClasses"
@@ -123,10 +123,10 @@
           </div>
 
           <!-- Bench Press Records -->
-          <div v-if="viewMode === 'current' && displayRecords.bench.length > 0" class="mb-12">
+          <div v-if="viewMode === 'current' && filteredRecords.bench.length > 0" class="mb-12">
             <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("general.benchPress") }}</h2>
             <RecordsTable
-              :records="displayRecords.bench"
+              :records="filteredRecords.bench"
               :athletes="displayAthletes"
               :meets="displayMeets"
               :weight-classes="weightClasses"
@@ -135,10 +135,10 @@
           </div>
 
           <!-- Deadlift Records -->
-          <div v-if="viewMode === 'current' && displayRecords.deadlift.length > 0" class="mb-12">
+          <div v-if="viewMode === 'current' && filteredRecords.deadlift.length > 0" class="mb-12">
             <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("general.deadlift") }}</h2>
             <RecordsTable
-              :records="displayRecords.deadlift"
+              :records="filteredRecords.deadlift"
               :athletes="displayAthletes"
               :meets="displayMeets"
               :weight-classes="weightClasses"
@@ -147,10 +147,10 @@
           </div>
 
           <!-- Total Records -->
-          <div v-if="viewMode === 'current' && displayRecords.total.length > 0" class="mb-12">
+          <div v-if="viewMode === 'current' && filteredRecords.total.length > 0" class="mb-12">
             <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("general.total") }}</h2>
             <RecordsTable
-              :records="displayRecords.total"
+              :records="filteredRecords.total"
               :athletes="displayAthletes"
               :meets="displayMeets"
               :weight-classes="weightClasses"
@@ -165,20 +165,28 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue"
-import Select from "primevue/select"
-import ProgressSpinner from "primevue/progressspinner"
-import Button from "primevue/button"
 import RecordsTable from "@/components/RecordsTable.vue"
 import RecordsHistoryList from "@/components/RecordsHistoryList.vue"
 import { WEIGHT_CLASS_MALE, WEIGHT_CLASS_FEMALE, RECORD_START_YEAR } from "~/lib/constants/constants"
+import { formatDateDMY } from "~/lib/utils/date"
 import type { LiftRecord } from "~/types/records"
 import type { Result } from "~/types/results"
 import type { UserPublicWithDecorators } from "~/types/users"
 import type { MeetPublic } from "~/types/meets"
 import type { Sex, Division } from "~/types/union-types"
+import type { ApiResponse } from "~/types/api"
+
+type RecordsData = {
+  records: LiftRecord[]
+  meet: MeetPublic[]
+  athletes: UserPublicWithDecorators[]
+  results: Result[]
+}
+type HistoryData = Omit<RecordsData, "meet"> & { meet: MeetPublic | null }
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 const { fetchDecorators, applyDecorators } = useNameDecorators()
 onMounted(fetchDecorators)
@@ -195,27 +203,25 @@ const selectedYear = ref<number | null>(
 )
 
 // Options
-const sexOptions = [
-  { label: "Male", value: "male" },
-  { label: "Female", value: "female" },
-]
+const sexOptions = computed(() => [
+  { label: t("general.male"), value: "male" },
+  { label: t("general.female"), value: "female" },
+])
 
-const divisionOptions = [
-  { label: "Sub-Junior", value: "subjr" },
-  { label: "Junior", value: "jr" },
-  { label: "Open", value: "open" },
-  { label: "Masters 1", value: "mas1" },
-  { label: "Masters 2", value: "mas2" },
-  { label: "Masters 3", value: "mas3" },
-  { label: "Masters 4", value: "mas4" },
-]
+const divisionOptions = computed(() => [
+  { label: t("general.divisionSubJunior"), value: "subjr" },
+  { label: t("general.divisionJunior"), value: "jr" },
+  { label: t("general.divisionOpen"), value: "open" },
+  { label: t("general.divisionMaster1"), value: "mas1" },
+  { label: t("general.divisionMaster2"), value: "mas2" },
+  { label: t("general.divisionMaster3"), value: "mas3" },
+  { label: t("general.divisionMaster4"), value: "mas4" },
+])
 
 // Fetch available years from API (we'll get this from meets data)
 const currentYear = new Date().getFullYear()
 const yearOptions = computed(() => {
-  const years = []
-  // Add "All Years" option
-  years.push({ label: "All Years", value: null })
+  const years: { label: string; value: number | null }[] = [{ label: t("records.allYears"), value: null }]
   // Generate years from RECORD_START_YEAR to current year + 1
   for (let year = RECORD_START_YEAR; year <= currentYear + 1; year++) {
     years.push({ label: year.toString(), value: year })
@@ -229,19 +235,7 @@ const weightClasses = computed(() => {
 })
 
 // Fetch current records data
-const { data, pending, error, refresh } = await useFetch<{
-  success: boolean
-  data: {
-    records: LiftRecord[]
-    meet: MeetPublic[]
-    athletes: UserPublicWithDecorators[]
-    results: Result[]
-  } | null
-  message: {
-    en: string
-    vi: string
-  }
-}>("/api/records", {
+const { data, pending, error, refresh } = await useFetch<ApiResponse<RecordsData>>("/api/records", {
   query: computed(() => {
     const query: Record<string, string | number | undefined> = {}
     if (selectedYear.value !== null) {
@@ -253,19 +247,7 @@ const { data, pending, error, refresh } = await useFetch<{
 })
 
 // Fetch history records data
-const { data: historyData, pending: historyPending, error: historyError, refresh: refreshHistory } = await useFetch<{
-  success: boolean
-  data: {
-    records: LiftRecord[]
-    meet: MeetPublic | null
-    athletes: UserPublicWithDecorators[]
-    results: Result[]
-  } | null
-  message: {
-    en: string
-    vi: string
-  }
-}>("/api/records/history", {
+const { data: historyData, pending: historyPending, error: historyError, refresh: refreshHistory } = await useFetch<ApiResponse<HistoryData>>("/api/records/history", {
   query: computed(() => {
     const query: Record<string, string | number | undefined> = {}
     if (selectedYear.value !== null) {
@@ -277,15 +259,7 @@ const { data: historyData, pending: historyPending, error: historyError, refresh
 })
 
 // Fetch previous year records for history view (to show previous record values)
-const { data: previousYearRecords } = await useFetch<{
-  success: boolean
-  data: {
-    records: LiftRecord[]
-    meet: MeetPublic[]
-    athletes: UserPublicWithDecorators[]
-    results: Result[]
-  } | null
-}>("/api/records", {
+const { data: previousYearRecords } = await useFetch<ApiResponse<RecordsData>>("/api/records", {
   query: computed(() => {
     const query: Record<string, string | number | undefined> = {}
     if (selectedYear.value !== null && viewMode.value === "history") {
@@ -404,9 +378,6 @@ const filteredRecords = computed(() => {
   return grouped
 })
 
-// Display records (same as filteredRecords but with better naming)
-const displayRecords = computed(() => filteredRecords.value)
-
 // Filter history records by sex and division
 const filteredHistoryRecords = computed(() => {
   const histData = historyData.value?.data
@@ -442,27 +413,6 @@ const handleFilterChange = () => {
 watch(viewMode, () => {
   handleFilterChange()
 })
-
-// Watch for viewMode and selectedYear changes to fetch previous year records
-watch([viewMode, selectedYear], ([newMode, newYear]) => {
-  if (newMode === "history" && newYear !== null) {
-    // The query will automatically update and trigger a fetch
-  }
-})
-
-// Format date helper
-const formatDate = (date: string | null | undefined): string => {
-  if (!date) return "-"
-  try {
-    const d = new Date(date)
-    const day = String(d.getDate()).padStart(2, "0")
-    const month = String(d.getMonth() + 1).padStart(2, "0")
-    const year = d.getFullYear()
-    return `${day}/${month}/${year}`
-  } catch {
-    return date
-  }
-}
 
 // Watch for route changes
 watch(

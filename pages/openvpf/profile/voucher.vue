@@ -31,10 +31,6 @@
 </template>
 
 <script setup lang="ts">
-import Button from "primevue/button"
-import DataTable from "primevue/datatable"
-import Column from "primevue/column"
-
 definePageMeta({
   layout: "openvpf-profile",
   middleware: "auth",

@@ -125,14 +125,11 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue"
-import InputText from "primevue/inputtext"
-import Password from "primevue/password"
-import Button from "primevue/button"
-import Dialog from "primevue/dialog"
 import type { ApiResponse, LoginResponse } from "~/types/api"
 import loginBg from "~/assets/img/login-bg.png"
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
+const apiMessage = useApiMessage()
 const route = useRoute()
 
 // Form state
@@ -208,7 +205,7 @@ const handleLogin = async () => {
       const redirectTo = typeof route.query.to === "string" ? route.query.to : "/"
       await navigateTo(redirectTo)
     } else {
-      loginError.value = response.message[locale.value as "en" | "vi"] || response.message.en || t("general.error")
+      loginError.value = apiMessage(response) || t("general.error")
     }
   } catch (error) {
     loginError.value = error instanceof Error ? error.message : t("general.error")

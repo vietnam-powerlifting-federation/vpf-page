@@ -117,13 +117,6 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from "vue"
-import { useToast } from "primevue/usetoast"
-import InputText from "primevue/inputtext"
-import InputNumber from "primevue/inputnumber"
-import Textarea from "primevue/textarea"
-import Button from "primevue/button"
-import Tag from "primevue/tag"
-import ProgressSpinner from "primevue/progressspinner"
 import { useProfileAthlete } from "~/composables/useProfileData"
 import { buildPatchPayload } from "~/lib/utils/client"
 import type { ApiResponse } from "~/types/api"
@@ -138,7 +131,8 @@ definePageMeta({
 })
 
 const toast = useToast()
-const { t, locale } = useI18n()
+const { t } = useI18n()
+const apiMessage = useApiMessage()
 const { data: profileResponse, pending, error } = useProfileAthlete()
 const userData = computed(() => profileResponse.value?.athlete ?? null)
 
@@ -217,14 +211,14 @@ async function handleSubmit() {
       toast.add({
         severity: "success",
         summary: t("general.success"),
-        detail: response.message[locale.value as "en" | "vi"] || response.message.en,
+        detail: apiMessage(response),
         life: 3000,
       })
     } else {
       toast.add({
         severity: "error",
         summary: t("general.updateError"),
-        detail: response.message[locale.value as "en" | "vi"] || response.message.en,
+        detail: apiMessage(response),
         life: 5000,
       })
     }

@@ -79,8 +79,6 @@
 </template>
 
 <script setup lang="ts">
-import InputText from "primevue/inputtext"
-import Select from "primevue/select"
 import type { Sex, Division, MeetType } from "~/types/union-types"
 
 interface Props {

@@ -6,8 +6,6 @@
 </template>
 
 <script setup lang="ts">
-import Button from "primevue/button"
-import { useToast } from "primevue/usetoast"
 
 const toast = useToast()
 const { t } = useI18n()

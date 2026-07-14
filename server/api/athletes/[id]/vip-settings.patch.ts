@@ -4,6 +4,9 @@ import { vipBenefits } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
 import { uploadVipImage } from "~/lib/utils/r2-vip-upload"
 import { VipSettingsPatchSchema } from "~/lib/zod/schemas/vip.schema"
+import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
+import { requireUser } from "~/server/utils/auth-guard"
 import type { ApiResponse } from "~/types/api"
 import type { VipBenefits } from "~/types/vip"
 
@@ -14,45 +17,25 @@ const BANNER_URL_KEYS = ["bannerImageUrl1", "bannerImageUrl2", "bannerImageUrl3"
 export default defineEventHandler(async (event): Promise<ApiResponse<VipBenefits>> => {
   try {
     const idParam = getRouterParam(event, "id")
-    const currentUser = event.context.user
-
-    if (!currentUser?.vpfId) {
-      setResponseStatus(event, 401)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "Unauthorized",
-          vi: "Không được phép",
-        },
-      }
-    }
+    const auth = requireUser(event)
+    if (!auth.ok) return auth.error
+    const currentUser = auth.user
 
     const vpfId = idParam === "self" ? currentUser.vpfId : idParam
     if (!vpfId) {
-      setResponseStatus(event, 400)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "Athlete ID is required",
-          vi: "ID vận động viên là bắt buộc",
-        },
-      }
+      return fail(event, 400, {
+        en: "Athlete ID is required",
+        vi: "ID vận động viên là bắt buộc",
+      })
     }
 
     const isAdmin = currentUser.role === "admin"
     const isSelf = idParam === "self" || currentUser.vpfId === vpfId
     if (!isSelf && !isAdmin) {
-      setResponseStatus(event, 403)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "You may only update your own VIP settings, or an admin may update any athlete's",
-          vi: "Bạn chỉ có thể cập nhật cài đặt VIP của mình, hoặc admin có thể cập nhật của bất kỳ vận động viên nào",
-        },
-      }
+      return fail(event, 403, {
+        en: "You may only update your own VIP settings, or an admin may update any athlete's",
+        vi: "Bạn chỉ có thể cập nhật cài đặt VIP của mình, hoặc admin có thể cập nhật của bất kỳ vận động viên nào",
+      })
     }
 
     const contentType = getRequestHeader(event, "content-type") || ""
@@ -61,15 +44,10 @@ export default defineEventHandler(async (event): Promise<ApiResponse<VipBenefits
     if (contentType.includes("multipart/form-data")) {
       const form = await readMultipartFormData(event)
       if (!form?.length) {
-        setResponseStatus(event, 400)
-        return {
-          success: false,
-          data: null,
-          message: {
-            en: "Invalid or empty form data",
-            vi: "Dữ liệu form không hợp lệ hoặc trống",
-          },
-        }
+        return fail(event, 400, {
+          en: "Invalid or empty form data",
+          vi: "Dữ liệu form không hợp lệ hoặc trống",
+        })
       }
       const textFields: Record<string, string> = {}
       const files: { field: string; data: Buffer; filename: string; type?: string }[] = []
@@ -79,15 +57,10 @@ export default defineEventHandler(async (event): Promise<ApiResponse<VipBenefits
           if (FILE_FIELDS.includes(part.name as (typeof FILE_FIELDS)[number])) {
             const type = part.type || ""
             if (!ALLOWED_IMAGE_TYPES.includes(type)) {
-              setResponseStatus(event, 400)
-              return {
-                success: false,
-                data: null,
-                message: {
-                  en: "Invalid image type. Allowed: JPEG, PNG, GIF, WebP",
-                  vi: "Loại ảnh không hợp lệ. Cho phép: JPEG, PNG, GIF, WebP",
-                },
-              }
+              return fail(event, 400, {
+                en: "Invalid image type. Allowed: JPEG, PNG, GIF, WebP",
+                vi: "Loại ảnh không hợp lệ. Cho phép: JPEG, PNG, GIF, WebP",
+              })
             }
             files.push({
               field: part.name,
@@ -137,15 +110,10 @@ export default defineEventHandler(async (event): Promise<ApiResponse<VipBenefits
       const body = await readBody(event)
       const parsed = VipSettingsPatchSchema.safeParse(body)
       if (!parsed.success) {
-        setResponseStatus(event, 400)
-        return {
-          success: false,
-          data: null,
-          message: {
-            en: "Invalid VIP settings data",
-            vi: "Dữ liệu cài đặt VIP không hợp lệ",
-          },
-        }
+        return fail(event, 400, {
+          en: "Invalid VIP settings data",
+          vi: "Dữ liệu cài đặt VIP không hợp lệ",
+        })
       }
       patch = parsed.data
     }
@@ -158,24 +126,15 @@ export default defineEventHandler(async (event): Promise<ApiResponse<VipBenefits
         .limit(1)
         .then((rows) => rows[0])
       if (existing) {
-        return {
-          success: true,
-          data: existing,
-          message: {
-            en: "VIP settings unchanged",
-            vi: "Cài đặt VIP không thay đổi",
-          },
-        }
+        return ok(existing, {
+          en: "VIP settings unchanged",
+          vi: "Cài đặt VIP không thay đổi",
+        })
       }
-      setResponseStatus(event, 400)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "No VIP settings data provided",
-          vi: "Chưa cung cấp dữ liệu cài đặt VIP",
-        },
-      }
+      return fail(event, 400, {
+        en: "No VIP settings data provided",
+        vi: "Chưa cung cấp dữ liệu cài đặt VIP",
+      })
     }
 
     const existing = await db
@@ -204,35 +163,18 @@ export default defineEventHandler(async (event): Promise<ApiResponse<VipBenefits
       .then((rows) => rows[0])
 
     if (!updated) {
-      setResponseStatus(event, 500)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "Failed to save VIP settings",
-          vi: "Lưu cài đặt VIP thất bại",
-        },
-      }
+      return fail(event, 500, {
+        en: "Failed to save VIP settings",
+        vi: "Lưu cài đặt VIP thất bại",
+      })
     }
 
-    return {
-      success: true,
-      data: updated,
-      message: {
-        en: "VIP settings updated successfully",
-        vi: "Cập nhật cài đặt VIP thành công",
-      },
-    }
+    return ok(updated, {
+      en: "VIP settings updated successfully",
+      vi: "Cập nhật cài đặt VIP thành công",
+    })
   } catch (error) {
     logger.error("Error updating VIP settings", { error })
-    setResponseStatus(event, 500)
-    return {
-      success: false,
-      data: null,
-      message: {
-        en: "Internal server error",
-        vi: "Lỗi máy chủ",
-      },
-    }
+    return fail(event, 500, MSG.internalError)
   }
 })

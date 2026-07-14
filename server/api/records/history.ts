@@ -1,18 +1,17 @@
 import { db } from "~/lib/external/drizzle/drizzle"
 import { meets } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
-import { RECORD_DIVISION_OVERRIDE } from "~/lib/constants/constants"
-import { getDivisionFromAge, buildAttemptEvents } from "~/lib/utils/queries/records"
+import { getTargetDivisions, buildAttemptEvents } from "~/lib/utils/queries/records"
 import { cachedFetchRecordsForYear } from "~/server/utils/cached-records"
 import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import type { ApiResponse } from "~/types/api"
 import type { LiftRecord } from "~/types/records"
 import type { MeetPublic } from "~/types/meets"
 import type { UserPublic, UserPublicWithDecorators } from "~/types/users"
-import type { RankedDivision } from "~/types/union-types"
 import { eq, and, sql } from "drizzle-orm"
 import type { Result } from "~/types/results"
 import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
 
 type HistoryResponse = {
   records: LiftRecord[]
@@ -100,12 +99,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
       processed.add(resultKey)
 
       const dob = usersMap.get(result.vpfId)?.dob ?? null
-      const originalDiv: RankedDivision =
-        dob === null ? "open" : getDivisionFromAge(systemYear - dob)
-
-      const targetDivisions = (originalDiv in RECORD_DIVISION_OVERRIDE
-        ? RECORD_DIVISION_OVERRIDE[originalDiv]
-        : [originalDiv]) as RankedDivision[]
+      const targetDivisions = getTargetDivisions(dob, systemYear)
 
       for (const div of targetDivisions) {
         const key = `${result.sex}-${div}-${result.weightClass}-${lift}`
@@ -138,6 +132,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
     )
   } catch (error) {
     logger.error("Error fetching record history", { error })
-    return fail(event, 500, { en: "Internal server error", vi: "Lỗi máy chủ" }) as ApiResponse<HistoryResponse>
+    return fail(event, 500, MSG.internalError)
   }
 })

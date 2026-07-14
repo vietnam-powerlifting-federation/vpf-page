@@ -146,16 +146,10 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from "vue"
-import InputText from "primevue/inputtext"
-import InputNumber from "primevue/inputnumber"
-import Textarea from "primevue/textarea"
-import Button from "primevue/button"
-import ProgressSpinner from "primevue/progressspinner"
-import { useToast } from "primevue/usetoast"
 import type { ApiResponse } from "~/types/api"
 import type { IdentityVerification } from "~/types/verifications"
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const toast = useToast()
 
 const currentYear = new Date().getFullYear()
@@ -208,7 +202,7 @@ const statusBannerClass = computed(() => {
 
 type StatusData = { emailVerified: boolean; verification: IdentityVerification | null }
 
-const msg = (r: ApiResponse<unknown>) => r.message[locale.value as "en" | "vi"] || r.message.en
+const msg = useApiMessage()
 
 onMounted(async () => {
   const res = await $fetch("/api/verifications/self", {

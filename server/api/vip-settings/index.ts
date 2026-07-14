@@ -2,6 +2,8 @@ import { or, isNull, gte, sql, and, eq } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { users, vipBenefits } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
+import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
 import type { ApiResponse } from "~/types/api"
 
 type VipDecoratorSettings = {
@@ -27,24 +29,12 @@ export default defineEventHandler(async (event): Promise<ApiResponse<VipDecorato
       .innerJoin(users, eq(vipBenefits.vpfId, users.vpfId))
       .where(and(vipMembershipActive))
 
-    return {
-      success: true,
-      data: settings,
-      message: {
-        en: "VIP settings retrieved successfully",
-        vi: "Lấy cài đặt VIP thành công",
-      },
-    }
+    return ok(settings, {
+      en: "VIP settings retrieved successfully",
+      vi: "Lấy cài đặt VIP thành công",
+    })
   } catch (error) {
     logger.error("Error fetching VIP settings", { error })
-    setResponseStatus(event, 500)
-    return {
-      success: false,
-      data: null,
-      message: {
-        en: "Internal server error",
-        vi: "Lỗi máy chủ",
-      },
-    }
+    return fail(event, 500, MSG.internalError)
   }
 })

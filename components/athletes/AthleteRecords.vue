@@ -65,10 +65,8 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue"
-import DataTable from "primevue/datatable"
-import Column from "primevue/column"
-import Button from "primevue/button"
 import { formatWeightClass, formatDivision, formatWeight } from "~/lib/utils/client"
+import { formatDateDMY } from "~/lib/utils/date"
 import RecordCertificateDialog, { type CertificateData } from "~/components/athletes/RecordCertificateDialog.vue"
 import type { LiftRecord } from "~/types/records"
 import type { Result } from "~/types/results"
@@ -94,19 +92,6 @@ function liftLabel(lift: LiftRecord["lift"]): string {
   return map[lift]
 }
 
-function formatDate(date: string | null | undefined): string {
-  if (!date) return "-"
-  try {
-    const d = new Date(date)
-    const day = String(d.getDate()).padStart(2, "0")
-    const month = String(d.getMonth() + 1).padStart(2, "0")
-    const year = d.getFullYear()
-    return `${day}/${month}/${year}`
-  } catch {
-    return date
-  }
-}
-
 const enrichedRecords = computed(() => {
   const resultsById = new Map<string, Result>()
   for (const r of props.compHistory) {
@@ -122,7 +107,7 @@ const enrichedRecords = computed(() => {
       record,
       result,
       meetName: meet?.meetName ?? "-",
-      hostDate: formatDate(meet?.hostDate),
+      hostDate: formatDateDMY(meet?.hostDate),
       hostDateRaw: meet?.hostDate ?? null,
     }
   })

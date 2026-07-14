@@ -3,20 +3,20 @@ import { db } from "~/lib/external/drizzle/drizzle"
 import { purchases } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
 import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
+import { requireUser } from "~/server/utils/auth-guard"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseCancelled } from "~/types/purchases"
 
 export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseCancelled>> => {
   try {
-    const currentUser = event.context.user
-
-    if (!currentUser?.vpfId) {
-      return fail(event, 401, { en: "Unauthorized", vi: "Không được phép" }) as ApiResponse<PurchaseCancelled>
-    }
+    const auth = requireUser(event)
+    if (!auth.ok) return auth.error
+    const currentUser = auth.user
 
     const refCode = getRouterParam(event, "refCode")
     if (!refCode) {
-      return fail(event, 400, { en: "Ref code is required", vi: "Mã tham chiếu là bắt buộc" }) as ApiResponse<PurchaseCancelled>
+      return fail(event, 400, MSG.refCodeRequired)
     }
 
     const purchase = await db
@@ -32,21 +32,21 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseCan
       .then((rows) => rows[0])
 
     if (!purchase) {
-      return fail(event, 404, { en: "Purchase not found", vi: "Không tìm thấy giao dịch" }) as ApiResponse<PurchaseCancelled>
+      return fail(event, 404, MSG.purchaseNotFound)
     }
 
     if (currentUser.role !== "admin" && purchase.vpfId !== currentUser.vpfId) {
       return fail(event, 403, {
         en: "You are not allowed to cancel this purchase",
         vi: "Bạn không có quyền hủy giao dịch này",
-      }) as ApiResponse<PurchaseCancelled>
+      })
     }
 
     if (purchase.status !== "pending") {
       return fail(event, 400, {
         en: "Only pending purchases can be cancelled",
         vi: "Chỉ có thể hủy các giao dịch đang chờ xử lý",
-      }) as ApiResponse<PurchaseCancelled>
+      })
     }
 
     const cancelledAt = new Date().toISOString()
@@ -69,6 +69,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseCan
     )
   } catch (error) {
     logger.error("Error cancelling purchase", { error: (error as Error).message })
-    return fail(event, 500, { en: "Internal server error", vi: "Lỗi máy chủ" }) as ApiResponse<PurchaseCancelled>
+    return fail(event, 500, MSG.internalError)
   }
 })

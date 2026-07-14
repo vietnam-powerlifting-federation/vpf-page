@@ -2,6 +2,8 @@ import { desc, eq } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { meets } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
+import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
 import type { ApiResponse } from "~/types/api"
 import type { MeetPublic } from "~/types/meets"
 
@@ -13,24 +15,12 @@ export default defineEventHandler(async (event): Promise<ApiResponse<MeetPublic[
       .where(eq(meets.hidden, false))
       .orderBy(desc(meets.hostDate), desc(meets.meetId))
 
-    return {
-      success: true,
-      data: allMeets,
-      message: {
-        en: "Meets retrieved successfully",
-        vi: "Lấy danh sách meet thành công",
-      },
-    }
+    return ok(allMeets, {
+      en: "Meets retrieved successfully",
+      vi: "Lấy danh sách meet thành công",
+    })
   } catch (error) {
     logger.error("Error fetching meets", { error })
-    setResponseStatus(event, 500)
-    return {
-      success: false,
-      data: null,
-      message: {
-        en: "Internal server error",
-        vi: "Lỗi máy chủ",
-      },
-    }
+    return fail(event, 500, MSG.internalError)
   }
 })

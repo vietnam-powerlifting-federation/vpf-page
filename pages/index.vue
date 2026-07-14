@@ -81,8 +81,6 @@
 </template>
 
 <script setup>
-import Button from "primevue/button"
-import Card from "primevue/card"
 import heroBg from "~/assets/img/hero-bg.jpg"
 
 definePageMeta({

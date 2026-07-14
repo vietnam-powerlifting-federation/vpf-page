@@ -6,7 +6,7 @@ import { userPublicSelect } from "~/lib/utils/queries/users"
 import { sortResultsByKey, type SortKey } from "~/lib/utils/queries/results"
 import type { MeetPublic } from "~/types/meets"
 import type { Result, LegacyResultRaw, ResultRaw } from "~/types/results"
-import type { UserPublic, UserPublicWithDecorators } from "~/types/users"
+import type { UserPublicWithDecorators } from "~/types/users"
 import type { Division, Sex, MeetType } from "~/types/union-types"
 
 type GetMeetsAndResultsAndAthletesOptions = {

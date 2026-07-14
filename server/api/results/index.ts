@@ -1,6 +1,8 @@
 import { applyDistinctFilter, type SortKey, type MeetType } from "~/lib/utils/queries/results"
 import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import { logger } from "~/lib/logger/logger"
+import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
 import type { ApiResponse } from "~/types/api"
 import type { ResultRanked } from "~/types/results"
 import type { MeetPublic } from "~/types/meets"
@@ -28,15 +30,10 @@ export default defineEventHandler(async (event): Promise<ApiResponse<ResultsResp
     // Validate sort key
     const validSortKeys: SortKey[] = ["bestSquat", "bestBench", "bestDeadlift", "total", "gl"]
     if (!validSortKeys.includes(sortKey)) {
-      setResponseStatus(event, 400)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: `Invalid sort key. Must be one of: ${validSortKeys.join(", ")}`,
-          vi: `Khóa sắp xếp không hợp lệ. Phải là một trong: ${validSortKeys.join(", ")}`,
-        },
-      }
+      return fail(event, 400, {
+        en: `Invalid sort key. Must be one of: ${validSortKeys.join(", ")}`,
+        vi: `Khóa sắp xếp không hợp lệ. Phải là một trong: ${validSortKeys.join(", ")}`,
+      })
     }
 
     // Fetch results using optimized query function
@@ -56,28 +53,19 @@ export default defineEventHandler(async (event): Promise<ApiResponse<ResultsResp
       rank: index + 1,
     })) as ResultRanked[]
 
-    return {
-      success: true,
-      data: {
+    return ok(
+      {
         results: rankedResults,
         meets,
         athletes,
       },
-      message: {
+      {
         en: "Results retrieved successfully",
         vi: "Lấy kết quả thành công",
       },
-    }
+    )
   } catch (error) {
     logger.error("Error fetching results", { error })
-    setResponseStatus(event, 500)
-    return {
-      success: false,
-      data: null,
-      message: {
-        en: "Internal server error",
-        vi: "Lỗi máy chủ",
-      },
-    }
+    return fail(event, 500, MSG.internalError)
   }
 })

@@ -4,6 +4,8 @@ import { purchases } from "~/lib/external/drizzle/migrations/schema"
 import { config } from "~/lib/config/config"
 import { logger } from "~/lib/logger/logger"
 import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
+import { requireUser } from "~/server/utils/auth-guard"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseStatus } from "~/types/purchases"
 
@@ -15,11 +17,9 @@ function buildVietQrUrl(refCode: string, amount: number): string {
 
 export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseStatus[]>> => {
   try {
-    const currentUser = event.context.user
-
-    if (!currentUser?.vpfId) {
-      return fail(event, 401, { en: "Unauthorized", vi: "Không được phép" }) as ApiResponse<PurchaseStatus[]>
-    }
+    const auth = requireUser(event)
+    if (!auth.ok) return auth.error
+    const currentUser = auth.user
 
     const rows = await db
       .select({
@@ -53,6 +53,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseSta
     )
   } catch (error) {
     logger.error("Error listing purchases", { error: (error as Error).message })
-    return fail(event, 500, { en: "Internal server error", vi: "Lỗi máy chủ" }) as ApiResponse<PurchaseStatus[]>
+    return fail(event, 500, MSG.internalError)
   }
 })

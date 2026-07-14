@@ -106,8 +106,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue"
-import Button from "primevue/button"
-import Drawer from "primevue/drawer"
 import type { ApiResponse } from "~/types/api"
 import type { UserPublic } from "~/types/users"
 import type { VipBenefits } from "~/types/vip"

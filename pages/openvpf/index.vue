@@ -108,8 +108,6 @@
 </template>
 
 <script setup lang="ts">
-import DataTable from "primevue/datatable"
-import Column from "primevue/column"
 import AthletesRankingFilter from "@/components/AthletesRankingFilter.vue"
 import { useRankingFilters } from "@/composables/useRankingFilters"
 import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL, nameGradientStyle } from "@/lib/utils/client"

@@ -25,8 +25,11 @@ const getRequestHeader = vi.fn((event: H3Event, name: string) => {
   return headers[key] ?? headers[name] ?? null
 })
 const useRuntimeConfig = vi.fn(() => ({ vipUploadDir: "" }))
+// Nitro's cache layer is unavailable in-process; run the wrapped function uncached.
+const defineCachedFunction = vi.fn(<T>(fn: T) => fn)
 
 vi.stubGlobal("defineEventHandler", defineEventHandler)
+vi.stubGlobal("defineCachedFunction", defineCachedFunction)
 vi.stubGlobal("readBody", readBody)
 vi.stubGlobal("getRouterParam", getRouterParam)
 vi.stubGlobal("getQuery", getQuery)

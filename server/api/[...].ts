@@ -1,4 +1,5 @@
 import { logger } from "~/lib/logger/logger"
+import { fail } from "~/server/utils/api-response"
 import type { ApiResponse } from "~/types/api"
 
 export default defineEventHandler(async (event): Promise<ApiResponse<null>> => {
@@ -11,13 +12,8 @@ export default defineEventHandler(async (event): Promise<ApiResponse<null>> => {
     path,
   })
 
-  setResponseStatus(event, 404)
-  return {
-    success: false,
-    data: null,
-    message: {
-      en: `Endpoint not found: ${method} ${path}`,
-      vi: `Không tìm thấy endpoint: ${method} ${path}`,
-    },
-  }
+  return fail(event, 404, {
+    en: `Endpoint not found: ${method} ${path}`,
+    vi: `Không tìm thấy endpoint: ${method} ${path}`,
+  })
 })

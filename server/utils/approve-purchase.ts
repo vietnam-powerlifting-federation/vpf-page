@@ -3,6 +3,7 @@ import { db } from "~/lib/external/drizzle/drizzle"
 import { purchases, users, vipPurchaseMetadata } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
 import type { I18nMessage } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
 
 type ApprovalSuccess = {
   success: true
@@ -34,7 +35,7 @@ export async function approvePurchase(refCode: string, approvedBy: string | null
     .then((rows) => rows[0])
 
   if (!purchase) {
-    return { success: false, statusCode: 404, message: { en: "Purchase not found", vi: "Không tìm thấy giao dịch" } }
+    return { success: false, statusCode: 404, message: MSG.purchaseNotFound }
   }
 
   if (purchase.status !== "pending") {
@@ -54,7 +55,7 @@ export async function approvePurchase(refCode: string, approvedBy: string | null
 
   if (!metadata) {
     logger.error("VIP purchase metadata not found", { purchaseId: purchase.purchaseId })
-    return { success: false, statusCode: 500, message: { en: "Internal server error", vi: "Lỗi máy chủ" } }
+    return { success: false, statusCode: 500, message: MSG.internalError }
   }
 
   const athlete = await db
@@ -65,7 +66,7 @@ export async function approvePurchase(refCode: string, approvedBy: string | null
     .then((rows) => rows[0])
 
   if (!athlete) {
-    return { success: false, statusCode: 404, message: { en: "Athlete not found", vi: "Không tìm thấy vận động viên" } }
+    return { success: false, statusCode: 404, message: MSG.athleteNotFound }
   }
 
   // Extend from current expiry if still active, otherwise from today

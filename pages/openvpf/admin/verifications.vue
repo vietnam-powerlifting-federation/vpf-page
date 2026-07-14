@@ -84,19 +84,10 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue"
-import DataTable from "primevue/datatable"
-import Column from "primevue/column"
-import Button from "primevue/button"
-import Dialog from "primevue/dialog"
-import Textarea from "primevue/textarea"
-import Tag from "primevue/tag"
-import SelectButton from "primevue/selectbutton"
-import ProgressSpinner from "primevue/progressspinner"
-import { useToast } from "primevue/usetoast"
 import type { ApiResponse } from "~/types/api"
 import type { IdentityVerification, IdentityVerificationWithUser } from "~/types/verifications"
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const toast = useToast()
 
 const statusFilter = ref<"pending" | "approved" | "rejected" | "all">("pending")
@@ -107,7 +98,7 @@ const statusOptions = computed(() => [
   { label: t("adminVerifications.filterAll"), value: "all" },
 ])
 
-const msg = (r: ApiResponse<unknown>) => r.message[locale.value as "en" | "vi"] || r.message.en
+const msg = useApiMessage()
 
 const query = computed(() => (statusFilter.value === "all" ? {} : { status: statusFilter.value }))
 

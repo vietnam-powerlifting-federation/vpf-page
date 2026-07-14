@@ -232,10 +232,6 @@
 </template>
 
 <script setup lang="ts">
-import Button from "primevue/button"
-import InputText from "primevue/inputtext"
-import Textarea from "primevue/textarea"
-import ToggleSwitch from "primevue/toggleswitch"
 import type { VipBenefits } from "~/types/vip"
 
 type FormState = Partial<
@@ -249,7 +245,7 @@ type FormState = Partial<
   }
 >
 
-const props = defineProps<{
+defineProps<{
   disabled: boolean
   form: FormState
   avatarPreview: string | null

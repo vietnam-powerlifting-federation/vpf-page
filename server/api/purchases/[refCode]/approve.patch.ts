@@ -1,33 +1,29 @@
 import { approvePurchase } from "~/server/utils/approve-purchase"
 import { logger } from "~/lib/logger/logger"
 import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
+import { requireAdmin } from "~/server/utils/auth-guard"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseApproved } from "~/types/purchases"
 
 export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseApproved>> => {
   try {
-    const currentUser = event.context.user
-
-    if (!currentUser?.vpfId) {
-      return fail(event, 401, { en: "Unauthorized", vi: "Không được phép" }) as ApiResponse<PurchaseApproved>
-    }
-
-    if (currentUser.role !== "admin") {
-      return fail(event, 403, {
-        en: "Only admins can approve purchases",
-        vi: "Chỉ quản trị viên mới có thể duyệt giao dịch",
-      }) as ApiResponse<PurchaseApproved>
-    }
+    const auth = requireAdmin(event, {
+      en: "Only admins can approve purchases",
+      vi: "Chỉ quản trị viên mới có thể duyệt giao dịch",
+    })
+    if (!auth.ok) return auth.error
+    const currentUser = auth.user
 
     const refCode = getRouterParam(event, "refCode")
     if (!refCode) {
-      return fail(event, 400, { en: "Ref code is required", vi: "Mã tham chiếu là bắt buộc" }) as ApiResponse<PurchaseApproved>
+      return fail(event, 400, MSG.refCodeRequired)
     }
 
     const result = await approvePurchase(refCode, currentUser.vpfId)
 
     if (!result.success) {
-      return fail(event, result.statusCode, result.message) as ApiResponse<PurchaseApproved>
+      return fail(event, result.statusCode, result.message)
     }
 
     return ok(
@@ -43,6 +39,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseApp
     )
   } catch (error) {
     logger.error("Error approving purchase", { error: (error as Error).message })
-    return fail(event, 500, { en: "Internal server error", vi: "Lỗi máy chủ" }) as ApiResponse<PurchaseApproved>
+    return fail(event, 500, MSG.internalError)
   }
 })

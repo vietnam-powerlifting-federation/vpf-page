@@ -12,7 +12,7 @@
       <DataTable :value="rows" striped-rows class="w-full border border-surface-200 dark:border-surface-700">
         <Column field="hostDate" :header="$t('profile.competitionInfoTable.date')">
           <template #body="{ data }">
-            {{ formatDate(data.hostDate) }}
+            {{ formatDateDMY(data.hostDate) }}
           </template>
         </Column>
         <Column field="meetName" :header="$t('profile.competitionInfoTable.competition')">
@@ -57,12 +57,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue"
-import Button from "primevue/button"
-import Checkbox from "primevue/checkbox"
-import ProgressSpinner from "primevue/progressspinner"
-import DataTable from "primevue/datatable"
-import Column from "primevue/column"
 import { useProfileAthlete } from "~/composables/useProfileData"
+import { formatDateDMY } from "~/lib/utils/date"
 import type { MeetPublic } from "~/types/meets"
 import type { Result } from "~/types/results"
 
@@ -95,12 +91,6 @@ const rows = computed(() => {
     }
   })
 })
-
-function formatDate(dateStr: string | null | undefined) {
-  if (!dateStr) return "—"
-  const d = new Date(dateStr)
-  return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
-}
 
 const { t } = useI18n()
 

@@ -14,6 +14,7 @@ import type { Result, PersonalBestSummary } from "~/types/results"
 import type { LiftRecord } from "~/types/records"
 import type { MeetPublic } from "~/types/meets"
 import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
 
 type AthleteDetailsResponse = {
   athlete: UserPrivate | UserPublic
@@ -33,7 +34,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
       return fail(event, 400, {
         en: "Athlete ID is required",
         vi: "ID vận động viên là bắt buộc",
-      }) as ApiResponse<AthleteDetailsResponse>
+      })
     }
 
     let vpfId: string | undefined
@@ -53,15 +54,9 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
 
     if (!vpfId) {
       if (idParam === "self") {
-        return fail(event, 401, {
-          en: "Unauthorized",
-          vi: "Không được phép",
-        }) as ApiResponse<AthleteDetailsResponse>
+        return fail(event, 401, MSG.unauthorized)
       }
-      return fail(event, 404, {
-        en: "Athlete not found",
-        vi: "Không tìm thấy vận động viên",
-      }) as ApiResponse<AthleteDetailsResponse>
+      return fail(event, 404, MSG.athleteNotFound)
     }
 
     const isAdmin = currentUser?.role === "admin"
@@ -86,10 +81,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
     }
 
     if (!athlete) {
-      return fail(event, 404, {
-        en: "Athlete not found",
-        vi: "Không tìm thấy vận động viên",
-      }) as ApiResponse<AthleteDetailsResponse>
+      return fail(event, 404, MSG.athleteNotFound)
     }
 
     const query = getQuery(event)
@@ -142,6 +134,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
     })
   } catch (error) {
     logger.error("Error fetching athlete details", { error })
-    return fail(event, 500, { en: "Internal server error", vi: "Lỗi máy chủ" }) as ApiResponse<AthleteDetailsResponse>
+    return fail(event, 500, MSG.internalError)
   }
 })

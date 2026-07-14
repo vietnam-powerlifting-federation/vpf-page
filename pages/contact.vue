@@ -62,7 +62,6 @@
 
 <script setup>
 import { ref, computed } from "vue"
-import { useToast } from "primevue/usetoast"
 import { CONTACT_INFO } from "~/lib/config/contact"
 
 const toast = useToast()

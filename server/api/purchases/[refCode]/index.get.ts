@@ -4,6 +4,8 @@ import { purchases } from "~/lib/external/drizzle/migrations/schema"
 import { config } from "~/lib/config/config"
 import { logger } from "~/lib/logger/logger"
 import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
+import { requireUser } from "~/server/utils/auth-guard"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseStatus } from "~/types/purchases"
 
@@ -15,15 +17,13 @@ function buildVietQrUrl(refCode: string, amount: number): string {
 
 export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseStatus>> => {
   try {
-    const currentUser = event.context.user
-
-    if (!currentUser?.vpfId) {
-      return fail(event, 401, { en: "Unauthorized", vi: "Không được phép" }) as ApiResponse<PurchaseStatus>
-    }
+    const auth = requireUser(event)
+    if (!auth.ok) return auth.error
+    const currentUser = auth.user
 
     const refCode = getRouterParam(event, "refCode")
     if (!refCode) {
-      return fail(event, 400, { en: "Ref code is required", vi: "Mã tham chiếu là bắt buộc" }) as ApiResponse<PurchaseStatus>
+      return fail(event, 400, MSG.refCodeRequired)
     }
 
     const purchase = await db
@@ -44,14 +44,14 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseSta
       .then((rows) => rows[0])
 
     if (!purchase) {
-      return fail(event, 404, { en: "Purchase not found", vi: "Không tìm thấy giao dịch" }) as ApiResponse<PurchaseStatus>
+      return fail(event, 404, MSG.purchaseNotFound)
     }
 
     if (currentUser.role !== "admin" && purchase.vpfId !== currentUser.vpfId) {
       return fail(event, 403, {
         en: "You are not allowed to view this purchase",
         vi: "Bạn không có quyền xem giao dịch này",
-      }) as ApiResponse<PurchaseStatus>
+      })
     }
 
     return ok(
@@ -70,6 +70,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseSta
     )
   } catch (error) {
     logger.error("Error getting purchase", { error: (error as Error).message })
-    return fail(event, 500, { en: "Internal server error", vi: "Lỗi máy chủ" }) as ApiResponse<PurchaseStatus>
+    return fail(event, 500, MSG.internalError)
   }
 })

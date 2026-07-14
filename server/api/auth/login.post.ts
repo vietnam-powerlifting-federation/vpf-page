@@ -8,6 +8,7 @@ import { signToken } from "~/lib/utils/jwt"
 import type { ApiResponse, LoginResponse } from "~/types/api"
 import { z } from "zod"
 import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
 import { setAuthCookie } from "~/server/utils/auth-cookie"
 
 export default defineEventHandler(async (event): Promise<ApiResponse<LoginResponse>> => {
@@ -19,7 +20,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
 
     if (!password) {
       logger.debug("Login attempt without password", { vpfId: rawVpfId, email: rawEmail })
-      return fail(event, 400, { en: "Password is required", vi: "Mật khẩu là bắt buộc" }) as ApiResponse<LoginResponse>
+      return fail(event, 400, MSG.passwordRequired)
     }
 
     const LoginBodySchema = z.object({
@@ -37,13 +38,10 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
       return fail(event, 400, {
         en: "Invalid login credentials",
         vi: "Thông tin đăng nhập không hợp lệ",
-      }) as ApiResponse<LoginResponse>
+      })
     }
 
     const { vpfId, email } = validated.data
-
-    // Validate input
-    // (validated by schema)
 
     // Find user by vpfId or email
     const whereCondition = vpfId
@@ -56,7 +54,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
       return fail(event, 400, {
         en: "Invalid login credentials",
         vi: "Thông tin đăng nhập không hợp lệ",
-      }) as ApiResponse<LoginResponse>
+      })
     }
 
     // Query user with password for verification
@@ -77,7 +75,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
       return fail(event, 401, {
         en: "Invalid login credentials",
         vi: "Thông tin đăng nhập không hợp lệ",
-      }) as ApiResponse<LoginResponse>
+      })
     }
 
     // Check if user has a password set
@@ -86,7 +84,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
       return fail(event, 401, {
         en: "Invalid login credentials",
         vi: "Thông tin đăng nhập không hợp lệ",
-      }) as ApiResponse<LoginResponse>
+      })
     }
 
     // Compare password
@@ -97,7 +95,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
       return fail(event, 401, {
         en: "Invalid login credentials",
         vi: "Thông tin đăng nhập không hợp lệ",
-      }) as ApiResponse<LoginResponse>
+      })
     }
 
     // Query user again with public select for response
@@ -112,7 +110,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
       return fail(event, 500, {
         en: "An error occurred during login",
         vi: "Đã xảy ra lỗi khi đăng nhập",
-      }) as ApiResponse<LoginResponse>
+      })
     }
 
     // Generate JWT token
@@ -135,6 +133,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
     return fail(event, 500, {
       en: "An error occurred during login",
       vi: "Đã xảy ra lỗi khi đăng nhập",
-    }) as ApiResponse<LoginResponse>
+    })
   }
 })

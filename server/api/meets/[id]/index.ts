@@ -2,12 +2,16 @@ import { eq } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { meets } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
+import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
 import type { ApiResponse } from "~/types/api"
 import type { MeetPublic } from "~/types/meets"
 import type { Result } from "~/types/results"
 import type { UserPublicWithDecorators } from "~/types/users"
 import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import { DISQUALIFIED } from "~/lib/constants/constants"
+
+const MEET_NOT_FOUND = { en: "Meet not found", vi: "Không tìm thấy meet" }
 
 type MeetDetailsResponse = {
   meet: MeetPublic
@@ -57,15 +61,10 @@ export default defineEventHandler(async (event): Promise<ApiResponse<MeetDetails
     const identifier = getRouterParam(event, "id")
     
     if (!identifier) {
-      setResponseStatus(event, 400)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "Meet identifier is required",
-          vi: "Định danh meet là bắt buộc",
-        },
-      }
+      return fail(event, 400, {
+        en: "Meet identifier is required",
+        vi: "Định danh meet là bắt buộc",
+      })
     }
 
     let meetId: number
@@ -85,15 +84,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<MeetDetails
         .limit(1)
 
       if (!meetBySlug || meetBySlug.length === 0) {
-        setResponseStatus(event, 404)
-        return {
-          success: false,
-          data: null,
-          message: {
-            en: "Meet not found",
-            vi: "Không tìm thấy meet",
-          },
-        }
+        return fail(event, 404, MEET_NOT_FOUND)
       }
 
       meetId = meetBySlug[0].meetId
@@ -108,15 +99,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<MeetDetails
     const meet = foundMeet || returnedMeets[0] || null
 
     if (!meet) {
-      setResponseStatus(event, 404)
-      return {
-        success: false,
-        data: null,
-        message: {
-          en: "Meet not found",
-          vi: "Không tìm thấy meet",
-        },
-      }
+      return fail(event, 404, MEET_NOT_FOUND)
     }
 
     // Group results by sex, division, and weight class for lift placement calculation
@@ -162,28 +145,19 @@ export default defineEventHandler(async (event): Promise<ApiResponse<MeetDetails
       }
     })
 
-    return {
-      success: true,
-      data: {
+    return ok(
+      {
         meet,
         results: resultsWithPlacements,
         athletes: publicAthletes,
       },
-      message: {
+      {
         en: "Meet details retrieved successfully",
         vi: "Lấy thông tin meet thành công",
       },
-    }
+    )
   } catch (error) {
     logger.error("Error fetching meet details", { error })
-    setResponseStatus(event, 500)
-    return {
-      success: false,
-      data: null,
-      message: {
-        en: "Internal server error",
-        vi: "Lỗi máy chủ",
-      },
-    }
+    return fail(event, 500, MSG.internalError)
   }
 })

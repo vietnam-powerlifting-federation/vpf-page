@@ -73,10 +73,6 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from "vue"
-import { useToast } from "primevue/usetoast"
-import Button from "primevue/button"
-import ToggleSwitch from "primevue/toggleswitch"
-import ProgressSpinner from "primevue/progressspinner"
 import { buildPatchPayload } from "~/lib/utils/client"
 import { isVipActive } from "~/lib/utils/vip"
 import vipPreview from "~/assets/img/vip-preview.png"
@@ -90,7 +86,8 @@ definePageMeta({
   middleware: "auth",
 })
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
+const apiMessage = useApiMessage()
 const toast = useToast()
 
 const { data: profileResponse, pending } = useProfileAthlete()
@@ -356,7 +353,7 @@ async function handleSubmit() {
 }
 
 function handleResponse(response: ApiResponse<VipBenefits>) {
-  const msg = response.message[locale.value as "en" | "vi"] ?? response.message.en
+  const msg = apiMessage(response)
   if (response.success) {
     toast.add({ severity: "success", summary: t("general.success"), detail: msg, life: 3000 })
   } else {

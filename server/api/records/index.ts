@@ -1,5 +1,7 @@
 import { logger } from "~/lib/logger/logger"
 import { cachedFetchRecordsForYear } from "~/server/utils/cached-records"
+import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
 import type { ApiResponse } from "~/types/api"
 import type { LiftRecord } from "~/types/records"
 import type { MeetPublic } from "~/types/meets"
@@ -25,31 +27,21 @@ export default defineEventHandler(async (event): Promise<ApiResponse<RecordsResp
     })
 
     setHeader(event, "Cache-Control", "public, max-age=86400, s-maxage=86400")
-    setResponseStatus(event, 200)
 
-    return {
-      success: true,
-      data: {
+    return ok(
+      {
         records,
         meet: allMeets,
         athletes,
         results,
       },
-      message: {
+      {
         en: "Records retrieved successfully",
         vi: "Lấy thông tin kỷ lục thành công",
       },
-    }
+    )
   } catch (error) {
     logger.error("Error fetching records", { error })
-    setResponseStatus(event, 500)
-    return {
-      success: false,
-      data: null,
-      message: {
-        en: "Internal server error",
-        vi: "Lỗi máy chủ",
-      },
-    }
+    return fail(event, 500, MSG.internalError)
   }
 })

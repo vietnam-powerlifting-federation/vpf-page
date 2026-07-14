@@ -76,10 +76,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue"
-import { useToast } from "primevue/usetoast"
-import Button from "primevue/button"
-import DataTable from "primevue/datatable"
-import Column from "primevue/column"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseCreated } from "~/types/purchases"
 import type { CheckoutItem } from "~/types/checkout"
@@ -91,6 +87,7 @@ definePageMeta({
 })
 
 const { t, locale } = useI18n()
+const apiMessage = useApiMessage()
 const toast = useToast()
 const router = useRouter()
 
@@ -130,7 +127,7 @@ async function handleConfirm() {
     })) as ApiResponse<PurchaseCreated>
 
     if (!res.success || !res.data) {
-      const msg = res.message?.vi ?? res.message?.en ?? t("general.validationError")
+      const msg = apiMessage(res) || t("general.validationError")
       toast.add({ severity: "error", summary: t("general.updateError"), detail: msg, life: 5000 })
       return
     }

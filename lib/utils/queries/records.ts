@@ -16,6 +16,21 @@ export function getDivisionFromAge(age: number): RankedDivision {
   return "open"
 }
 
+/**
+ * Resolves the record divisions an athlete's attempt should count towards, based
+ * on their age at the meet. Falls back to "open" when age is unknown, and expands
+ * via RECORD_DIVISION_OVERRIDE (e.g. juniors also hold open records).
+ */
+export function getTargetDivisions(dob: number | null, systemYear: number | null): RankedDivision[] {
+  const originalDiv: RankedDivision = (dob === null || systemYear === null)
+    ? "open"
+    : getDivisionFromAge(systemYear - dob)
+
+  return (originalDiv in RECORD_DIVISION_OVERRIDE
+    ? RECORD_DIVISION_OVERRIDE[originalDiv]
+    : [originalDiv]) as RankedDivision[]
+}
+
 export function getBestAttempt(
   lift1: number | null,
   lift2: number | null,
@@ -32,6 +47,25 @@ export function getBestAttempt(
   return attempts.reduce((best, current) =>
     current.weight > best.weight ? current : best
   )
+}
+
+/**
+ * Running total after each deadlift attempt: best squat + best bench + the best
+ * deadlift achieved up to and including that attempt.
+ */
+export function getRunningTotals(result: Result): Array<{ attempt: 1 | 2 | 3; weight: number }> {
+  const bestSquatW = getBestAttempt(result.squat1, result.squat2, result.squat3)?.weight ?? 0
+  const bestBenchW = getBestAttempt(result.bench1, result.bench2, result.bench3)?.weight ?? 0
+
+  return ([1, 2, 3] as const).map((attempt) => ({
+    attempt,
+    weight: bestSquatW + bestBenchW + Math.max(
+      result.deadlift1 ?? 0,
+      attempt >= 2 ? (result.deadlift2 ?? 0) : 0,
+      attempt >= 3 ? (result.deadlift3 ?? 0) : 0,
+      0,
+    ),
+  }))
 }
 
 export type AttemptEvent = {
@@ -72,15 +106,7 @@ export function buildAttemptEvents(
     if (r.deadlift2) events.push({ year, lot, lift: "deadlift", liftOrder: 2, attempt: 2, weight: r.deadlift2, result: r })
     if (r.deadlift3) events.push({ year, lot, lift: "deadlift", liftOrder: 2, attempt: 3, weight: r.deadlift3, result: r })
 
-    const bestSquatW = getBestAttempt(r.squat1, r.squat2, r.squat3)?.weight ?? 0
-    const bestBenchW = getBestAttempt(r.bench1, r.bench2, r.bench3)?.weight ?? 0
-    for (const attempt of [1, 2, 3] as const) {
-      const weight = bestSquatW + bestBenchW + Math.max(
-        r.deadlift1 ?? 0,
-        attempt >= 2 ? (r.deadlift2 ?? 0) : 0,
-        attempt >= 3 ? (r.deadlift3 ?? 0) : 0,
-        0,
-      )
+    for (const { attempt, weight } of getRunningTotals(r)) {
       if (weight > 0) {
         events.push({ year, lot, lift: "total", liftOrder: 3, attempt, weight, result: r })
       }
@@ -137,13 +163,7 @@ export async function fetchAthleteRecordStatus(targetVpfId: string): Promise<Lif
     if (!meet) continue
 
     const dob = usersMap.get(result.vpfId)?.dob ?? null
-    const systemYear = meet.systemYear
-    const originalDiv: RankedDivision = (dob === null || systemYear === null)
-      ? "open" : getDivisionFromAge(systemYear - dob)
-
-    const targetDivisions = (originalDiv in RECORD_DIVISION_OVERRIDE
-      ? RECORD_DIVISION_OVERRIDE[originalDiv]
-      : [originalDiv]) as RankedDivision[]
+    const targetDivisions = getTargetDivisions(dob, meet.systemYear)
 
     for (const div of targetDivisions) {
       const key = `${result.sex}-${div}-${result.weightClass}-${lift}`
@@ -221,14 +241,8 @@ export async function fetchRecordsForYear(
     const meet = meetsMap.get(result.meetId)
     if (!meet) continue
 
-    const systemYear = meet.systemYear
     const dob = usersMap.get(result.vpfId)?.dob ?? null
-    const originalDiv: RankedDivision = (dob === null || systemYear === null)
-      ? "open" : getDivisionFromAge(systemYear - dob)
-
-    const targetDivisions = (originalDiv in RECORD_DIVISION_OVERRIDE
-      ? RECORD_DIVISION_OVERRIDE[originalDiv]
-      : [originalDiv]) as RankedDivision[]
+    const targetDivisions = getTargetDivisions(dob, meet.systemYear)
 
     const lot = result.lot ?? 999
 
@@ -258,15 +272,7 @@ export async function fetchRecordsForYear(
     }
 
     // Running totals after each deadlift attempt
-    const bestSquatW = bestSquat?.weight ?? 0
-    const bestBenchW = bestBench?.weight ?? 0
-    const totalAttempts = [
-      { attempt: 1 as const, weight: bestSquatW + bestBenchW + Math.max(result.deadlift1 ?? 0, 0) },
-      { attempt: 2 as const, weight: bestSquatW + bestBenchW + Math.max(result.deadlift1 ?? 0, result.deadlift2 ?? 0, 0) },
-      { attempt: 3 as const, weight: bestSquatW + bestBenchW + Math.max(result.deadlift1 ?? 0, result.deadlift2 ?? 0, result.deadlift3 ?? 0, 0) },
-    ]
-
-    for (const { attempt, weight } of totalAttempts) {
+    for (const { attempt, weight } of getRunningTotals(result)) {
       if (!weight || weight <= 0) continue
       for (const targetDiv of targetDivisions) {
         const key = `${result.sex}-${targetDiv}-${result.weightClass}-total`

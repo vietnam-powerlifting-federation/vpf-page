@@ -7,31 +7,28 @@ import { IdentityVerificationReviewSchema } from "~/lib/zod/schemas/identity-ver
 import type { ApiResponse } from "~/types/api"
 import type { IdentityVerification } from "~/types/verifications"
 import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
+import { requireAdmin } from "~/server/utils/auth-guard"
 import { readZodBody } from "~/server/utils/validate"
 
 export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVerification>> => {
   try {
-    const currentUser = event.context.user
-    if (!currentUser?.vpfId) {
-      return fail(event, 401, { en: "Unauthorized", vi: "Không được phép" }) as ApiResponse<IdentityVerification>
-    }
-
-    if (currentUser.role !== "admin") {
-      return fail(event, 403, {
-        en: "Only admins can review verifications",
-        vi: "Chỉ quản trị viên mới có thể duyệt hồ sơ",
-      }) as ApiResponse<IdentityVerification>
-    }
+    const auth = requireAdmin(event, {
+      en: "Only admins can review verifications",
+      vi: "Chỉ quản trị viên mới có thể duyệt hồ sơ",
+    })
+    if (!auth.ok) return auth.error
+    const currentUser = auth.user
 
     const idParam = getRouterParam(event, "id")
     const id = Number(idParam)
     if (!idParam || Number.isNaN(id)) {
-      return fail(event, 400, { en: "Invalid verification id", vi: "ID hồ sơ không hợp lệ" }) as ApiResponse<IdentityVerification>
+      return fail(event, 400, { en: "Invalid verification id", vi: "ID hồ sơ không hợp lệ" })
     }
 
     const validated = await readZodBody(event, IdentityVerificationReviewSchema)
     if (!validated.success) {
-      return fail(event, 400, { en: "Invalid review data", vi: "Dữ liệu duyệt không hợp lệ" }) as ApiResponse<IdentityVerification>
+      return fail(event, 400, { en: "Invalid review data", vi: "Dữ liệu duyệt không hợp lệ" })
     }
 
     const { decision, reviewNote } = validated.data
@@ -44,7 +41,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
       .then((rows) => rows[0])
 
     if (!verification) {
-      return fail(event, 404, { en: "Verification not found", vi: "Không tìm thấy hồ sơ" }) as ApiResponse<IdentityVerification>
+      return fail(event, 404, { en: "Verification not found", vi: "Không tìm thấy hồ sơ" })
     }
 
     const nowIso = new Date().toISOString()
@@ -63,7 +60,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
       .then((rows) => rows[0])
 
     if (!updated) {
-      return fail(event, 500, { en: "Failed to update verification", vi: "Cập nhật hồ sơ thất bại" }) as ApiResponse<IdentityVerification>
+      return fail(event, 500, { en: "Failed to update verification", vi: "Cập nhật hồ sơ thất bại" })
     }
 
     // On approval, copy the verified information onto the athlete's official record.
@@ -105,6 +102,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
     })
   } catch (error) {
     logger.error("Error reviewing verification", { error: (error as Error).message })
-    return fail(event, 500, { en: "Internal server error", vi: "Lỗi máy chủ" }) as ApiResponse<IdentityVerification>
+    return fail(event, 500, MSG.internalError)
   }
 })

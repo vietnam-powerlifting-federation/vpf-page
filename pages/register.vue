@@ -94,13 +94,11 @@
 
 <script setup lang="ts">
 import { ref } from "vue"
-import InputText from "primevue/inputtext"
-import Password from "primevue/password"
-import Button from "primevue/button"
 import type { ApiResponse, RegisterResponse } from "~/types/api"
 import loginBg from "~/assets/img/login-bg.png"
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
+const apiMessage = useApiMessage()
 
 const email = ref("")
 const password = ref("")
@@ -162,7 +160,7 @@ const handleRegister = async () => {
         await navigateTo("/verify-email")
       }
     } else {
-      registerError.value = response.message[locale.value as "en" | "vi"] || response.message.en || t("general.error")
+      registerError.value = apiMessage(response) || t("general.error")
     }
   } catch (error) {
     registerError.value = error instanceof Error ? error.message : t("general.error")

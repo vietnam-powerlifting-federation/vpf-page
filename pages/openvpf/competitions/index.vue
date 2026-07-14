@@ -165,9 +165,6 @@
 </template>
 
 <script setup lang="ts">
-import Button from "primevue/button"
-import DataTable from "primevue/datatable"
-import Column from "primevue/column"
 import type { MeetPublic } from "~/types/meets"
 import { useMeetsList } from "~/composables/useMeetsList"
 import { formatMeetDate, formatMeetTypeLabel } from "~/lib/utils/meet-formatters"

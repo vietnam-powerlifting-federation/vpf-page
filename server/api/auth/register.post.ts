@@ -10,6 +10,7 @@ import { sendVerificationCodeEmail } from "~/lib/utils/email"
 import type { ApiResponse, RegisterResponse } from "~/types/api"
 import { z } from "zod"
 import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
 import { readZodBody } from "~/server/utils/validate"
 import { setAuthCookie } from "~/server/utils/auth-cookie"
 
@@ -28,12 +29,12 @@ export default defineEventHandler(async (event): Promise<ApiResponse<RegisterRes
 
     if (!rawEmail) {
       logger.debug("Registration attempt without email")
-      return fail(event, 400, { en: "Email is required", vi: "Email là bắt buộc" }) as ApiResponse<RegisterResponse>
+      return fail(event, 400, { en: "Email is required", vi: "Email là bắt buộc" })
     }
 
     if (!rawPassword) {
       logger.debug("Registration attempt without password", { email: rawEmail })
-      return fail(event, 400, { en: "Password is required", vi: "Mật khẩu là bắt buộc" }) as ApiResponse<RegisterResponse>
+      return fail(event, 400, MSG.passwordRequired)
     }
 
     const RegisterBodySchema = z.object({
@@ -45,7 +46,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<RegisterRes
 
     const validated = await readZodBody(event, RegisterBodySchema)
     if (!validated.success) {
-      return fail(event, 400, { en: "Invalid input data", vi: "Dữ liệu đầu vào không hợp lệ" }) as ApiResponse<RegisterResponse>
+      return fail(event, 400, MSG.invalidInput)
     }
 
     const { email, password } = validated.data
@@ -64,7 +65,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<RegisterRes
 
     if (existingUser) {
       logger.debug("Registration attempt with existing email", { email })
-      return fail(event, 409, { en: "Email already exists", vi: "Email đã tồn tại" }) as ApiResponse<RegisterResponse>
+      return fail(event, 409, MSG.emailAlreadyExists)
     }
 
     // Hash password
@@ -95,7 +96,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<RegisterRes
 
     if (!insertResult) {
       logger.error("Failed to create user", { email })
-      return fail(event, 500, { en: "Failed to create user", vi: "Không thể tạo người dùng" }) as ApiResponse<RegisterResponse>
+      return fail(event, 500, MSG.failedCreateUser)
     }
 
     // Query the newly created user with public select
@@ -107,7 +108,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<RegisterRes
 
     if (!userPublic) {
       logger.error("Failed to fetch user public data after registration", { vpfId: insertResult.vpfId })
-      return fail(event, 500, { en: "Failed to create user", vi: "Không thể tạo người dùng" }) as ApiResponse<RegisterResponse>
+      return fail(event, 500, MSG.failedCreateUser)
     }
 
     if (skipVerification) {
@@ -135,9 +136,9 @@ export default defineEventHandler(async (event): Promise<ApiResponse<RegisterRes
 
     // Check if it's a unique constraint violation
     if (error instanceof Error && error.message.includes("unique")) {
-      return fail(event, 409, { en: "Email already exists", vi: "Email đã tồn tại" }) as ApiResponse<RegisterResponse>
+      return fail(event, 409, MSG.emailAlreadyExists)
     }
 
-    return fail(event, 500, { en: "An error occurred during registration", vi: "Đã xảy ra lỗi khi đăng ký" }) as ApiResponse<RegisterResponse>
+    return fail(event, 500, { en: "An error occurred during registration", vi: "Đã xảy ra lỗi khi đăng ký" })
   }
 })

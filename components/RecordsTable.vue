@@ -37,7 +37,7 @@
       </Column>
       <Column :header="$t('general.date')">
         <template #body="{ data }">
-          {{ data.meet?.hostDate ? formatDate(data.meet.hostDate) : "-" }}
+          {{ data.meet?.hostDate ? formatDateDMY(data.meet.hostDate) : "-" }}
         </template>
       </Column>
     </DataTable>
@@ -45,12 +45,11 @@
 </template>
 
 <script setup lang="ts">
-import DataTable from "primevue/datatable"
-import Column from "primevue/column"
 import type { UserPublicWithDecorators } from "~/types/users"
 import type { MeetPublic } from "~/types/meets"
 import type { Sex } from "~/types/union-types"
 import { formatWeightClass, nameGradientStyle } from "@/lib/utils/client"
+import { formatDateDMY } from "@/lib/utils/date"
 
 interface RecordRow {
   weightClass: number
@@ -73,18 +72,5 @@ const props = defineProps<{
 const formatWeight = (weight: number | null | undefined): string => {
   if (weight === null || weight === undefined) return "-"
   return `${weight.toFixed(2)}`
-}
-
-const formatDate = (date: string | null | undefined): string => {
-  if (!date) return "-"
-  try {
-    const d = new Date(date)
-    const day = String(d.getDate()).padStart(2, "0")
-    const month = String(d.getMonth() + 1).padStart(2, "0")
-    const year = d.getFullYear()
-    return `${day}/${month}/${year}`
-  } catch {
-    return date
-  }
 }
 </script>

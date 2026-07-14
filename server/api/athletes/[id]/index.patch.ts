@@ -7,28 +7,29 @@ import { UserSelfPatchSchema, UserRequiredSchema } from "~/lib/zod/schemas/users
 import type { ApiResponse } from "~/types/api"
 import type { UserPrivate } from "~/types/users"
 import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
+import { requireUser } from "~/server/utils/auth-guard"
 import { readZodBody } from "~/server/utils/validate"
 
 export default defineEventHandler(async (event): Promise<ApiResponse<UserPrivate>> => {
   try {
     const idParam = getRouterParam(event, "id")
-    const currentUser = event.context.user
 
     if (idParam !== "self") {
       return fail(event, 403, {
         en: "Only the current athlete profile can be updated",
         vi: "Chỉ có thể cập nhật hồ sơ vận động viên hiện tại",
-      }) as ApiResponse<UserPrivate>
+      })
     }
 
-    if (!currentUser || !currentUser.vpfId) {
-      return fail(event, 401, { en: "Unauthorized", vi: "Không được phép" }) as ApiResponse<UserPrivate>
-    }
+    const auth = requireUser(event)
+    if (!auth.ok) return auth.error
+    const currentUser = auth.user
 
     // Validate the patch data
     const validated = await readZodBody(event, UserSelfPatchSchema)
     if (!validated.success) {
-      return fail(event, 400, { en: "Invalid input data", vi: "Dữ liệu đầu vào không hợp lệ" }) as ApiResponse<UserPrivate>
+      return fail(event, 400, MSG.invalidInput)
     }
 
     // Get current athlete data to check required fields
@@ -40,7 +41,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<UserPrivate
       .then((rows) => rows[0])
 
     if (!currentUserData) {
-      return fail(event, 404, { en: "Athlete not found", vi: "Không tìm thấy vận động viên" }) as ApiResponse<UserPrivate>
+      return fail(event, 404, MSG.athleteNotFound)
     }
 
     // Merge current data with patch data
@@ -55,7 +56,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<UserPrivate
       return fail(event, 400, {
         en: "Required fields are missing or invalid",
         vi: "Các trường bắt buộc bị thiếu hoặc không hợp lệ",
-      }) as ApiResponse<UserPrivate>
+      })
     }
 
     // Update athlete in database
@@ -76,12 +77,12 @@ export default defineEventHandler(async (event): Promise<ApiResponse<UserPrivate
       return fail(event, 404, {
         en: "Athlete not found after update",
         vi: "Không tìm thấy vận động viên sau khi cập nhật",
-      }) as ApiResponse<UserPrivate>
+      })
     }
 
     return ok(updatedUser, { en: "Profile updated successfully", vi: "Cập nhật hồ sơ thành công" })
   } catch (error) {
     logger.error("Error updating athlete profile", { error })
-    return fail(event, 500, { en: "Internal server error", vi: "Lỗi máy chủ" }) as ApiResponse<UserPrivate>
+    return fail(event, 500, MSG.internalError)
   }
 })

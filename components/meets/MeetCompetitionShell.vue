@@ -6,7 +6,7 @@
       </h1>
       <div class="flex flex-wrap gap-4 text-sm text-surface-600">
         <span v-if="meet.hostDate">
-          <strong>{{ $t("meets.date") }}:</strong> {{ formatDate(meet.hostDate) }}
+          <strong>{{ $t("meets.date") }}:</strong> {{ formatMeetDate(meet.hostDate) }}
         </span>
         <span v-if="meet.city">
           <strong>{{ $t("meets.location") }}:</strong> {{ meet.city }}
@@ -49,6 +49,7 @@
 import type { MeetType } from "~/types/union-types"
 import type { MeetDataPayload } from "~/types/meets"
 import type { ApiResponse } from "~/types/api"
+import { formatMeetDate } from "~/lib/utils/meet-formatters"
 
 const props = defineProps<{
   slug: string
@@ -85,19 +86,6 @@ const tabClass = (tab: string): string => {
   const inactive =
     "border-b border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-0"
   return activeTab.value === tab ? `${base} ${active}` : `${base} ${inactive}`
-}
-
-const formatDate = (date: string | null): string => {
-  if (!date) return "-"
-  try {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  } catch {
-    return date
-  }
 }
 
 const formatMeetType = (type: MeetType | null): string => {

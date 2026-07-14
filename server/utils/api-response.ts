@@ -7,7 +7,7 @@ export function ok<T>(data: T, message: I18nMessage): ApiResponse<T> {
   return { success: true, data, message }
 }
 
-export function fail(event: H3Event, status: number, message: I18nMessage): ApiResponse<null> {
+export function fail<T = never>(event: H3Event, status: number, message: I18nMessage): ApiResponse<T> {
   setResponseStatus(event, status)
   return { success: false, data: null, message }
 }

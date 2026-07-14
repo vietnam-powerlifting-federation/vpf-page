@@ -54,10 +54,6 @@
 
 <script setup lang="ts">
 import { ref } from "vue"
-import { useToast } from "primevue/usetoast"
-import ProgressSpinner from "primevue/progressspinner"
-import Dialog from "primevue/dialog"
-import Tag from "primevue/tag"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseStatus } from "~/types/purchases"
 
