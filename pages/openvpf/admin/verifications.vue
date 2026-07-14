@@ -11,7 +11,7 @@
         option-value="value"
         :allow-empty="false"
       />
-      <Button icon="pi pi-refresh" :label="$t('adminVerifications.refresh')" outlined @click="refresh" />
+      <Button icon="pi pi-refresh" :label="$t('adminVerifications.refresh')" outlined @click="() => refresh()" />
     </div>
 
     <div v-if="pending" class="flex justify-center py-12">
