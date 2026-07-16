@@ -64,7 +64,7 @@ const isResending = ref(false)
 const error = ref<string | null>(null)
 const info = ref<string | null>(null)
 
-type StatusData = { emailVerified: boolean; verification: unknown }
+type StatusData = { emailVerified: boolean; identityVerified: boolean; verification: unknown }
 
 const msg = useApiMessage()
 

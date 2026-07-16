@@ -10,6 +10,7 @@ import { requireUser } from "~/server/utils/auth-guard"
 
 type SelfVerification = {
   emailVerified: boolean
+  identityVerified: boolean
   verification: IdentityVerification | null
 }
 
@@ -20,7 +21,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<SelfVerific
     const currentUser = auth.user
 
     const account = await db
-      .select({ emailVerified: users.emailVerified })
+      .select({ emailVerified: users.emailVerified, identityVerified: users.identityVerified })
       .from(users)
       .where(eq(users.vpfId, currentUser.vpfId))
       .limit(1)
@@ -38,7 +39,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<SelfVerific
       .then((rows) => rows[0] ?? null)
 
     return ok(
-      { emailVerified: account.emailVerified, verification },
+      { emailVerified: account.emailVerified, identityVerified: account.identityVerified, verification },
       { en: "Verification status retrieved", vi: "Lấy trạng thái xác minh thành công" },
     )
   } catch (error) {

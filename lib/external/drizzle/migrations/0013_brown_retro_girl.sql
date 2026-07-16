@@ -1,0 +1,1 @@
+ALTER TABLE "user_violations" RENAME COLUMN "system_year" TO "expire_year";

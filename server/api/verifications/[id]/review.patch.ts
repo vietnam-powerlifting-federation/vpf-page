@@ -63,7 +63,9 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
       return fail(event, 500, { en: "Failed to update verification", vi: "Cập nhật hồ sơ thất bại" })
     }
 
-    // On approval, copy the verified information onto the athlete's official record.
+    // On approval, copy the verified information onto the athlete's official record and
+    // flip the denormalized identityVerified flag. Rejection clears the flag so it always
+    // mirrors whether the athlete's current verification is approved.
     if (decision === "approved") {
       await db
         .update(users)
@@ -74,7 +76,13 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
           nationalId: verification.nationalId,
           address: verification.address,
           phoneNumber: verification.phoneNumber,
+          identityVerified: true,
         })
+        .where(eq(users.vpfId, verification.vpfId))
+    } else {
+      await db
+        .update(users)
+        .set({ identityVerified: false })
         .where(eq(users.vpfId, verification.vpfId))
     }
 

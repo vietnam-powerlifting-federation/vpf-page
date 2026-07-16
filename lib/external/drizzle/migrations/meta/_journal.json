@@ -92,6 +92,20 @@
       "when": 1784017301803,
       "tag": "0012_password_reset",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1784170874035,
+      "tag": "0013_brown_retro_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1784172719673,
+      "tag": "0014_identity_verified",
+      "breakpoints": true
     }
   ]
 }

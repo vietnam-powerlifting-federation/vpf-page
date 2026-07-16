@@ -29,7 +29,7 @@ async function resetTempUser(fields: Partial<typeof users.$inferInsert>): Promis
     })
     .onConflictDoUpdate({
       target: users.vpfId,
-      set: { emailVerified: false, emailVerificationCode: null, emailVerificationExpiresAt: null, ...fields },
+      set: { emailVerified: false, identityVerified: false, emailVerificationCode: null, emailVerificationExpiresAt: null, ...fields },
     })
 }
 
@@ -106,6 +106,7 @@ describe("API: GET /api/verifications/self", () => {
     const res = await handler(event)
     expect(res.success).toBe(true)
     expect(res.data?.emailVerified).toBe(true)
+    expect(res.data?.identityVerified).toBe(false)
     expect(res.data?.verification).toBeNull()
   })
 })
@@ -188,14 +189,17 @@ describe("API: PATCH /api/verifications/[id]/review", () => {
     expect(res.data?.reviewedBy).toBe(admin.vpfId)
     expect(res.data?.reviewedAt).toBeTruthy()
 
-    const user = await db.select({ nationality: users.nationality, dob: users.dob, fullName: users.fullName }).from(users).where(eq(users.vpfId, TEMP_VPF_ID)).then((r) => r[0])
+    const user = await db.select({ nationality: users.nationality, dob: users.dob, fullName: users.fullName, identityVerified: users.identityVerified }).from(users).where(eq(users.vpfId, TEMP_VPF_ID)).then((r) => r[0])
     expect(user?.nationality).toBe("VN")
     expect(user?.dob).toBe(1998)
     expect(user?.fullName).toBe("Verified Name")
+    expect(user?.identityVerified).toBe(true)
   })
 
-  it("rejects with a review note", async () => {
+  it("rejects with a review note and clears the identityVerified flag", async () => {
     const id = await seedVerification()
+    // Simulate a previously-approved account so we can prove rejection clears the flag.
+    await db.update(users).set({ identityVerified: true }).where(eq(users.vpfId, TEMP_VPF_ID))
     const handler = (await import("~/server/api/verifications/[id]/review.patch")).default
     const event = createMockH3Event({
       method: "PATCH",
@@ -207,5 +211,8 @@ describe("API: PATCH /api/verifications/[id]/review", () => {
     expect(res.success).toBe(true)
     expect(res.data?.status).toBe("rejected")
     expect(res.data?.reviewNote).toBe("Blurry photo")
+
+    const user = await db.select({ identityVerified: users.identityVerified }).from(users).where(eq(users.vpfId, TEMP_VPF_ID)).then((r) => r[0])
+    expect(user?.identityVerified).toBe(false)
   })
 })

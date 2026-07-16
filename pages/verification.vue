@@ -200,7 +200,7 @@ const statusBannerClass = computed(() => {
   return "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300"
 })
 
-type StatusData = { emailVerified: boolean; verification: IdentityVerification | null }
+type StatusData = { emailVerified: boolean; identityVerified: boolean; verification: IdentityVerification | null }
 
 const msg = useApiMessage()
 

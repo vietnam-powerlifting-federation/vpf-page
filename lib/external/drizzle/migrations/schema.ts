@@ -56,6 +56,7 @@ export const users = pgTable("users", {
   slug: text(),
   email: text(),
   role: roles().default("user").notNull(),
+  identityVerified: boolean("identity_verified").default(false).notNull(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   emailVerificationCode: text("email_verification_code"),
   emailVerificationExpiresAt: timestamp("email_verification_expires_at", { withTimezone: true, mode: "string" }),
@@ -134,7 +135,7 @@ export const userViolations = pgTable("user_violations", {
   vpfId: text("vpf_id").primaryKey().notNull(),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
   note: text(),
-  systemYear: smallint("system_year"),
+  expireYear: smallint("expire_year"),
 }, (table) => [
   foreignKey({
     columns: [table.vpfId],

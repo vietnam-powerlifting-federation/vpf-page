@@ -137,7 +137,7 @@ const { data: profileResponse, pending, error } = useProfileAthlete()
 const userData = computed(() => profileResponse.value?.athlete ?? null)
 
 // Identity verification status, surfaced on the profile with a link back to the verification page.
-type SelfVerification = { emailVerified: boolean; verification: IdentityVerification | null }
+type SelfVerification = { emailVerified: boolean; identityVerified: boolean; verification: IdentityVerification | null }
 const { data: verifyResponse } = useFetch<ApiResponse<SelfVerification>>("/api/verifications/self", {
   credentials: "include",
   ignoreResponseError: true,
