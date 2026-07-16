@@ -1,6 +1,6 @@
 # Competition registration flow
 
-How an athlete registers for a competition ("giải đấu"). This is the **design spec** transcribed from the process flowcharts — a frontend wizard flow plus its backend checks — reconciled against the actual schema and the existing purchase code so it can be built directly. It was **not yet implemented** when written: there is no registration endpoint under `server/api/` (closest is [server/api/auth/register.post.ts](../server/api/auth/register.post.ts), which is account signup, a different thing). Verify against code once it lands.
+How an athlete registers for a competition ("giải đấu"). This is the **design spec** transcribed from the process flowcharts — a frontend wizard flow plus its backend checks — reconciled against the actual schema and the existing purchase code so it can be built directly. 
 
 Throughout, "user" = athlete. "CCCD" is the Vietnamese citizen ID card. "Giải" / "giải đấu" = the competition/meet.
 
@@ -70,7 +70,7 @@ The system derives the valid options from the athlete's real data — the athlet
 - **Weight class** ("Hạng cân") — system uses the chosen sporting gender + real age to show only the weight classes valid for that gender (`WEIGHT_CLASS_MALE` / `WEIGHT_CLASS_FEMALE`).
 - **Age category** ("Độ tuổi") — backend computes real age from `dob` (a year) against `meets.systemYear` to show only valid divisions. Example: a 2026 competition with an athlete born in 2006 (age 20) shows only **Junior / Open**.
 
-See [Powerlifting domain rules](powerlifting-domain-rules.md) for the weight-class and division definitions this must line up with.
+See [Powerlifting domain rules](../memory/powerlifting-domain-rules.md) for the weight-class and division definitions this must line up with.
 
 ## 5. Add-ons
 
