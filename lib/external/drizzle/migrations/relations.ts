@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations"
-import { users, userViolations, meets, legacyMeetResults, teams, meetResults, vipBenefits, purchases, vipPurchaseMetadata, vpfMembershipPurchaseMetadata, competitionPurchaseMetadata, identityVerifications } from "./schema"
+import { users, userViolations, competitionBanList, meets, legacyMeetResults, teams, meetResults, vipBenefits, purchases, vipPurchaseMetadata, vpfMembershipPurchaseMetadata, competitionPurchaseMetadata, identityVerifications } from "./schema"
 
 export const userViolationsRelations = relations(userViolations, ({ one }) => ({
   user: one(users, {
@@ -8,9 +8,21 @@ export const userViolationsRelations = relations(userViolations, ({ one }) => ({
   }),
 }))
 
+export const competitionBanListRelations = relations(competitionBanList, ({ one }) => ({
+  meet: one(meets, {
+    fields: [competitionBanList.meetId],
+    references: [meets.meetId]
+  }),
+  user: one(users, {
+    fields: [competitionBanList.vpfId],
+    references: [users.vpfId]
+  }),
+}))
+
 export const usersRelations = relations(users, ({ one, many }) => ({
   vipBenefits: one(vipBenefits),
   userViolations: many(userViolations),
+  competitionBans: many(competitionBanList),
   legacyMeetResults: many(legacyMeetResults),
   meetResults: many(meetResults),
   purchases: many(purchases),
@@ -59,6 +71,7 @@ export const meetsRelations = relations(meets, ({ many }) => ({
   legacyMeetResults: many(legacyMeetResults),
   meetResults: many(meetResults),
   competitionPurchaseMetadata: many(competitionPurchaseMetadata),
+  competitionBans: many(competitionBanList),
 }))
 
 export const teamsRelations = relations(teams, ({ many }) => ({

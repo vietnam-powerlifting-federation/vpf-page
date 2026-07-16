@@ -1,8 +1,10 @@
+import type { PurchaseType, PurchaseStatusValue } from "~/types/union-types"
+
 export type PurchaseCreated = {
   purchaseId: number
   refCode: string
-  type: "vip" | "vpf_membership" | "competition"
-  plan: "6months" | "1year"
+  type: PurchaseType[]
+  plan?: "6months" | "1year"
   amount: number
   status: "pending"
   createdAt: string
@@ -22,15 +24,17 @@ export type PurchaseApproved = {
   status: "active"
   confirmedAt: string
   approvedBy: string
-  vipMembershipExpiresAt: string
+  type: PurchaseType[]
+  vipMembershipExpiresAt: string | null
+  vpfMembershipExpiresAt: string | null
 }
 
 export type PurchaseStatus = {
   purchaseId: number
   refCode: string
-  type: "vip" | "vpf_membership" | "competition"
+  type: PurchaseType[]
   amount: number
-  status: "pending" | "active" | "expired" | "cancelled"
+  status: PurchaseStatusValue
   createdAt: string
   confirmedAt: string | null
   cancelledAt: string | null

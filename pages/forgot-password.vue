@@ -19,13 +19,8 @@
               type="email"
               :placeholder="$t('forgotPassword.emailPlaceholder')"
               class="w-full"
-              :class="{ 'p-invalid': !!error }"
               autocomplete="email"
             />
-          </div>
-
-          <div v-if="error" class="p-4 rounded-lg border bg-primary/10 border-primary/20">
-            <p class="text-sm text-primary-700 dark:text-primary-300">{{ error }}</p>
           </div>
 
           <Button
@@ -70,6 +65,7 @@
               v-model="newPassword"
               :placeholder="$t('forgotPassword.newPasswordPlaceholder')"
               class="w-full"
+              input-class="w-full"
               :class="{ 'p-invalid': errors.newPassword }"
               :feedback="false"
               toggle-mask
@@ -87,19 +83,13 @@
               v-model="confirmPassword"
               :placeholder="$t('forgotPassword.confirmPasswordPlaceholder')"
               class="w-full"
+              input-class="w-full"
               :class="{ 'p-invalid': errors.confirmPassword }"
               :feedback="false"
               toggle-mask
               autocomplete="new-password"
             />
             <small v-if="errors.confirmPassword" class="p-error mt-1 block">{{ errors.confirmPassword }}</small>
-          </div>
-
-          <div v-if="error" class="p-4 rounded-lg border bg-primary/10 border-primary/20">
-            <p class="text-sm text-primary-700 dark:text-primary-300">{{ error }}</p>
-          </div>
-          <div v-if="info" class="p-4 rounded-lg border bg-surface-100 dark:bg-surface-800 border-surface-200 dark:border-surface-700">
-            <p class="text-sm text-surface-700 dark:text-surface-200">{{ info }}</p>
           </div>
 
           <Button
@@ -143,8 +133,6 @@ const confirmPassword = ref("")
 
 const isLoading = ref(false)
 const isResending = ref(false)
-const error = ref<string | null>(null)
-const info = ref<string | null>(null)
 
 const errors = ref({
   code: "",
@@ -154,11 +142,8 @@ const errors = ref({
 
 // `resend` reuses the same request from step 2, where the email is already filled in.
 const handleRequestCode = async (resend = false) => {
-  error.value = null
-  info.value = null
-
   if (!email.value.trim()) {
-    error.value = t("forgotPassword.emailRequired")
+    toast.add({ severity: "error", summary: t("general.error"), detail: t("forgotPassword.emailRequired"), life: 5000 })
     return
   }
 
@@ -174,12 +159,12 @@ const handleRequestCode = async (resend = false) => {
 
     if (res.success) {
       step.value = "reset"
-      info.value = msg(res)
+      toast.add({ severity: "info", summary: t("forgotPassword.title"), detail: msg(res), life: 4000 })
     } else {
-      error.value = msg(res) || t("general.error")
+      toast.add({ severity: "error", summary: t("general.error"), detail: msg(res) || t("general.error"), life: 5000 })
     }
   } catch (e) {
-    error.value = e instanceof Error ? e.message : t("general.error")
+    toast.add({ severity: "error", summary: t("general.error"), detail: e instanceof Error ? e.message : t("general.error"), life: 5000 })
   } finally {
     isLoading.value = false
     isResending.value = false
@@ -209,9 +194,6 @@ const validateResetForm = (): boolean => {
 }
 
 const handleResetPassword = async () => {
-  error.value = null
-  info.value = null
-
   if (!validateResetForm()) return
 
   isLoading.value = true
@@ -236,10 +218,10 @@ const handleResetPassword = async () => {
       })
       await navigateTo("/login")
     } else {
-      error.value = msg(res) || t("general.error")
+      toast.add({ severity: "error", summary: t("general.error"), detail: msg(res) || t("general.error"), life: 5000 })
     }
   } catch (e) {
-    error.value = e instanceof Error ? e.message : t("general.error")
+    toast.add({ severity: "error", summary: t("general.error"), detail: e instanceof Error ? e.message : t("general.error"), life: 5000 })
   } finally {
     isLoading.value = false
   }

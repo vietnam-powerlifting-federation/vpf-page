@@ -34,16 +34,13 @@
                 v-model="password"
                 :placeholder="$t('login.password')"
                 class="w-full"
+                input-class="w-full"
                 :class="{ 'p-invalid': errors.password }"
                 :feedback="false"
                 toggle-mask
                 autocomplete="current-password"
               />
               <small v-if="errors.password" class="p-error mt-1 block">{{ errors.password }}</small>
-            </div>
-
-            <div v-if="loginError" class="p-4 rounded-lg border bg-primary/10 border-primary/20">
-              <p class="text-sm text-primary-700 dark:text-primary-300">{{ loginError }}</p>
             </div>
 
             <NuxtLinkLocale
@@ -130,13 +127,13 @@ import loginBg from "~/assets/img/login-bg.png"
 
 const { t } = useI18n()
 const apiMessage = useApiMessage()
+const toast = useToast()
 const route = useRoute()
 
 // Form state
 const vpfIdOrEmail = ref("")
 const password = ref("")
 const isLoading = ref(false)
-const loginError = ref<string | null>(null)
 const showNoticeModal = ref(false)
 
 // Form errors
@@ -175,8 +172,6 @@ const validateForm = (): boolean => {
 
 // Handle login
 const handleLogin = async () => {
-  loginError.value = null
-
   if (!validateForm()) {
     return
   }
@@ -202,13 +197,19 @@ const handleLogin = async () => {
     }) as ApiResponse<LoginResponse>
 
     if (response.success) {
-      const redirectTo = typeof route.query.to === "string" ? route.query.to : "/"
-      await navigateTo(redirectTo)
+      toast.add({ severity: "success", summary: t("general.success"), detail: t("login.success"), life: 4000 })
+      // Gate accounts that have not verified their email before letting them into the app.
+      if (!response.data.emailVerified) {
+        await navigateTo("/verify-email")
+      } else {
+        const redirectTo = typeof route.query.to === "string" ? route.query.to : "/"
+        await navigateTo(redirectTo)
+      }
     } else {
-      loginError.value = apiMessage(response) || t("general.error")
+      toast.add({ severity: "error", summary: t("general.error"), detail: apiMessage(response) || t("general.error"), life: 5000 })
     }
   } catch (error) {
-    loginError.value = error instanceof Error ? error.message : t("general.error")
+    toast.add({ severity: "error", summary: t("general.error"), detail: error instanceof Error ? error.message : t("general.error"), life: 5000 })
   } finally {
     isLoading.value = false
   }

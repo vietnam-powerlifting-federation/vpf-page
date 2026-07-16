@@ -12,5 +12,6 @@ const { t } = useI18n()
 
 const show = () => {
   toast.add({ severity: "info", summary: t("test.info"), detail: t("test.messageContent"), life: 3000 })
+  navigateTo("/openvpf")
 }
 </script>

@@ -49,7 +49,7 @@ describe("API: purchases", () => {
       const res = await handler(event)
       expect(res.success).toBe(true)
       expect(res.data?.refCode).toMatch(/^\d{6}$/)
-      expect(res.data?.type).toBe("vip")
+      expect(res.data?.type).toEqual(["vip"])
       expect(res.data?.plan).toBe("6months")
       expect(res.data?.amount).toBe(300_000)
       expect(res.data?.status).toBe("pending")

@@ -1,23 +1,28 @@
 <template>
   <template v-if="meet">
-    <div class="mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold mb-4 text">
-        {{ meet.meetName }}
-      </h1>
-      <div class="flex flex-wrap gap-4 text-sm text-surface-600">
-        <span v-if="meet.hostDate">
-          <strong>{{ $t("meets.date") }}:</strong> {{ formatMeetDate(meet.hostDate) }}
-        </span>
-        <span v-if="meet.city">
-          <strong>{{ $t("meets.location") }}:</strong> {{ meet.city }}
-        </span>
-        <span v-if="meet.type">
-          <strong>{{ $t("meets.type") }}:</strong> {{ formatMeetType(meet.type) }}
-        </span>
-        <span v-if="meet.systemYear">
-          <strong>{{ $t("meets.year") }}:</strong> {{ meet.systemYear }}
-        </span>
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold mb-4 text">
+          {{ meet.meetName }}
+        </h1>
+        <div class="flex flex-wrap gap-4 text-sm text-surface-600">
+          <span v-if="meet.hostDate">
+            <strong>{{ $t("meets.date") }}:</strong> {{ formatMeetDate(meet.hostDate) }}
+          </span>
+          <span v-if="meet.city">
+            <strong>{{ $t("meets.location") }}:</strong> {{ meet.city }}
+          </span>
+          <span v-if="meet.type">
+            <strong>{{ $t("meets.type") }}:</strong> {{ formatMeetType(meet.type) }}
+          </span>
+          <span v-if="meet.systemYear">
+            <strong>{{ $t("meets.year") }}:</strong> {{ meet.systemYear }}
+          </span>
+        </div>
       </div>
+      <NuxtLinkLocale :to="registerPath" class="shrink-0">
+        <Button :label="$t('meets.register')" icon="pi pi-user-plus" size="small" />
+      </NuxtLinkLocale>
     </div>
 
     <div class="flex relative bg-surface-0 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-700 mb-6">
@@ -67,6 +72,7 @@ const meet = computed(() => {
   return payload?.data?.meet ?? null
 })
 
+const registerPath = computed(() => localePath(`/openvpf/competitions/${props.slug}/register`))
 const scoresheetPath = computed(() => localePath(`/openvpf/competitions/${props.slug}`))
 const detailedPath = computed(() => localePath(`/openvpf/competitions/${props.slug}/detailed`))
 const glRankingPath = computed(() => localePath(`/openvpf/competitions/${props.slug}/gl-ranking`))

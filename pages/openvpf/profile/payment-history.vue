@@ -20,7 +20,7 @@
         >
           <div class="w-full sm:flex-1 min-w-0">
             <div class="flex flex-wrap items-center gap-2 mb-1">
-              <span class="font-mono text-sm text-surface-400 break-all sm:break-normal">{{ $t(`profile.paymentHistory.type.${purchase.type}`) }} - VPF{{ purchase.refCode }}</span>
+              <span class="font-mono text-sm text-surface-400 break-all sm:break-normal">{{ purchase.type.map((t) => $t(`profile.paymentHistory.type.${t}`)).join(" + ") }} - VPF{{ purchase.refCode }}</span>
               <Tag :severity="statusSeverity(purchase.status)" :value="$t(`profile.paymentHistory.status.${purchase.status}`)" />
             </div>
             <div class="text-surface-0">{{ formatAmount(purchase.amount) }} VND</div>

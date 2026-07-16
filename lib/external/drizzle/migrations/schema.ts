@@ -25,6 +25,7 @@ export const meets = pgTable("meets", {
   hidden: boolean().default(false).notNull(),
   allowSpotterRegistration: boolean("allow_spotter_registration").default(true),
   allowGuestRegistration: boolean("allow_guest_registration").default(true),
+  entryFee: integer("entry_fee"),
   legacy: boolean("legacy").default(false),
 })
 
@@ -47,6 +48,7 @@ export const users = pgTable("users", {
   benchRackPin: smallint("bench_rack_pin").default(0),
   benchSafetyPin: smallint("bench_safety_pin").default(0),
   benchFootBlock: smallint("bench_foot_block").default(0),
+  competitionPhotoUrl: text("competition_photo_url"),
   legacyEmail: text("legacy_email"),
   vpfMembershipExpiresAt: date("vpf_membership_expires_at"),
   vipMembershipExpiresAt: date("vip_membership_expires_at"),
@@ -132,7 +134,8 @@ export const vipBenefits = pgTable("vip_benefits", {
 ])
 
 export const userViolations = pgTable("user_violations", {
-  vpfId: text("vpf_id").primaryKey().notNull(),
+  id: serial().primaryKey().notNull(),
+  vpfId: text("vpf_id").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
   note: text(),
   expireYear: smallint("expire_year"),
@@ -141,6 +144,26 @@ export const userViolations = pgTable("user_violations", {
     columns: [table.vpfId],
     foreignColumns: [users.vpfId],
     name: "user_violations_vpf_id_fkey"
+  }).onUpdate("cascade").onDelete("cascade"),
+])
+
+export const competitionBanList = pgTable("competition_ban_list", {
+  id: serial().primaryKey().notNull(),
+  meetId: integer("meet_id").notNull(),
+  vpfId: text("vpf_id").notNull(),
+  reason: text().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
+}, (table) => [
+  unique("competition_ban_list_meet_vpf_key").on(table.meetId, table.vpfId),
+  foreignKey({
+    columns: [table.meetId],
+    foreignColumns: [meets.meetId],
+    name: "competition_ban_list_meet_id_fkey"
+  }).onUpdate("cascade").onDelete("cascade"),
+  foreignKey({
+    columns: [table.vpfId],
+    foreignColumns: [users.vpfId],
+    name: "competition_ban_list_vpf_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
 ])
 
@@ -229,7 +252,7 @@ export const meetResults = pgTable("meet_results", {
 export const purchases = pgTable("purchases", {
   purchaseId: serial("purchase_id").primaryKey().notNull(),
   vpfId: text("vpf_id").notNull(),
-  type: purchaseType().notNull(),
+  type: purchaseType().array().notNull(),
   refCode: text("ref_code").notNull(),
   amount: integer("amount").notNull(),
   status: purchaseStatus().default("pending").notNull(),
@@ -279,6 +302,7 @@ export const competitionPurchaseMetadata = pgTable("competition_purchase_metadat
   sex: sexes().notNull(),
   weightClass: integer("weight_class").notNull(),
   division: division().notNull(),
+  mediaPlus: boolean("media_plus").default(false).notNull(),
 }, (table) => [
   foreignKey({
     columns: [table.purchaseId],

@@ -188,11 +188,11 @@ useSeoMeta({
 })
 
 function handleRegistration(meet: MeetPublic) {
-  navigateTo(`/meets/${meet.meetSlug}`)
+  navigateTo(`/openvpf/competitions/${meet.meetSlug}/register`)
 }
 
 function handleSpotterRegistration(meet: MeetPublic) {
-  navigateTo(`/meets/${meet.meetSlug}`)
+  navigateTo(`/openvpf/competitions/${meet.meetSlug}`)
 }
 
 function handleRowClick(meet: MeetPublic) {

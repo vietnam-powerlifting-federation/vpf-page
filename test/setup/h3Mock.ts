@@ -27,10 +27,13 @@ const getRequestHeader = vi.fn((event: H3Event, name: string) => {
 const useRuntimeConfig = vi.fn(() => ({ vipUploadDir: "" }))
 // Nitro's cache layer is unavailable in-process; run the wrapped function uncached.
 const defineCachedFunction = vi.fn(<T>(fn: T) => fn)
+// Multipart parts are injected onto the mock event by createMockH3Event.
+const readMultipartFormData = vi.fn(async (event: H3Event) => (event as { _multipartData?: unknown })._multipartData)
 
 vi.stubGlobal("defineEventHandler", defineEventHandler)
 vi.stubGlobal("defineCachedFunction", defineCachedFunction)
 vi.stubGlobal("readBody", readBody)
+vi.stubGlobal("readMultipartFormData", readMultipartFormData)
 vi.stubGlobal("getRouterParam", getRouterParam)
 vi.stubGlobal("getQuery", getQuery)
 vi.stubGlobal("setResponseStatus", setResponseStatus)

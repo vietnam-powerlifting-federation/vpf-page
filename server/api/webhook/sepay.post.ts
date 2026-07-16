@@ -53,7 +53,9 @@ export default defineEventHandler(async (event) => {
         transactionId: body.id,
         refCode,
         purchaseId: result.purchaseId,
+        type: result.type,
         vipMembershipExpiresAt: result.vipMembershipExpiresAt,
+        vpfMembershipExpiresAt: result.vpfMembershipExpiresAt,
       })
     }
   } catch (error) {

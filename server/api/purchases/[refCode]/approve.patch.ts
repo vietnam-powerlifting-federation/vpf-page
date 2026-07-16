@@ -33,7 +33,9 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseApp
         status: "active",
         confirmedAt: result.confirmedAt,
         approvedBy: currentUser.vpfId,
+        type: result.type,
         vipMembershipExpiresAt: result.vipMembershipExpiresAt,
+        vpfMembershipExpiresAt: result.vpfMembershipExpiresAt,
       },
       { en: "Purchase approved successfully", vi: "Duyệt giao dịch thành công" },
     )

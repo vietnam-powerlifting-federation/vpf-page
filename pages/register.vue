@@ -62,10 +62,6 @@
               <small v-if="errors.confirmPassword" class="p-error mt-1 block">{{ errors.confirmPassword }}</small>
             </div>
 
-            <div v-if="registerError" class="p-4 rounded-lg border bg-primary/10 border-primary/20">
-              <p class="text-sm text-primary-700 dark:text-primary-300">{{ registerError }}</p>
-            </div>
-
             <Button
               type="submit"
               :label="$t('register.registerButton')"
@@ -99,12 +95,12 @@ import loginBg from "~/assets/img/login-bg.png"
 
 const { t } = useI18n()
 const apiMessage = useApiMessage()
+const toast = useToast()
 
 const email = ref("")
 const password = ref("")
 const confirmPassword = ref("")
 const isLoading = ref(false)
-const registerError = ref<string | null>(null)
 
 const errors = ref({
   email: "",
@@ -141,7 +137,6 @@ const validateForm = (): boolean => {
 }
 
 const handleRegister = async () => {
-  registerError.value = null
   if (!validateForm()) return
 
   isLoading.value = true
@@ -160,10 +155,10 @@ const handleRegister = async () => {
         await navigateTo("/verify-email")
       }
     } else {
-      registerError.value = apiMessage(response) || t("general.error")
+      toast.add({ severity: "error", summary: t("general.error"), detail: apiMessage(response) || t("general.error"), life: 5000 })
     }
   } catch (error) {
-    registerError.value = error instanceof Error ? error.message : t("general.error")
+    toast.add({ severity: "error", summary: t("general.error"), detail: error instanceof Error ? error.message : t("general.error"), life: 5000 })
   } finally {
     isLoading.value = false
   }

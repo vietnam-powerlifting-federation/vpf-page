@@ -13,6 +13,7 @@ export const userPrivateSelect = {
   benchRackPin: users.benchRackPin,
   benchSafetyPin: users.benchSafetyPin,
   benchFootBlock: users.benchFootBlock,
+  competitionPhotoUrl: users.competitionPhotoUrl,
   legacyEmail: users.legacyEmail,
   vpfMembershipExpiresAt: users.vpfMembershipExpiresAt,
   vipMembershipExpiresAt: users.vipMembershipExpiresAt,

@@ -64,6 +64,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
         email: users.email,
         password: users.password,
         role: users.role,
+        emailVerified: users.emailVerified,
       })
       .from(users)
       .where(whereCondition)
@@ -125,7 +126,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<LoginRespon
     setAuthCookie(event, token)
 
     return ok(
-      { user: userPublic, token },
+      { user: userPublic, token, emailVerified: user.emailVerified },
       { en: "Login successful", vi: "Đăng nhập thành công" },
     )
   } catch (error) {

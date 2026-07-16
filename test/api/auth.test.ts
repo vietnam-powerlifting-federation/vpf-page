@@ -96,6 +96,18 @@ describe("API: auth", () => {
       expect(res.data?.user?.vpfId).toBe(fixtureUsers[0].vpfId)
       expect(res.data?.token).toBeDefined()
     })
+
+    it("returns the account's emailVerified status so the client can gate unverified logins", async () => {
+      await resetTempUser({ emailVerified: true })
+      const handler = (await import("~/server/api/auth/login.post")).default
+      const event = createMockH3Event({
+        body: { email: RESET_EMAIL, password: "oldpassword123" },
+        method: "POST",
+      })
+      const res = await handler(event)
+      expect(res.success).toBe(true)
+      expect(res.data?.emailVerified).toBe(true)
+    })
   })
 
   describe("POST /api/auth/register", () => {

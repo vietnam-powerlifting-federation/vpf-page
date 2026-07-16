@@ -16,15 +16,7 @@
               inputmode="numeric"
               :placeholder="$t('verifyEmail.codePlaceholder')"
               class="w-full tracking-widest"
-              :class="{ 'p-invalid': !!error }"
             />
-          </div>
-
-          <div v-if="error" class="p-4 rounded-lg border bg-primary/10 border-primary/20">
-            <p class="text-sm text-primary-700 dark:text-primary-300">{{ error }}</p>
-          </div>
-          <div v-if="info" class="p-4 rounded-lg border bg-surface-100 dark:bg-surface-800 border-surface-200 dark:border-surface-700">
-            <p class="text-sm text-surface-700 dark:text-surface-200">{{ info }}</p>
           </div>
 
           <Button
@@ -57,12 +49,11 @@ import { ref, onMounted } from "vue"
 import type { ApiResponse } from "~/types/api"
 
 const { t } = useI18n()
+const toast = useToast()
 
 const code = ref("")
 const isLoading = ref(false)
 const isResending = ref(false)
-const error = ref<string | null>(null)
-const info = ref<string | null>(null)
 
 type StatusData = { emailVerified: boolean; identityVerified: boolean; verification: unknown }
 
@@ -80,10 +71,8 @@ onMounted(async () => {
 })
 
 const handleVerify = async () => {
-  error.value = null
-  info.value = null
   if (!code.value.trim()) {
-    error.value = t("verifyEmail.codeRequired")
+    toast.add({ severity: "error", summary: t("general.error"), detail: t("verifyEmail.codeRequired"), life: 5000 })
     return
   }
   isLoading.value = true
@@ -97,18 +86,16 @@ const handleVerify = async () => {
     if (res.success) {
       await navigateTo("/verification")
     } else {
-      error.value = msg(res) || t("general.error")
+      toast.add({ severity: "error", summary: t("general.error"), detail: msg(res) || t("general.error"), life: 5000 })
     }
   } catch (e) {
-    error.value = e instanceof Error ? e.message : t("general.error")
+    toast.add({ severity: "error", summary: t("general.error"), detail: e instanceof Error ? e.message : t("general.error"), life: 5000 })
   } finally {
     isLoading.value = false
   }
 }
 
 const handleResend = async () => {
-  error.value = null
-  info.value = null
   isResending.value = true
   try {
     const res = await $fetch("/api/auth/resend-verification", {
@@ -116,9 +103,13 @@ const handleResend = async () => {
       ignoreResponseError: true,
       credentials: "include",
     }) as ApiResponse<null>
-    info.value = res.success ? (msg(res) || t("verifyEmail.resent")) : (msg(res) || t("general.error"))
+    if (res.success) {
+      toast.add({ severity: "info", summary: t("verifyEmail.title"), detail: msg(res) || t("verifyEmail.resent"), life: 4000 })
+    } else {
+      toast.add({ severity: "error", summary: t("general.error"), detail: msg(res) || t("general.error"), life: 5000 })
+    }
   } catch (e) {
-    error.value = e instanceof Error ? e.message : t("general.error")
+    toast.add({ severity: "error", summary: t("general.error"), detail: e instanceof Error ? e.message : t("general.error"), life: 5000 })
   } finally {
     isResending.value = false
   }

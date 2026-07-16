@@ -3,40 +3,20 @@ import { z } from "zod"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { purchases, users, vipPurchaseMetadata } from "~/lib/external/drizzle/migrations/schema"
 import { VIP_MEMBERSHIP_PLANS } from "~/lib/constants/constants"
-import { config } from "~/lib/config/config"
 import { logger } from "~/lib/logger/logger"
 import { ok, fail } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
 import { requireUser } from "~/server/utils/auth-guard"
 import { readZodBody } from "~/server/utils/validate"
+import { buildVietQrUrl, generateUniqueRefCode } from "~/server/utils/purchase-helpers"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseCreated } from "~/types/purchases"
-
-function buildVietQrUrl(refCode: string, amount: number): string {
-  const { bankId, accountNo, accountName } = config.vietqr
-  const params = new URLSearchParams({ amount: String(amount), addInfo: `VPF${refCode}`, accountName })
-  return `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?${params.toString()}`
-}
 
 const CreatePurchaseSchema = z.object({
   plan: z.enum(["6months", "1year"]),
   type: z.enum(["vip", "vpf_membership", "competition"]).optional().default("vip"),
   vpfId: z.string().optional(),
 })
-
-async function generateUniqueRefCode(): Promise<string> {
-  for (let attempt = 0; attempt < 10; attempt++) {
-    const code = Math.floor(Math.random() * 1_000_000).toString().padStart(6, "0")
-    const existing = await db
-      .select({ refCode: purchases.refCode })
-      .from(purchases)
-      .where(eq(purchases.refCode, code))
-      .limit(1)
-      .then((rows) => rows[0])
-    if (!existing) return code
-  }
-  throw new Error("Failed to generate unique ref code after 10 attempts")
-}
 
 export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseCreated>> => {
   try {
@@ -82,7 +62,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseCre
       .insert(purchases)
       .values({
         vpfId: resolvedVpfId,
-        type,
+        type: [type],
         refCode,
         amount: planConfig.amount,
         status: "pending",
@@ -108,7 +88,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseCre
       {
         purchaseId: inserted.purchaseId,
         refCode,
-        type,
+        type: [type],
         plan,
         amount: planConfig.amount,
         status: "pending",

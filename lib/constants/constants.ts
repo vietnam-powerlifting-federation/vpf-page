@@ -36,3 +36,12 @@ export const VIP_MEMBERSHIP_PLANS = {
 } as const
 
 export type VipMembershipPlan = keyof typeof VIP_MEMBERSHIP_PLANS
+
+// Yearly VPF membership fee (VND) owed by a member who has not paid for the competition's year.
+export const VPF_MEMBERSHIP_FEE = 200_000
+
+// Media Plus add-on fee (VND). TODO(vpf): confirm the real price with the federation.
+export const MEDIA_PLUS_FEE = 100_000
+
+// Minimum age (IPF) at which an athlete may enter a competition.
+export const MIN_COMPETITION_AGE = 14

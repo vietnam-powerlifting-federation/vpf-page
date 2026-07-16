@@ -119,12 +119,15 @@ const navItems = [
   { to: "/contact", label: "openvpf.headerNav.contact" },
 ] as const
 
+const nuxtApp = useNuxtApp()
 const headers = import.meta.server ? useRequestHeaders(["cookie"]) : undefined
 const { data } = await useFetch<ApiResponse<AthleteResponse>>("/api/athletes/self", {
+  key: "openvpf-header-athlete",
   ignoreResponseError: true,
   credentials: "include",
   headers,
   query: { includeVipSettings: true },
+  getCachedData: (key) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
 })
 
 const isLoggedIn = computed(() => data.value?.success === true)

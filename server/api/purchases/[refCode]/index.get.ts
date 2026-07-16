@@ -1,19 +1,13 @@
 import { eq } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { purchases } from "~/lib/external/drizzle/migrations/schema"
-import { config } from "~/lib/config/config"
 import { logger } from "~/lib/logger/logger"
 import { ok, fail } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
 import { requireUser } from "~/server/utils/auth-guard"
+import { buildVietQrUrl } from "~/server/utils/purchase-helpers"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseStatus } from "~/types/purchases"
-
-function buildVietQrUrl(refCode: string, amount: number): string {
-  const { bankId, accountNo, accountName } = config.vietqr
-  const params = new URLSearchParams({ amount: String(amount), addInfo: `VPF${refCode}`, accountName })
-  return `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?${params.toString()}`
-}
 
 export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseStatus>> => {
   try {
