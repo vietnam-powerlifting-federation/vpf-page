@@ -204,6 +204,22 @@
         <section v-else-if="step === 'review'" class="space-y-5">
           <h2 class="text-lg font-semibold text-surface-0">{{ $t("competitionRegistration.reviewLegend") }}</h2>
 
+          <!-- A voucher picker per owed type; Media Plus has no type and is never discounted. -->
+          <div v-if="voucherTypes.length" class="bg-surface-800 rounded-lg p-4 space-y-4">
+            <div>
+              <h3 class="text-sm font-semibold text-surface-200">{{ $t("competitionRegistration.voucherLegend") }}</h3>
+              <p class="text-xs text-surface-500 mt-1">{{ $t("competitionRegistration.voucherHint") }}</p>
+            </div>
+            <CheckoutVoucherPicker
+              v-for="vt in voucherTypes"
+              :key="vt"
+              :model-value="selectedVoucherCodes[vt] ?? null"
+              :type="vt"
+              :vouchers="vouchers"
+              @update:model-value="selectedVoucherCodes[vt] = $event"
+            />
+          </div>
+
           <div class="bg-surface-800 rounded-lg p-4 space-y-2 text-sm">
             <div class="flex justify-between">
               <span class="text-surface-400">{{ $t("competitionRegistration.entryFee") }}</span>
@@ -213,13 +229,17 @@
               <span class="text-surface-400">{{ $t("competitionRegistration.membershipFee") }}</span>
               <span class="text-surface-0">{{ formatAmount(fees.membershipFee) }} VND</span>
             </div>
+            <div v-for="line in discountedLines" :key="line.type" class="flex justify-between text-primary">
+              <span>{{ $t("competitionRegistration.discount") }} · {{ typeLabel(line.type) }}</span>
+              <span>-{{ formatAmount(line.discount) }} VND</span>
+            </div>
             <div v-if="fees.mediaPlusFee > 0" class="flex justify-between">
               <span class="text-surface-400">{{ $t("competitionRegistration.mediaPlusFee") }}</span>
               <span class="text-surface-0">{{ formatAmount(fees.mediaPlusFee) }} VND</span>
             </div>
             <div class="flex justify-between border-t border-surface-700 pt-2 font-semibold">
               <span class="text-surface-200">{{ $t("competitionRegistration.total") }}</span>
-              <span class="text-primary">{{ formatAmount(fees.total) }} VND</span>
+              <span class="text-primary">{{ formatAmount(totals.payable) }} VND</span>
             </div>
           </div>
 
@@ -230,7 +250,7 @@
         </section>
 
         <!-- Step 5: payment -->
-        <section v-else-if="step === 'payment' && purchase">
+        <section v-else-if="step === 'payment' && purchase?.qrUrl">
           <CheckoutQrPayment
             :ref-code="purchase.refCode"
             :amount="purchase.amount"
@@ -264,8 +284,11 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from "vue"
 import { formatWeightClass } from "~/lib/utils/client"
+import { computeVoucherTotals } from "~/lib/utils/vouchers"
 import type { ApiResponse } from "~/types/api"
 import type { RegistrationEligibility, CompetitionRegistrationCreated, RegistrationIdentityState } from "~/types/competitions"
+import type { PurchaseType } from "~/types/union-types"
+import type { Voucher } from "~/types/vouchers"
 
 definePageMeta({
   layout: "openvpf",
@@ -393,6 +416,46 @@ const fees = computed(() => {
   return { entryFee, membershipFee, mediaPlusFee, total: entryFee + membershipFee + mediaPlusFee }
 })
 
+const { vouchers } = useAthleteVouchers({ available: true }, `registration-vouchers-${slug}`)
+const { typeLabel } = useVoucherDisplay()
+const selectedVoucherCodes = reactive<Partial<Record<PurchaseType, string | null>>>({})
+
+/** Only offer a picker for a fee this registration actually owes. */
+const voucherTypes = computed<PurchaseType[]>(() => {
+  const types: PurchaseType[] = []
+  if (fees.value.entryFee > 0) types.push("competition")
+  if (fees.value.membershipFee > 0) types.push("vpf_membership")
+  return types
+})
+
+// Clear a selection whose fee stopped being owed (e.g. switching to guest capacity),
+// so a stale code is never submitted.
+watch(voucherTypes, (types) => {
+  for (const key of Object.keys(selectedVoucherCodes) as PurchaseType[]) {
+    if (!types.includes(key)) selectedVoucherCodes[key] = null
+  }
+})
+
+const appliedVouchers = computed(() =>
+  voucherTypes.value
+    .map((vt) => vouchers.value.find((v) => v.code === selectedVoucherCodes[vt]))
+    .filter((v): v is Voucher => Boolean(v)),
+)
+
+/**
+ * The live total, computed with the same function the server uses at creation.
+ * The server recomputes authoritatively and its number wins.
+ */
+const totals = computed(() =>
+  computeVoucherTotals(
+    { competition: fees.value.entryFee, vpf_membership: fees.value.membershipFee },
+    appliedVouchers.value,
+    fees.value.mediaPlusFee,
+  ),
+)
+
+const discountedLines = computed(() => totals.value.lines.filter((line) => line.discount > 0))
+
 const blockMessage = computed(() => {
   const e = eligibility.value
   if (!e?.bans) return ""
@@ -431,6 +494,8 @@ async function submit() {
     fd.append("benchSafetyPin", String(form.benchSafetyPin))
     fd.append("benchFootBlock", String(form.benchFootBlock))
     fd.append("mediaPlus", String(form.mediaPlus))
+    // Comma-separated: multipart fields arrive as text.
+    fd.append("voucherCodes", appliedVouchers.value.map((v) => v.code).join(","))
     if (photoFile.value) fd.append("competitionPhoto", photoFile.value)
 
     const res = await $fetch<ApiResponse<CompetitionRegistrationCreated>>(`/api/meets/${slug}/register`, {
@@ -444,7 +509,8 @@ async function submit() {
     }
 
     purchase.value = res.data
-    step.value = "payment"
+    // A fully-discounted registration arrives already active: skip the QR entirely.
+    step.value = res.data.status === "active" ? "done" : "payment"
   } catch {
     toast.add({ severity: "error", summary: t("general.updateError"), detail: t("competitionRegistration.submitError"), life: 5000 })
   } finally {

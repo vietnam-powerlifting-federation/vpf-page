@@ -1,65 +1,102 @@
 <template>
   <div class="min-h-full">
     <h1 class="text-2xl font-bold mb-6 text-surface-0">{{ $t("profile.tabs.voucher") }}</h1>
-    <p class="mb-4 text-surface-500 text-sm">
-      <span class="rounded bg-surface-700 px-2 py-0.5">{{ $t("profile.demo") }}</span>
-    </p>
 
-    <DataTable :value="demoVouchers" striped-rows class="w-full border border-surface-200 dark:border-surface-700">
+    <div v-if="pending" class="flex justify-center py-12">
+      <ProgressSpinner />
+    </div>
+
+    <Message v-else-if="error" severity="error" :closable="false">
+      {{ $t("profile.voucherTable.loadError") }}
+    </Message>
+
+    <DataTable v-else :value="vouchers" striped-rows class="w-full border border-surface-200 dark:border-surface-700">
       <template #empty>
         <div class="text-surface-400">{{ $t("profile.voucherTable.noVouchers") }}</div>
       </template>
-      <Column field="receivedDate" :header="$t('profile.voucherTable.receivedDate')" />
-      <Column field="expiryDate" :header="$t('profile.voucherTable.expiryDate')" />
+      <Column :header="$t('profile.voucherTable.receivedDate')">
+        <template #body="{ data }">{{ formatDateDMY(data.createdAt) }}</template>
+      </Column>
+      <Column :header="$t('profile.voucherTable.expiryDate')">
+        <template #body="{ data }">{{ formatDateDMY(data.expiresAt) }}</template>
+      </Column>
       <Column :header="$t('profile.voucherTable.voucherType')">
         <template #body="{ data }">
-          <span :class="data.active ? 'text-primary' : ''">{{ data.type }}</span>
+          <span :class="data.status === 'active' ? 'text-primary' : 'text-surface-300'">{{ describe(data) }}</span>
         </template>
       </Column>
       <Column :header="$t('profile.voucherTable.status')">
         <template #body="{ data }">
-          <span :class="data.active ? 'text-primary' : 'text-surface-400'">{{ data.statusLabel }}</span>
+          <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" />
         </template>
       </Column>
       <Column :header="$t('profile.voucherTable.action')">
         <template #body="{ data }">
-          <Button size="small" :label="$t('profile.voucherTable.viewDetail')" :disabled="!data.active" @click="() => {}" />
+          <Button size="small" :label="$t('profile.voucherTable.viewDetail')" outlined @click="openDetail(data)" />
         </template>
       </Column>
     </DataTable>
+
+    <Dialog
+      v-model:visible="detailVisible"
+      :header="$t('profile.voucherTable.detailTitle')"
+      modal
+      class="w-full max-w-md"
+    >
+      <dl v-if="selected" class="space-y-3 text-sm">
+        <div class="flex justify-between gap-4">
+          <dt class="text-surface-400">{{ $t("profile.voucherTable.code") }}</dt>
+          <dd class="font-mono font-semibold text-primary">{{ selected.code }}</dd>
+        </div>
+        <div class="flex justify-between gap-4">
+          <dt class="text-surface-400">{{ $t("profile.voucherTable.discount") }}</dt>
+          <dd class="text-surface-0">{{ describe(selected) }}</dd>
+        </div>
+        <div class="flex justify-between gap-4">
+          <dt class="text-surface-400">{{ $t("profile.voucherTable.expiryDate") }}</dt>
+          <dd class="text-surface-0">{{ formatDateDMY(selected.expiresAt) }}</dd>
+        </div>
+        <div class="flex justify-between gap-4">
+          <dt class="text-surface-400">{{ $t("profile.voucherTable.status") }}</dt>
+          <dd><Tag :value="statusLabel(selected.status)" :severity="statusSeverity(selected.status)" /></dd>
+        </div>
+        <div v-if="selected.redeemedRefCode" class="flex justify-between gap-4">
+          <dt class="text-surface-400">{{ $t("profile.voucherTable.usedOn") }}</dt>
+          <dd class="font-mono text-surface-0">VPF{{ selected.redeemedRefCode }}</dd>
+        </div>
+        <div class="border-t border-surface-700 pt-3">
+          <dt class="text-surface-400 mb-1">{{ $t("profile.voucherTable.note") }}</dt>
+          <dd class="text-surface-0">{{ selected.note || $t("profile.voucherTable.noNote") }}</dd>
+        </div>
+      </dl>
+      <template #footer>
+        <Button :label="$t('profile.voucherTable.close')" text @click="detailVisible = false" />
+      </template>
+    </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue"
+import { formatDateDMY } from "~/lib/utils/date"
+import type { Voucher } from "~/types/vouchers"
+
 definePageMeta({
   layout: "openvpf-profile",
   middleware: "auth",
 })
 
 const { t } = useI18n()
-const demoVouchers = [
-  {
-    receivedDate: "18/04/2025",
-    expiryDate: "18/04/2025",
-    type: "-20% for souvenir items",
-    active: true,
-    statusLabel: t("profile.voucherTable.active"),
-  },
-  {
-    receivedDate: "15/04/2025",
-    expiryDate: "15/04/2025",
-    type: "Free competition registration",
-    active: false,
-    statusLabel: t("profile.voucherTable.expired"),
-  },
-  {
-    receivedDate: "18/04/2025",
-    expiryDate: "18/04/2025",
-    type: "Free annual membership",
-    active: false,
-    statusLabel: t("profile.voucherTable.used"),
-  },
-]
+const { vouchers, pending, error } = useAthleteVouchers()
+const { describe, statusLabel, statusSeverity } = useVoucherDisplay()
+
+const detailVisible = ref(false)
+const selected = ref<Voucher | null>(null)
+
+function openDetail(voucher: Voucher) {
+  selected.value = voucher
+  detailVisible.value = true
+}
 
 useHead({ title: () => t("profile.tabs.voucher") })
 </script>

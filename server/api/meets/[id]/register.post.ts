@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { eq, TransactionRollbackError } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import {
   users,
@@ -20,7 +20,10 @@ import {
   isMembershipOwed,
 } from "~/server/utils/competition-registration"
 import { buildVietQrUrl, generateUniqueRefCode } from "~/server/utils/purchase-helpers"
+import { resolveVouchers, redeemVouchers, collectRedemptions } from "~/server/utils/voucher-helpers"
+import { approvePurchase } from "~/server/utils/approve-purchase"
 import { CompetitionRegisterSchema } from "~/lib/zod/schemas/competition-registration.schema"
+import { computeVoucherTotals, type LineItems } from "~/lib/utils/vouchers"
 import { VPF_MEMBERSHIP_FEE, MEDIA_PLUS_FEE } from "~/lib/constants/constants"
 import { computeCompetitionAge, getEligibleDivisions, getEligibleWeightClasses } from "~/lib/utils/competition-eligibility"
 import type { ApiResponse } from "~/types/api"
@@ -192,13 +195,27 @@ export default defineEventHandler(async (event): Promise<ApiResponse<Competition
       }
     }
 
-    // Fees → one combined amount (§6, §7).
+    // Fees → line items, discounts, one combined amount (§6, §7).
     const entryFee = meet.entryFee ?? 0
     const membershipOwed = !isGuest && isMembershipOwed(account.vpfMembershipExpiresAt, meet.systemYear)
     const membershipFee = membershipOwed ? VPF_MEMBERSHIP_FEE : 0
     const mediaPlusFee = data.mediaPlus ? MEDIA_PLUS_FEE : 0
-    const amount = entryFee + membershipFee + mediaPlusFee
     const type: PurchaseType[] = membershipOwed ? ["competition", "vpf_membership"] : ["competition"]
+
+    // Media Plus is deliberately not a line item: it belongs to no purchase type
+    // and is always paid in full, on top of the discounted fees.
+    const lineItems: LineItems = { competition: entryFee, vpf_membership: membershipFee }
+    const vouchers = await resolveVouchers({
+      codes: data.voucherCodes,
+      vpfId: currentUser.vpfId,
+      purchaseTypes: type,
+      lineItems,
+    })
+    if (!vouchers.ok) return fail(event, vouchers.statusCode, vouchers.message)
+
+    const totals = computeVoucherTotals(lineItems, vouchers.vouchers, mediaPlusFee)
+    const redemptions = collectRedemptions(totals)
+    const amount = totals.payable
 
     // Upload the competition photo (external R2) before opening the DB transaction.
     let competitionPhotoUrl: string | null = null
@@ -213,40 +230,57 @@ export default defineEventHandler(async (event): Promise<ApiResponse<Competition
 
     const refCode = await generateUniqueRefCode()
 
-    const created = await db.transaction(async (tx) => {
-      const [inserted] = await tx
-        .insert(purchases)
-        .values({ vpfId: currentUser.vpfId, type, refCode, amount, status: "pending" })
-        .returning({ purchaseId: purchases.purchaseId })
+    let created: { purchaseId: number }
+    try {
+      created = await db.transaction(async (tx) => {
+        const [inserted] = await tx
+          .insert(purchases)
+          .values({ vpfId: currentUser.vpfId, type, refCode, amount, status: "pending" })
+          .returning({ purchaseId: purchases.purchaseId })
 
-      await tx.insert(competitionPurchaseMetadata).values({
-        purchaseId: inserted.purchaseId,
-        meetId: meet.meetId,
-        sex: data.sex,
-        weightClass: data.weightClass,
-        division,
-        mediaPlus: data.mediaPlus,
-      })
-
-      if (membershipOwed) {
-        await tx.insert(vpfMembershipPurchaseMetadata).values({
+        await tx.insert(competitionPurchaseMetadata).values({
           purchaseId: inserted.purchaseId,
-          membershipYear: meet.systemYear,
+          meetId: meet.meetId,
+          sex: data.sex,
+          weightClass: data.weightClass,
+          division,
+          mediaPlus: data.mediaPlus,
+        })
+
+        if (membershipOwed) {
+          await tx.insert(vpfMembershipPurchaseMetadata).values({
+            purchaseId: inserted.purchaseId,
+            membershipYear: meet.systemYear,
+          })
+        }
+
+        const userUpdate: Partial<typeof users.$inferInsert> = {}
+        if (competitionPhotoUrl) userUpdate.competitionPhotoUrl = competitionPhotoUrl
+        if (data.squatRackPin !== undefined) userUpdate.squatRackPin = data.squatRackPin
+        if (data.benchRackPin !== undefined) userUpdate.benchRackPin = data.benchRackPin
+        if (data.benchSafetyPin !== undefined) userUpdate.benchSafetyPin = data.benchSafetyPin
+        if (data.benchFootBlock !== undefined) userUpdate.benchFootBlock = data.benchFootBlock
+        if (Object.keys(userUpdate).length > 0) {
+          await tx.update(users).set(userUpdate).where(eq(users.vpfId, currentUser.vpfId))
+        }
+
+        // Losing a redemption race means someone else spent the voucher first; roll
+        // back rather than issue a discounted QR against an already-spent voucher.
+        if (!(await redeemVouchers(tx, redemptions, inserted.purchaseId))) {
+          tx.rollback()
+        }
+
+        return inserted
+      })
+    } catch (error) {
+      if (error instanceof TransactionRollbackError) {
+        return fail(event, 409, {
+          en: "That voucher has just been used; please try again",
+          vi: "Voucher vừa được sử dụng; vui lòng thử lại",
         })
       }
-
-      const userUpdate: Partial<typeof users.$inferInsert> = {}
-      if (competitionPhotoUrl) userUpdate.competitionPhotoUrl = competitionPhotoUrl
-      if (data.squatRackPin !== undefined) userUpdate.squatRackPin = data.squatRackPin
-      if (data.benchRackPin !== undefined) userUpdate.benchRackPin = data.benchRackPin
-      if (data.benchSafetyPin !== undefined) userUpdate.benchSafetyPin = data.benchSafetyPin
-      if (data.benchFootBlock !== undefined) userUpdate.benchFootBlock = data.benchFootBlock
-      if (Object.keys(userUpdate).length > 0) {
-        await tx.update(users).set(userUpdate).where(eq(users.vpfId, currentUser.vpfId))
-      }
-
-      return inserted
-    })
+      throw error
+    }
 
     logger.info("Competition registration created", {
       vpfId: currentUser.vpfId,
@@ -254,19 +288,40 @@ export default defineEventHandler(async (event): Promise<ApiResponse<Competition
       refCode,
       type,
       amount,
+      vouchers: redemptions.map((v) => v.code),
     })
 
-    return ok(
-      {
-        purchaseId: created.purchaseId,
-        refCode,
-        type,
-        amount,
-        status: "pending",
-        qrUrl: buildVietQrUrl(refCode, amount),
-        identityVerified: account.identityVerified,
-        breakdown: { entryFee, membershipFee, mediaPlusFee },
+    const body = {
+      purchaseId: created.purchaseId,
+      refCode,
+      type,
+      amount,
+      identityVerified: account.identityVerified,
+      breakdown: {
+        entryFee,
+        membershipFee,
+        mediaPlusFee,
+        totalDiscount: totals.totalDiscount,
+        discounts: redemptions.map(({ code, type: t, discount }) => ({ code, type: t, discount })),
       },
+    }
+
+    // A fully-discounted registration has no QR and no webhook to wait for — activate
+    // it through the same single activation point the webhook uses.
+    if (amount === 0) {
+      const approval = await approvePurchase(refCode, null)
+      if (!approval.success) {
+        logger.error("Failed to auto-activate zero-amount registration", { refCode, purchaseId: created.purchaseId })
+        return fail(event, approval.statusCode, approval.message)
+      }
+      return ok(
+        { ...body, status: "active" as const },
+        { en: "Registration confirmed with voucher", vi: "Đăng ký đã được xác nhận bằng voucher" },
+      )
+    }
+
+    return ok(
+      { ...body, status: "pending" as const, qrUrl: buildVietQrUrl(refCode, amount) },
       { en: "Registration created; awaiting payment", vi: "Đã tạo đăng ký; chờ thanh toán" },
     )
   } catch (error) {

@@ -14,7 +14,7 @@ Rule of thumb: if the document would be obsoleted by deleting one feature, it is
 | [VIP purchase flow](vip-purchase-flow.md) | VietQR bank transfer, SePay webhook, `approvePurchase` as the single activation point, VIP perks and R2 uploads | Built |
 | [Registration & identity verification](identity-verification.md) | Account lifecycle: signup, email verification, CCCD submission, admin review, the `identityVerified` flag | Built |
 | [Competition registration flow](competition-registration-flow.md) | Registration wizard: identity gate, ban-list checks, member vs guest, entry details, add-ons, combined payment | Built — doc still says otherwise, see below |
-| [Voucher system](voucher-system.md) | Per-athlete single-use discount vouchers: per-type line items, fixed/percent math, redemption and release | Not built |
+| [Voucher system](voucher-system.md) | Per-athlete single-use discount vouchers: per-type line items, fixed/percent math, redemption and release | Built |
 
 ## Stale: competition registration says it is unbuilt
 

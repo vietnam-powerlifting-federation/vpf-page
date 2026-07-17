@@ -1,4 +1,4 @@
-import { pgTable, serial, text, date, smallint, boolean, unique, check, foreignKey, timestamp, integer, numeric, pgSequence, pgEnum, uuid } from "drizzle-orm/pg-core"
+import { pgTable, serial, text, date, smallint, boolean, unique, check, foreignKey, index, timestamp, integer, numeric, pgSequence, pgEnum, uuid } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 export const division = pgEnum("division", ["subjr", "jr", "open", "mas1", "mas2", "mas3", "mas4", "guest"])
@@ -8,6 +8,7 @@ export const sexes = pgEnum("sexes", ["female", "male"])
 export const purchaseType = pgEnum("purchase_type", ["vip", "vpf_membership", "competition"])
 export const purchaseStatus = pgEnum("purchase_status", ["pending", "active", "expired", "cancelled"])
 export const identityVerificationStatus = pgEnum("identity_verification_status", ["pending", "approved", "rejected"])
+export const voucherDiscountKind = pgEnum("voucher_discount_kind", ["fixed", "percent"])
 
 export const vpfSeq = pgSequence("vpf_seq", { startWith: "889", increment: "1", minValue: "1", maxValue: "9223372036854775807", cache: "1", cycle: false })
 
@@ -315,4 +316,50 @@ export const competitionPurchaseMetadata = pgTable("competition_purchase_metadat
     name: "competition_purchase_metadata_meet_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
   check("chk_competition_weight_class_sex", sql`((sex = 'male'::sexes) AND (weight_class = ANY (ARRAY[53, 59, 66, 74, 83, 93, 105, 120, 999]))) OR ((sex = 'female'::sexes) AND (weight_class = ANY (ARRAY[43, 47, 52, 57, 63, 69, 76, 84, 999])))`),
+])
+
+/**
+ * Per-athlete single-use discount vouchers. A voucher targets exactly one
+ * `purchase_type` and discounts only that type's line item — never the whole
+ * purchase. The three redemption columns move together (see the check below);
+ * `discount_applied` freezes the resolved VND at redemption so editing the
+ * voucher later never rewrites the price of a purchase already made.
+ */
+export const vouchers = pgTable("vouchers", {
+  voucherId: serial("voucher_id").primaryKey().notNull(),
+  code: text().notNull(),
+  vpfId: text("vpf_id").notNull(),
+  type: purchaseType().notNull(),
+  discountKind: voucherDiscountKind("discount_kind").notNull(),
+  discountValue: integer("discount_value").notNull(),
+  expiresAt: date("expires_at").notNull(),
+  redeemedPurchaseId: integer("redeemed_purchase_id"),
+  redeemedAt: timestamp("redeemed_at", { withTimezone: true, mode: "string" }),
+  discountApplied: integer("discount_applied"),
+  note: text(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
+  createdBy: text("created_by"),
+}, (table) => [
+  unique("vouchers_code_key").on(table.code),
+  // "One voucher per type per purchase", enforced by the database. Postgres treats
+  // NULLs as distinct here, so unredeemed vouchers never collide with each other.
+  unique("vouchers_purchase_type_key").on(table.redeemedPurchaseId, table.type),
+  index("vouchers_vpf_id_idx").on(table.vpfId),
+  foreignKey({
+    columns: [table.vpfId],
+    foreignColumns: [users.vpfId],
+    name: "vouchers_vpf_id_fkey"
+  }).onUpdate("cascade").onDelete("cascade"),
+  foreignKey({
+    columns: [table.redeemedPurchaseId],
+    foreignColumns: [purchases.purchaseId],
+    name: "vouchers_redeemed_purchase_id_fkey"
+  }).onUpdate("cascade").onDelete("cascade"),
+  foreignKey({
+    columns: [table.createdBy],
+    foreignColumns: [users.vpfId],
+    name: "vouchers_created_by_fkey"
+  }).onUpdate("cascade").onDelete("set null"),
+  check("chk_voucher_discount_value", sql`((discount_kind = 'percent'::voucher_discount_kind) AND (discount_value BETWEEN 1 AND 100)) OR ((discount_kind = 'fixed'::voucher_discount_kind) AND (discount_value > 0))`),
+  check("chk_voucher_redeemed_consistent", sql`(redeemed_purchase_id IS NULL AND redeemed_at IS NULL AND discount_applied IS NULL) OR (redeemed_purchase_id IS NOT NULL AND redeemed_at IS NOT NULL AND discount_applied IS NOT NULL)`),
 ])

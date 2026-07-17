@@ -1,14 +1,14 @@
 # Voucher system
 
-Per-athlete discount vouchers applied at purchase creation. This is a **design spec** — reconciled against the existing schema and purchase code so it can be built directly, but **not yet implemented** when written. Verify against code once it lands.
+Per-athlete discount vouchers applied at purchase creation. **Built** — the design below is the reference, and the code matches it except where noted in §8. Read the code for current behaviour.
 
 Throughout, "user" = athlete. Amounts are **VND integers** — there is no sub-unit, and the bank transfer amount must be a whole number.
 
 A voucher is owned by exactly one athlete, targets exactly one purchase type, is **single use**, and expires on a date. It discounts **only its own type's line item** — never the whole purchase, and never another type's fees.
 
-## 0. What exists today
+## 0. What this replaced
 
-[pages/openvpf/profile/voucher.vue](../pages/openvpf/profile/voucher.vue) is a **demo page with hardcoded rows** — a PrimeVue `DataTable` under the `openvpf-profile` layout. It is the UI target: this feature replaces `demoVouchers` with real data. The i18n keys it uses (`profile.voucherTable.*` in [en.json](../i18n/locales/en.json) / [vi.json](../i18n/locales/vi.json)) are already translated and define the athlete-facing vocabulary — **Active / Expired / Used** (`Còn hiệu lực` / `Hết hiệu lực` / `Đã sử dụng`). Reuse them; §6 explains why those three are derived, not stored.
+[pages/openvpf/profile/voucher.vue](../pages/openvpf/profile/voucher.vue) *was* a demo page with hardcoded `demoVouchers` rows; it now reads real data through [useVouchers.ts](../composables/useVouchers.ts). The i18n keys it uses (`profile.voucherTable.*` in [en.json](../i18n/locales/en.json) / [vi.json](../i18n/locales/vi.json)) were already translated and define the athlete-facing vocabulary — **Active / Expired / Used** (`Còn hiệu lực` / `Hết hiệu lực` / `Đã sử dụng`). §6 explains why those three are derived, not stored.
 
 Its demo rows also hint at the intended range of vouchers ("Free competition registration", "Free annual membership", "-20% for souvenir items"). Note the souvenir one has **no matching purchase type** — vouchers only apply to the three `purchase_type` values, so souvenir discounts are out of scope unless a type is added.
 
@@ -170,7 +170,16 @@ When `payable === 0` (§2), the payment step must **skip the QR entirely** and s
 
 ## 7. Open questions
 
-- **Is a code even needed?** The vouchers are per-athlete and listed in the profile, so the athlete could just pick one — no typing, no enumeration surface. A `code` is specified above because it makes vouchers issuable over email/social ("here's your code") and gives support something to quote. If they will only ever be picked from the list, drop `code` and key the API on `voucherId`.
+- ~~**Is a code even needed?**~~ **Resolved: `code` was kept**, as specified above — vouchers stay issuable over email/social and support has something to quote. The athlete-facing pickers never make anyone type one: they list the athlete's own vouchers and submit the code behind the scenes.
 - **Souvenir vouchers** — the demo page shows "-20% for souvenir items", which no `purchase_type` covers. Out of scope here; it needs a new purchase type and a shop.
 - **Stacking** — one voucher per type per purchase is specified. Two vouchers on the *same* line item is rejected by the §1 constraint. Confirm the federation does not want stacking.
 - **`VIP_MEMBERSHIP_PLANS`** — both plans are still 300,000 VND ([constants.ts:27-36](../lib/constants/constants.ts#L27-L36)), so a `vip` percent voucher discounts a year and six months identically. That is a pre-existing question flagged in the [VIP purchase flow](vip-purchase-flow.md), not one this feature introduces.
+
+## 8. Where the code differs from the design above
+
+Two things the spec did not settle, decided during implementation:
+
+- **`GET /api/vouchers/all` exists.** §4 defines no admin *list* endpoint, but the admin page needs one to revoke from. Rather than grow `GET /api/vouchers` a `vpfId` param — which §4 explicitly forbids, since that is the enumeration surface — admin listing lives at [all.get.ts](../server/api/vouchers/all.get.ts) behind `requireAdmin`, with `?vpfId=`, `?type=` and `?redeemed=` filters. `GET /api/vouchers` stays athlete-scoped.
+- **`redeemedPurchaseId` is `ON DELETE CASCADE`.** §1 does not name the action. `SET NULL` would leave `redeemed_at` / `discount_applied` populated and violate `chk_voucher_redeemed_consistent`, so cascade is the only action consistent with that check. Purchases are cancelled rather than deleted in normal operation, so this only bites if a purchase row is hard-deleted — which also cascades from deleting the athlete, when the voucher should vanish anyway.
+
+The discount math lives in one place, [lib/utils/vouchers.ts](../lib/utils/vouchers.ts): `resolveVouchers` returns a validated *rule*, and `computeVoucherTotals` is the only code that turns a rule into VND. The server reads the resolved lines back to freeze `discount_applied`; the pickers call the same function for the live total. Nothing else computes a discount.

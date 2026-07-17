@@ -5,6 +5,7 @@ import { logger } from "~/lib/logger/logger"
 import { ok, fail } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
 import { requireUser } from "~/server/utils/auth-guard"
+import { releaseVouchers } from "~/server/utils/voucher-helpers"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseCancelled } from "~/types/purchases"
 
@@ -51,10 +52,16 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseCan
 
     const cancelledAt = new Date().toISOString()
 
-    await db
-      .update(purchases)
-      .set({ status: "cancelled", cancelledAt })
-      .where(and(eq(purchases.refCode, refCode), eq(purchases.status, "pending")))
+    // Releasing the vouchers in the same transaction hands them back to the athlete
+    // to spend elsewhere; expiry is re-checked at next use.
+    await db.transaction(async (tx) => {
+      await tx
+        .update(purchases)
+        .set({ status: "cancelled", cancelledAt })
+        .where(and(eq(purchases.refCode, refCode), eq(purchases.status, "pending")))
+
+      await releaseVouchers(tx, purchase.purchaseId)
+    })
 
     logger.info("Purchase cancelled", { purchaseId: purchase.purchaseId, refCode, cancelledBy: currentUser.vpfId })
 

@@ -1,4 +1,5 @@
 import type { RankedDivision, PurchaseType } from "~/types/union-types"
+import type { AppliedVoucher } from "~/types/vouchers"
 
 /** 4-state identity status derived from the identity_verifications row (or its absence). */
 export type RegistrationIdentityState = "not_submitted" | "pending" | "approved" | "rejected"
@@ -57,14 +58,20 @@ export type CompetitionRegistrationCreated = {
   purchaseId: number
   refCode: string
   type: PurchaseType[]
+  /** What the athlete must transfer: fees minus discounts, plus Media Plus. */
   amount: number
-  status: "pending"
-  qrUrl: string
+  /** "active" when vouchers covered the full amount — there was nothing to pay. */
+  status: "pending" | "active"
+  /** Absent when `amount` is 0: a VietQR for 0 VND is meaningless. */
+  qrUrl?: string
   /** Drives the post-payment message: confirmed vs submitted/pending review. */
   identityVerified: boolean
   breakdown: {
+    /** Fees before discounts. Media Plus is never discounted. */
     entryFee: number
     membershipFee: number
     mediaPlusFee: number
+    totalDiscount: number
+    discounts: AppliedVoucher[]
   }
 }

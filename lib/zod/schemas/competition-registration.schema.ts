@@ -24,6 +24,18 @@ export const CompetitionRegisterSchema = z.object({
   benchSafetyPin: z.coerce.number().int().min(0).max(30).optional(),
   benchFootBlock: z.coerce.number().int().min(0).max(30).optional(),
   mediaPlus: formBool.optional().default(false),
+  /**
+   * Up to one voucher code per owed type, comma-separated (multipart fields arrive
+   * as text). Ownership, expiry and applicability are checked in the handler so
+   * each failure can return a specific bilingual message.
+   */
+  voucherCodes: z
+    .preprocess(
+      (v) => (typeof v === "string" ? v.split(",").map((c) => c.trim()).filter(Boolean) : v),
+      z.array(z.string().min(1)),
+    )
+    .optional()
+    .default([]),
 })
 
 export type CompetitionRegister = z.infer<typeof CompetitionRegisterSchema>

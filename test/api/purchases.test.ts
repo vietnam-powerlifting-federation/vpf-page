@@ -1,4 +1,7 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, beforeEach, afterAll } from "vitest"
+import { eq, inArray } from "drizzle-orm"
+import { db } from "~/lib/external/drizzle/drizzle"
+import { purchases, users, vouchers } from "~/lib/external/drizzle/migrations/schema"
 import { createMockH3Event } from "../utils/h3-event"
 import { fixtureUsers } from "../fixtures/data"
 
@@ -74,6 +77,116 @@ describe("API: purchases", () => {
       const res = await handler(event)
       expect(res.success).toBe(true)
       expect(res.data?.refCode).toMatch(/^\d{6}$/)
+    })
+  })
+
+  describe("POST /api/purchases — vouchers", () => {
+    async function issueVoucher(values: Partial<typeof vouchers.$inferInsert> & { code: string }) {
+      const [row] = await db
+        .insert(vouchers)
+        .values({
+          vpfId: user.vpfId,
+          type: "vip",
+          discountKind: "percent",
+          discountValue: 20,
+          expiresAt: "2099-12-31",
+          ...values,
+        })
+        .returning()
+      return row
+    }
+
+    beforeEach(async () => {
+      await db.delete(vouchers).where(inArray(vouchers.vpfId, [user.vpfId, user2.vpfId]))
+    })
+
+    afterAll(async () => {
+      await db.delete(vouchers).where(inArray(vouchers.vpfId, [user.vpfId, user2.vpfId]))
+      // The 100%-voucher case activates a VIP purchase; later suites assume the
+      // athlete has no active membership, so hand the fixture back as we found it.
+      await db
+        .update(users)
+        .set({ vipMembershipExpiresAt: null })
+        .where(inArray(users.vpfId, [user.vpfId, user2.vpfId]))
+      await db.delete(purchases).where(inArray(purchases.vpfId, [user.vpfId, user2.vpfId]))
+    })
+
+    it("discounts the plan price and reports the applied voucher", async () => {
+      await issueVoucher({ code: "VPF-VIP-20" })
+      const handler = (await import("~/server/api/purchases/index.post")).default
+      const res = await handler(
+        createMockH3Event({ body: { plan: "1year", voucherCode: "VPF-VIP-20" }, context: { user } }),
+      )
+      expect(res.success).toBe(true)
+      expect(res.data?.amount).toBe(240_000)
+      expect(res.data?.subtotal).toBe(300_000)
+      expect(res.data?.totalDiscount).toBe(60_000)
+      expect(res.data?.vouchers).toEqual([{ code: "VPF-VIP-20", type: "vip", discount: 60_000 }])
+      expect(res.data?.qrUrl).toContain("amount=240000")
+    })
+
+    it("activates immediately with no QR for a 100% voucher", async () => {
+      await issueVoucher({ code: "VPF-VIP-FREE", discountValue: 100 })
+      const handler = (await import("~/server/api/purchases/index.post")).default
+      const res = await handler(
+        createMockH3Event({ body: { plan: "6months", voucherCode: "VPF-VIP-FREE" }, context: { user } }),
+      )
+      expect(res.success).toBe(true)
+      expect(res.data?.amount).toBe(0)
+      expect(res.data?.status).toBe("active")
+      expect(res.data?.qrUrl).toBeUndefined()
+
+      const row = await db
+        .select({ status: purchases.status, approvedBy: purchases.approvedBy })
+        .from(purchases)
+        .where(eq(purchases.purchaseId, res.data!.purchaseId))
+        .then((r) => r[0])
+      expect(row.status).toBe("active")
+      expect(row.approvedBy).toBeNull()
+    })
+
+    it("clamps a fixed voucher larger than the plan price", async () => {
+      await issueVoucher({ code: "VPF-VIP-BIG", discountKind: "fixed", discountValue: 900_000 })
+      const handler = (await import("~/server/api/purchases/index.post")).default
+      const res = await handler(
+        createMockH3Event({ body: { plan: "1year", voucherCode: "VPF-VIP-BIG" }, context: { user } }),
+      )
+      expect(res.success).toBe(true)
+      expect(res.data?.amount).toBe(0)
+      expect(res.data?.totalDiscount).toBe(300_000)
+    })
+
+    it("resolves an admin's voucher against the target athlete, not the admin", async () => {
+      await issueVoucher({ code: "VPF-VIP-TARGET", vpfId: user2.vpfId })
+      const handler = (await import("~/server/api/purchases/index.post")).default
+      const res = await handler(
+        createMockH3Event({
+          body: { plan: "1year", vpfId: user2.vpfId, voucherCode: "VPF-VIP-TARGET" },
+          context: { user: admin },
+        }),
+      )
+      expect(res.success).toBe(true)
+      expect(res.data?.amount).toBe(240_000)
+    })
+
+    it("rejects a voucher belonging to someone else as not found", async () => {
+      await issueVoucher({ code: "VPF-VIP-OTHER", vpfId: user2.vpfId })
+      const handler = (await import("~/server/api/purchases/index.post")).default
+      const res = await handler(
+        createMockH3Event({ body: { plan: "1year", voucherCode: "VPF-VIP-OTHER" }, context: { user } }),
+      )
+      expect(res.success).toBe(false)
+      expect(res.message?.en).toMatch(/not found/i)
+    })
+
+    it("rejects a voucher whose type does not match the purchase", async () => {
+      await issueVoucher({ code: "VPF-VIP-WRONG", type: "competition" })
+      const handler = (await import("~/server/api/purchases/index.post")).default
+      const res = await handler(
+        createMockH3Event({ body: { plan: "1year", voucherCode: "VPF-VIP-WRONG" }, context: { user } }),
+      )
+      expect(res.success).toBe(false)
+      expect(res.message?.en).toMatch(/not applicable/i)
     })
   })
 

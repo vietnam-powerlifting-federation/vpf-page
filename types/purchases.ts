@@ -1,14 +1,22 @@
 import type { PurchaseType, PurchaseStatusValue } from "~/types/union-types"
+import type { AppliedVoucher } from "~/types/vouchers"
 
 export type PurchaseCreated = {
   purchaseId: number
   refCode: string
   type: PurchaseType[]
   plan?: "6months" | "1year"
+  /** What the athlete must transfer: post-discount, plus any undiscounted add-on. */
   amount: number
-  status: "pending"
+  /** "active" when a voucher covered the full amount — there was nothing to pay. */
+  status: "pending" | "active"
   createdAt: string
-  qrUrl: string
+  /** Absent when `amount` is 0: a VietQR for 0 VND is meaningless. */
+  qrUrl?: string
+  /** Line-item total before discounts. */
+  subtotal: number
+  totalDiscount: number
+  vouchers: AppliedVoucher[]
 }
 
 export type PurchaseCancelled = {
