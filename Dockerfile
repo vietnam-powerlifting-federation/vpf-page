@@ -27,6 +27,19 @@ RUN npm ci --ignore-scripts
 
 COPY . .
 
+# nuxt build prerenders the @nuxt/content dump, which loads the Nitro bundle and
+# with it lib/config/config.ts — that throws at import when these are unset.
+# Prerendering never reaches R2, SMTP, or the database, so placeholders satisfy
+# the check without putting real secrets in the build. They stay in this stage;
+# the runner reads the real values from the environment at startup.
+ENV JWT_SECRET=build-time-placeholder \
+    EMAIL_VERIFICATION_SKIP=true \
+    CLOUDFLARE_R2_ACCOUNT_ID=build-time-placeholder \
+    CLOUDFLARE_R2_ACCESS_KEY_ID=build-time-placeholder \
+    CLOUDFLARE_R2_SECRET_ACCESS_KEY=build-time-placeholder \
+    CLOUDFLARE_R2_VIP_BUCKET=build-time-placeholder \
+    CLOUDFLARE_R2_VIP_PUBLIC_URL_BASE=https://build-time-placeholder.invalid
+
 RUN npm rebuild
 RUN npm run build
 
