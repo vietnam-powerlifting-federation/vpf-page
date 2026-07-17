@@ -81,7 +81,9 @@ export const identityVerifications = pgTable("identity_verifications", {
   nationalId: text("national_id").notNull(),
   address: text().notNull(),
   phoneNumber: text("phone_number").notNull(),
-  idCardFrontUrl: text("id_card_front_url").notNull(),
+  // Cleared once the verification is approved: the image is deleted from the bucket and
+  // only the extracted fields above are retained.
+  idCardFrontUrl: text("id_card_front_url"),
   status: identityVerificationStatus().default("pending").notNull(),
   reviewedBy: text("reviewed_by"),
   reviewedAt: timestamp("reviewed_at", { withTimezone: true, mode: "string" }),

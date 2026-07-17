@@ -1,0 +1,1 @@
+ALTER TABLE "identity_verifications" ALTER COLUMN "id_card_front_url" DROP NOT NULL;

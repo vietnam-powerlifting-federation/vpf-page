@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { identityVerifications, users } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
-import { uploadVipImage } from "~/lib/utils/r2-vip-upload"
+import { deleteVipImage, uploadVipImage } from "~/lib/utils/r2-vip-upload"
 import { IdentityVerificationSubmitSchema } from "~/lib/zod/schemas/identity-verification.schema"
 import type { ApiResponse } from "~/types/api"
 import type { IdentityVerification } from "~/types/verifications"
@@ -95,11 +95,14 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
 
     // A photo is required on first submission; on resubmission the existing one is kept if none is provided.
     let idCardFrontUrl = existing?.idCardFrontUrl ?? null
+    let supersededUrl: string | null = null
     if (idCardFile) {
       idCardFrontUrl = await uploadVipImage(currentUser.vpfId, "id-card-front", new Uint8Array(idCardFile.data), {
         filename: idCardFile.filename,
         mimeType: idCardFile.type,
+        unguessable: true,
       })
+      supersededUrl = existing?.idCardFrontUrl ?? null
     }
 
     if (!idCardFrontUrl) {
@@ -147,6 +150,20 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
 
     if (!saved) {
       return fail(event, 500, { en: "Failed to save verification", vi: "Lưu hồ sơ thất bại" })
+    }
+
+    // Each upload lands on a fresh random key, so the replaced image would otherwise stay
+    // readable in the bucket forever. Deleted only after the row points at the new one.
+    if (supersededUrl && supersededUrl !== idCardFrontUrl) {
+      try {
+        await deleteVipImage(supersededUrl)
+      } catch (error) {
+        logger.error("Failed to delete superseded ID card image", {
+          vpfId: currentUser.vpfId,
+          url: supersededUrl,
+          error: (error as Error).message,
+        })
+      }
     }
 
     logger.info("Identity verification submitted", { vpfId: currentUser.vpfId })

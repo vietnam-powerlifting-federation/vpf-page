@@ -32,9 +32,15 @@
       <Column field="phoneNumber" :header="$t('verification.phoneNumber')" />
       <Column :header="$t('adminVerifications.idCard')">
         <template #body="{ data }">
-          <button type="button" class="text-primary hover:underline text-sm" @click="openImage(data.idCardFrontUrl)">
+          <button
+            v-if="data.idCardFrontUrl"
+            type="button"
+            class="text-primary hover:underline text-sm"
+            @click="openImage(data.idCardFrontUrl)"
+          >
             {{ $t("adminVerifications.viewImage") }}
           </button>
+          <span v-else class="text-surface-500 text-sm">{{ $t("adminVerifications.imageRemoved") }}</span>
         </template>
       </Column>
       <Column :header="$t('adminVerifications.status')">

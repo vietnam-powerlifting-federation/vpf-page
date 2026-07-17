@@ -120,6 +120,13 @@
       "when": 1784196001829,
       "tag": "0016_voucher_system",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1784259838888,
+      "tag": "0017_nullable_id_card_url",
+      "breakpoints": true
     }
   ]
 }

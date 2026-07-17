@@ -199,7 +199,8 @@ function applyVerification(v: IdentityVerification) {
   form.address = v.address
   form.phoneNumber = v.phoneNumber
   idCardPreview.value = v.idCardFrontUrl
-  existingPhoto.value = true
+  // Null once approved: the image is deleted from the bucket after review.
+  existingPhoto.value = Boolean(v.idCardFrontUrl)
 }
 
 onMounted(async () => {

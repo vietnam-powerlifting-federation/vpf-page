@@ -3,6 +3,7 @@ import { db } from "~/lib/external/drizzle/drizzle"
 import { identityVerifications, users } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
 import { sendVerificationApprovedEmail, sendVerificationRejectedEmail } from "~/lib/utils/email"
+import { deleteVipImage } from "~/lib/utils/r2-vip-upload"
 import { IdentityVerificationReviewSchema } from "~/lib/zod/schemas/identity-verification.schema"
 import type { ApiResponse } from "~/types/api"
 import type { IdentityVerification } from "~/types/verifications"
@@ -54,6 +55,9 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
         reviewedAt: nowIso,
         reviewNote: reviewNote ?? null,
         updatedAt: nowIso,
+        // Approval extracts everything we need onto the athlete's record, so the ID card image
+        // itself is no longer needed. Rejection keeps it until the athlete resubmits.
+        ...(decision === "approved" ? { idCardFrontUrl: null } : {}),
       })
       .where(eq(identityVerifications.id, id))
       .returning()
@@ -61,6 +65,22 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
 
     if (!updated) {
       return fail(event, 500, { en: "Failed to update verification", vi: "Cập nhật hồ sơ thất bại" })
+    }
+
+    // Only once the row no longer references it, so a failed update never destroys an image
+    // the admin still needs to review. A failure here leaves an orphan at a random key that is
+    // no longer stored anywhere; the log carries the URL so it can be cleaned up by hand.
+    if (decision === "approved" && verification.idCardFrontUrl) {
+      try {
+        await deleteVipImage(verification.idCardFrontUrl)
+      } catch (error) {
+        logger.error("Failed to delete ID card image after approval", {
+          id,
+          vpfId: verification.vpfId,
+          url: verification.idCardFrontUrl,
+          error: (error as Error).message,
+        })
+      }
     }
 
     // On approval, copy the verified information onto the athlete's official record and

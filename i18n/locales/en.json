@@ -523,6 +523,7 @@
     "athlete": "Athlete",
     "idCard": "ID card",
     "viewImage": "View image",
+    "imageRemoved": "Removed after approval",
     "status": "Status",
     "action": "Action",
     "approve": "Approve",

@@ -159,7 +159,9 @@ describe("API: PATCH /api/verifications/[id]/review", () => {
       })
       .onConflictDoUpdate({
         target: identityVerifications.vpfId,
-        set: { status: "pending", reviewedBy: null, reviewedAt: null, fullName: "Verified Name", nationality: "VN", dob: 1998 },
+        // idCardFrontUrl must be restored too: approval nulls it, and later cases start from a
+        // pending row that still has its image.
+        set: { status: "pending", reviewedBy: null, reviewedAt: null, fullName: "Verified Name", nationality: "VN", dob: 1998, idCardFrontUrl: "https://cdn.example.com/id.png" },
       })
       .returning({ id: identityVerifications.id })
       .then((r) => r[0])
@@ -188,6 +190,8 @@ describe("API: PATCH /api/verifications/[id]/review", () => {
     expect(res.data?.status).toBe("approved")
     expect(res.data?.reviewedBy).toBe(admin.vpfId)
     expect(res.data?.reviewedAt).toBeTruthy()
+    // The ID card image is dropped once its data has been copied onto the athlete's record.
+    expect(res.data?.idCardFrontUrl).toBeNull()
 
     const user = await db.select({ nationality: users.nationality, dob: users.dob, fullName: users.fullName, identityVerified: users.identityVerified }).from(users).where(eq(users.vpfId, TEMP_VPF_ID)).then((r) => r[0])
     expect(user?.nationality).toBe("VN")
@@ -211,8 +215,29 @@ describe("API: PATCH /api/verifications/[id]/review", () => {
     expect(res.success).toBe(true)
     expect(res.data?.status).toBe("rejected")
     expect(res.data?.reviewNote).toBe("Blurry photo")
+    // Retained on rejection: the athlete may resubmit the form without re-uploading the photo.
+    expect(res.data?.idCardFrontUrl).toBe("https://cdn.example.com/id.png")
 
     const user = await db.select({ identityVerified: users.identityVerified }).from(users).where(eq(users.vpfId, TEMP_VPF_ID)).then((r) => r[0])
     expect(user?.identityVerified).toBe(false)
+  })
+
+  it("clears the stored image URL in the database on approval", async () => {
+    const id = await seedVerification()
+    const handler = (await import("~/server/api/verifications/[id]/review.patch")).default
+    const event = createMockH3Event({
+      method: "PATCH",
+      params: { id: String(id) },
+      body: { decision: "approved" },
+      context: { user: { vpfId: admin.vpfId, email: admin.email, role: "admin" } },
+    })
+    await handler(event)
+
+    const row = await db
+      .select({ idCardFrontUrl: identityVerifications.idCardFrontUrl })
+      .from(identityVerifications)
+      .where(eq(identityVerifications.id, id))
+      .then((r) => r[0])
+    expect(row?.idCardFrontUrl).toBeNull()
   })
 })
