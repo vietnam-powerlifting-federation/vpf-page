@@ -13,6 +13,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       g++ \
     && rm -rf /var/lib/apt/lists/*
 
+# package-lock.json is an artifact of the npm version that wrote it: npm versions
+# disagree on how to resolve peer deps and the deps of platform-mismatched
+# optional packages, and `npm ci` rejects a lock built by a version that resolved
+# them differently. Keep this pinned to the npm that regenerates the lock.
+RUN npm install -g npm@11.6.2
+
 # Dependencies are installed before the source is copied so the layer is reused
 # across source-only changes. Scripts are deferred because the root postinstall
 # (nuxt prepare) needs the source that has not been copied yet.
