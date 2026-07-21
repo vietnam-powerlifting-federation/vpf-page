@@ -97,9 +97,22 @@ export default defineNuxtConfig({
     ],
   },
   routeRules: {
-    "/openvpf/**": {
-      swr: 60 * 10
-    },
+    // Only public, non-personalized OpenVPF pages are share-cached. The header's
+    // auth UI is client-only (see components/OpenVPFHeader.vue), so nothing
+    // user-specific is rendered server-side on these routes.
+    //
+    // Authenticated / user-specific pages (profile/**, checkout, admin/**,
+    // athletes/**) are deliberately NOT cached: they render per-request so one
+    // user's private data can never be baked into a response served to another.
+    "/openvpf": { swr: 60 * 10 },
+    "/openvpf/records": { swr: 60 * 10 },
+    "/openvpf/competitions": { swr: 60 * 10 },
+    "/openvpf/competitions/**": { swr: 60 * 10 },
+    // Vietnamese locale variants (i18n prefix_except_default strategy).
+    "/vi/openvpf": { swr: 60 * 10 },
+    "/vi/openvpf/records": { swr: 60 * 10 },
+    "/vi/openvpf/competitions": { swr: 60 * 10 },
+    "/vi/openvpf/competitions/**": { swr: 60 * 10 },
     "/api/meets/**": {
       swr: 60 * 10
     },

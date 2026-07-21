@@ -14,11 +14,7 @@
               group-rows-by="weightClass"
             >
               <template #groupheader="slotProps">
-                <tr>
-                  <td colspan="12">
-                    -{{ formatWeightClass(slotProps.data.weightClass, slotProps.data.sex) }}
-                  </td>
-                </tr>
+                -{{ formatWeightClass(slotProps.data.weightClass, slotProps.data.sex) }}
               </template>
               <Column field="placement" :header="$t('meets.place')" :sortable="true" style="width: 5rem" align="right">
                 <template #body="{ data }">

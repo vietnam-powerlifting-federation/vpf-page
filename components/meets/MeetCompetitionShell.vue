@@ -64,13 +64,39 @@ const localePath = useLocalePath()
 const route = useRoute()
 const { t } = useI18n()
 
-const currentSlug = computed(() => route.params.slug as string)
 const nuxtApp = useNuxtApp()
 
-const meet = computed(() => {
-  const payload = nuxtApp.payload.data[`meet-data-${currentSlug.value}`] as ApiResponse<MeetDataPayload> | null | undefined
-  return payload?.data?.meet ?? null
-})
+// Share the page's fetch (same key, deduped) so this shell renders identically
+// on server and client.
+//
+// On the server we `await` so the shell is present in the SSR HTML, matching
+// what the client renders during hydration (getCachedData reads the serialized
+// payload synchronously there). Without the await the layout renders before the
+// deduped fetch settles (meet === null → a comment vs the client's fragment),
+// causing a hydration mismatch.
+//
+// On the client we must NOT await: during client-side navigation the awaited
+// setup would suspend the entire route transition until the API responds,
+// freezing navigation for 1-2s. There is no hydration to match then, so letting
+// the shell fill in once the data arrives is correct and keeps navigation snappy.
+const meetFetch = useFetch<ApiResponse<MeetDataPayload>>(
+  `/api/meets/${props.slug}`,
+  {
+    key: `meet-data-${props.slug}`,
+    getCachedData: (key) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+)
+
+// Only block on the server. `import.meta.server` is statically replaced, so this
+// await is compiled away in the client bundle, keeping client-side navigation
+// snappy while still guaranteeing the data is present in the SSR HTML.
+if (import.meta.server) {
+  await meetFetch
+}
+
+const { data: meetResponse } = meetFetch
+
+const meet = computed(() => (meetResponse.value?.success ? meetResponse.value.data.meet : null))
 
 const registerPath = computed(() => localePath(`/openvpf/competitions/${props.slug}/register`))
 const scoresheetPath = computed(() => localePath(`/openvpf/competitions/${props.slug}`))
