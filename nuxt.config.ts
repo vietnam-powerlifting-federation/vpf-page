@@ -106,5 +106,30 @@ export default defineNuxtConfig({
     "/api/results": {
       swr: 60 * 10
     }
-  }
+  },
+  nitro: {
+    prerender: {
+      crawlLinks: false,
+    },
+    hooks: {
+      async "prerender:routes"(routes) {
+        // The container build runs without a reachable database (see Dockerfile),
+        // so degrade gracefully: skip competition prerendering and let these
+        // routes fall back to on-demand SSR + swr caching at runtime.
+        try {
+          const { getVisibleMeetSlugs } = await import("./lib/utils/queries/meet-slugs")
+          const slugs = await getVisibleMeetSlugs()
+          routes.add("/openvpf/competitions")
+          for (const slug of slugs) {
+            routes.add(`/openvpf/competitions/${slug}`)
+            routes.add(`/openvpf/competitions/${slug}/detailed`)
+            routes.add(`/openvpf/competitions/${slug}/gl-ranking`)
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error)
+          console.warn(`[prerender] Skipping competition pages, could not load meet slugs: ${message}`)
+        }
+      },
+    },
+  },
 })

@@ -3,7 +3,6 @@
     <div v-for="sexGroup in groupedByGenderDivision" :key="sexGroup.sex" class="mb-8">
       <div v-for="divisionGroup in sexGroup.divisions" :key="divisionGroup.division" class="mb-6">
         <h2 class="text-2xl font-bold mb-4">{{ formatSexAlternative(sexGroup.sex) }} {{ formatDivision(divisionGroup.division) }}</h2>
-        <ClientOnly>
         <div class="overflow-hidden">
             <DataTable
               :value="divisionGroup.results"
@@ -126,7 +125,6 @@
               </Column>
             </DataTable>
         </div>
-        </ClientOnly>
       </div>
     </div>
   </MeetTabContent>

@@ -27,11 +27,11 @@ RUN npm ci --ignore-scripts
 
 COPY . .
 
-# nuxt build prerenders the @nuxt/content dump, which loads the Nitro bundle and
-# with it lib/config/config.ts — that throws at import when these are unset.
-# Prerendering never reaches R2, SMTP, or the database, so placeholders satisfy
-# the check without putting real secrets in the build. They stay in this stage;
-# the runner reads the real values from the environment at startup.
+# nuxt build prerenders the @nuxt/content dump and the competition pages, which
+# load the Nitro bundle and with it lib/config/config.ts — that throws at import
+# when these are unset. Prerendering never reaches R2 or SMTP, so placeholders
+# satisfy the check without putting real secrets in the build. They stay in this
+# stage; the runner reads the real values from the environment at startup.
 ENV JWT_SECRET=build-time-placeholder \
     EMAIL_VERIFICATION_SKIP=true \
     CLOUDFLARE_R2_ACCOUNT_ID=build-time-placeholder \
@@ -41,7 +41,14 @@ ENV JWT_SECRET=build-time-placeholder \
     CLOUDFLARE_R2_VIP_PUBLIC_URL_BASE=https://build-time-placeholder.invalid
 
 RUN npm rebuild
-RUN npm run build
+
+# DATABASE_URL is mounted as a build secret (not an ENV/ARG) so it never lands in
+# an image layer. The prerender hook uses it to enumerate competition slugs; when
+# the secret is absent or the database is unreachable, the hook skips those pages
+# and the build still succeeds.
+RUN --mount=type=secret,id=database_url \
+    DATABASE_URL="$(cat /run/secrets/database_url 2>/dev/null || true)" \
+    npm run build
 
 FROM node:24-slim AS runner
 

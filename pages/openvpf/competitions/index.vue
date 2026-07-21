@@ -79,7 +79,6 @@
       <div v-if="oldMeets.length > 0">
         <h2 class="text-2xl md:text-3xl font-bold mb-6 text-primary">{{ $t("meets.oldCompetitions") }}</h2>
         <div class="bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-lg overflow-hidden">
-          <ClientOnly>
             <div class="old-meets-table-wrapper">
               <DataTable
                 ref="oldMeetsTable"
@@ -144,14 +143,6 @@
                 </Column>
               </DataTable>
             </div>
-            <template #fallback>
-              <div class="flex items-center justify-center py-12">
-                <div class="text-center">
-                  <div class="text-lg font-semibold mb-2 text-primary">{{ $t("meets.loadingTable") }}</div>
-                </div>
-              </div>
-            </template>
-          </ClientOnly>
         </div>
       </div>
 

@@ -1,6 +1,5 @@
 <template>
   <MeetTabContent :pending="pending" :error="error" :meet="meet ?? null">
-    <ClientOnly>
     <div class="overflow-hidden">
         <DataTable
           :value="glRankedResults"
@@ -72,7 +71,6 @@
           </Column>
         </DataTable>
     </div>
-    </ClientOnly>
   </MeetTabContent>
 </template>
 

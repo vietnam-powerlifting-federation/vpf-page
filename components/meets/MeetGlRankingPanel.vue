@@ -1,6 +1,5 @@
 <template>
   <div class="overflow-hidden">
-    <ClientOnly>
       <DataTable
         :value="glRankedResults"
         :loading="false"
@@ -70,14 +69,6 @@
           </template>
         </Column>
       </DataTable>
-      <template #fallback>
-        <div class="flex items-center justify-center py-12">
-          <div class="text-center">
-            <div class="text-lg font-semibold mb-2 text-primary">{{ $t("meets.loadingGlRankings") }}</div>
-          </div>
-        </div>
-      </template>
-    </ClientOnly>
   </div>
 </template>
 

@@ -4,7 +4,6 @@
     <div v-for="divisionGroup in sexGroup.divisions" :key="divisionGroup.division" class="mb-6">
       <h2 class="text-2xl font-bold mb-4">{{ formatSexAlternative(sexGroup.sex) }} {{ formatDivision(divisionGroup.division) }}</h2>
       <div class="overflow-hidden">
-        <ClientOnly>
           <DataTable
             :value="divisionGroup.results"
             :loading="false"
@@ -125,14 +124,6 @@
               </template>
             </Column>
           </DataTable>
-          <template #fallback>
-            <div class="flex items-center justify-center py-12">
-              <div class="text-center">
-                <div class="text-lg font-semibold mb-2 text-primary">{{ $t("meets.loadingDetailedScoresheet") }}</div>
-              </div>
-            </div>
-          </template>
-        </ClientOnly>
       </div>
     </div>
   </div>
