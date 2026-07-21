@@ -24,21 +24,22 @@ export type MeetDataReturn = {
   error: Ref<Error | null>
 }
 
-export function useMeetData(slug: string): MeetDataReturn {
-  const nuxtApp = useNuxtApp()
+export function useMeetPayload(slug: string) {
   const { data: response, pending, error } = useFetch<ApiResponse<MeetDataPayload>>(
     `/api/meets/${slug}`,
-    {
-      key: `meet-data-${slug}`,
-      getCachedData: (key) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
-    },
   )
   const data = computed(() => response.value?.success ? response.value.data : null)
+  const meet = computed(() => data.value?.meet ?? null)
+
+  return { data, meet, pending, error }
+}
+
+export function useMeetData(slug: string): MeetDataReturn {
+  const { data, meet, pending, error } = useMeetPayload(slug)
 
   const { fetchDecorators, applyDecorators } = useNameDecorators()
   onMounted(fetchDecorators)
 
-  const meet = computed(() => data.value?.meet ?? null)
   const results = computed<MeetResult[]>(() => (data.value?.results ?? []) as MeetResult[])
   const athletes = computed(() => applyDecorators(data.value?.athletes ?? []))
 

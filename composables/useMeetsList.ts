@@ -1,12 +1,8 @@
 import type { ApiResponse } from "~/types/api"
 import type { MeetPublic } from "~/types/meets"
 
-export const COMPETITIONS_MEETS_KEY = "openvpf-competitions-meets"
-
 export function useMeetsList() {
-  const { data: response, pending, error } = useFetch<ApiResponse<MeetPublic[]>>("/api/meets", {
-    key: COMPETITIONS_MEETS_KEY,
-  })
+  const { data: response, pending, error } = useFetch<ApiResponse<MeetPublic[]>>("/api/meets")
 
   const allMeets = computed(() => {
     if (response.value?.success && response.value.data) {

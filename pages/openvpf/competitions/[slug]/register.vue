@@ -301,9 +301,7 @@ const { t } = useI18n()
 const apiMessage = useApiMessage()
 const toast = useToast()
 
-const { data, pending, refresh } = await useFetch<ApiResponse<RegistrationEligibility>>(`/api/meets/${slug}/registration`, {
-  key: `registration-${slug}`,
-})
+const { data, pending, refresh } = await useFetch<ApiResponse<RegistrationEligibility>>(`/api/meets/${slug}/registration`)
 
 const eligibility = computed<RegistrationEligibility | null>(() => (data.value?.success ? data.value.data : null))
 
