@@ -14,3 +14,4 @@ Everything here is **cross-cutting** — architecture and conventions that no si
 | [Powerlifting domain rules](powerlifting-domain-rules.md) | Weight classes, divisions, disqualification, GL points, records |
 | [Frontend conventions](frontend-conventions.md) | PrimeVue theme, Tailwind usage, i18n, data-fetching composables |
 | [Config fails fast on env](config-and-env.md) | Env vars validated at import time, and what each one gates |
+| [Repository and service layers](repository-and-service-layers.md) | `server/repository/` vs `server/service/` split, what each owns |
