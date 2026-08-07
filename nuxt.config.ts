@@ -103,19 +103,12 @@ export default defineNuxtConfig({
     ],
   },
 
-  routeRules: {
-    // There is deliberately no rule for "/api/meets/**" any more.
-    //
-    // A cache routeRule is keyed on the request URL alone, with no notion of who
-    // asked, so a blanket rule over /api/meets would store an admin's response
-    // and replay it to anyone requesting the same path — hidden meets from
-    // `?includeHidden=true`, the entry roster, the ban list. The one expensive
-    // *public* read under that prefix caches itself instead, via
-    // `defineCachedEventHandler` in server/api/meets/[id]/index.ts.
-    "/api/results": {
-      swr: 60 * 10
-    }
-  },
+  // No cache routeRules, deliberately. A routeRule is keyed on the request URL
+  // alone, with no notion of who asked, so any rule over an /api prefix will
+  // eventually store one caller's response and replay it to another — hidden
+  // meets from `?includeHidden=true`, an entry roster, a ban list. API caching
+  // lives in server/service/ instead, where the code that caches a response is
+  // the code that knows whether it is public.
 
   nitro: {
     prerender: {
