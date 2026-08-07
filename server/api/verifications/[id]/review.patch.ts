@@ -8,6 +8,7 @@ import { IdentityVerificationReviewSchema } from "~/lib/zod/schemas/identity-ver
 import type { ApiResponse } from "~/types/api"
 import type { IdentityVerification } from "~/types/verifications"
 import { ok, fail } from "~/server/utils/api-response"
+import { invalidatePublicData } from "~/server/service/cache"
 import { MSG } from "~/server/utils/messages"
 import { requireAdmin } from "~/server/utils/auth-guard"
 import { readZodBody } from "~/server/utils/validate"
@@ -104,6 +105,13 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
         .update(users)
         .set({ identityVerified: false })
         .where(eq(users.vpfId, verification.vpfId))
+    }
+
+    // Approval overwrites the athlete's name, nationality and date of birth from
+    // the verified ID — all three are on the public record, and the date of birth
+    // decides which age divisions their lifts set records in.
+    if (decision === "approved") {
+      await invalidatePublicData("identity-verification-approved")
     }
 
     // Notify the athlete of the decision.

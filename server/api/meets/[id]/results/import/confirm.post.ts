@@ -2,7 +2,7 @@ import { logger } from "~/lib/logger/logger"
 import { ok, fail } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
 import { requireAdmin } from "~/server/utils/auth-guard"
-import { invalidateMeetDetailsCache, invalidateRecordsCache } from "~/server/utils/cached-records"
+import { invalidatePublicData } from "~/server/service/cache"
 import { resolveMeet } from "~/server/utils/competition-registration"
 import { applyImport, buildImportContext } from "~/server/utils/liftingcast-import"
 import { readImportUpload } from "~/server/utils/liftingcast-upload"
@@ -61,9 +61,9 @@ export default defineEventHandler(async (event): Promise<ApiResponse<ImportResul
 
     const result = await applyImport(meet, context)
 
-    // Both caches outlive the import, so without this the admin imports, sees a
+    // The cache outlives the import, so without this the admin imports, sees a
     // records page and a meet page that have not changed, and imports again (§3.6).
-    await Promise.all([invalidateRecordsCache(), invalidateMeetDetailsCache()])
+    await invalidatePublicData("results-import")
 
     logger.info("Meet results imported", { importedBy: auth.user.vpfId, ...result })
 

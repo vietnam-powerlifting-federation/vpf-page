@@ -5,6 +5,7 @@ import { MeetCreateSchema } from "~/lib/zod/schemas/meets.schema"
 import { ok, fail } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
 import { requireAdmin } from "~/server/utils/auth-guard"
+import { invalidatePublicData } from "~/server/service/cache"
 import { deriveFreeSlug, isSlugTaken, MEET_ADMIN_FORBIDDEN, SLUG_TAKEN } from "~/server/utils/meet-admin"
 import { readZodBody } from "~/server/utils/validate"
 import type { ApiResponse } from "~/types/api"
@@ -48,6 +49,10 @@ export default defineEventHandler(async (event): Promise<ApiResponse<MeetPublic>
       })
       .returning()
       .then((rows) => rows[0])
+
+    // A new meet is hidden by default, but the cached results dataset carries
+    // every meet regardless of `hidden`, so it is stale either way.
+    await invalidatePublicData("meet-create")
 
     logger.info("Meet created", { meetId: created.meetId, meetSlug, createdBy: auth.user.vpfId })
 

@@ -6,6 +6,7 @@ import { MeetDeleteSchema } from "~/lib/zod/schemas/meets.schema"
 import { ok, fail } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
 import { requireAdmin } from "~/server/utils/auth-guard"
+import { invalidatePublicData } from "~/server/service/cache"
 import { resolveMeet } from "~/server/utils/competition-registration"
 import { MEET_ADMIN_FORBIDDEN, MEET_NOT_FOUND } from "~/server/utils/meet-admin"
 import { readZodBody } from "~/server/utils/validate"
@@ -62,6 +63,8 @@ export default defineEventHandler(async (event): Promise<ApiResponse<{ meetId: n
     }
 
     await db.delete(meets).where(eq(meets.meetId, meet.meetId))
+
+    await invalidatePublicData("meet-delete")
 
     logger.warn("Meet deleted", {
       meetId: meet.meetId,

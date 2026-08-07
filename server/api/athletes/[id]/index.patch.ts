@@ -9,6 +9,7 @@ import type { ApiResponse } from "~/types/api"
 import type { JwtPayload } from "~/lib/utils/jwt"
 import type { UserPrivate } from "~/types/users"
 import { ok, fail } from "~/server/utils/api-response"
+import { invalidatePublicData, touchesPublicAthleteFields } from "~/server/service/cache"
 import { MSG } from "~/server/utils/messages"
 import { requireUser } from "~/server/utils/auth-guard"
 import { readZodBody } from "~/server/utils/validate"
@@ -56,6 +57,12 @@ async function patchSelf(event: H3Event, vpfId: string): Promise<ApiResponse<Use
   }
 
   await db.update(users).set(validated.data).where(eq(users.vpfId, vpfId))
+
+  // Nationality and date of birth are on the public record and feed the cached
+  // results and records pages; the rest of a self-edit is private.
+  if (touchesPublicAthleteFields(validated.data)) {
+    await invalidatePublicData("athlete-self-update")
+  }
 
   const updatedUser = await db
     .select(userPrivateSelect)
@@ -157,6 +164,10 @@ async function patchAsAdmin(
   if (patch.email !== undefined && patch.email !== target.email) updates.emailVerified = false
 
   await db.update(users).set(updates).where(eq(users.vpfId, targetVpfId))
+
+  if (touchesPublicAthleteFields(patch)) {
+    await invalidatePublicData("athlete-admin-update")
+  }
 
   if (togglingDoping) {
     logger.warn("Doping ban changed", {

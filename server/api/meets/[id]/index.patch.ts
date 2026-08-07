@@ -6,6 +6,7 @@ import { MeetPatchSchema } from "~/lib/zod/schemas/meets.schema"
 import { ok, fail } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
 import { requireAdmin } from "~/server/utils/auth-guard"
+import { invalidatePublicData } from "~/server/service/cache"
 import { resolveMeet } from "~/server/utils/competition-registration"
 import { isSlugTaken, MEET_ADMIN_FORBIDDEN, MEET_NOT_FOUND, SLUG_TAKEN } from "~/server/utils/meet-admin"
 import { readZodBody } from "~/server/utils/validate"
@@ -54,6 +55,8 @@ export default defineEventHandler(async (event): Promise<ApiResponse<MeetPublic>
       .where(eq(meets.meetId, meet.meetId))
       .returning()
       .then((rows) => rows[0])
+
+    await invalidatePublicData("meet-update")
 
     logger.info("Meet updated", {
       meetId: meet.meetId,

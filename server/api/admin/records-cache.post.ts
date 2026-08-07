@@ -2,7 +2,7 @@ import { logger } from "~/lib/logger/logger"
 import { ok, fail } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
 import { requireAdmin } from "~/server/utils/auth-guard"
-import { invalidateMeetDetailsCache, invalidateRecordsCache } from "~/server/utils/cached-records"
+import { invalidatePublicData } from "~/server/service/cache"
 import type { ApiResponse } from "~/types/api"
 
 /**
@@ -20,8 +20,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<{ cleared: 
     })
     if (!auth.ok) return auth.error
 
-    const [records, meetPages] = await Promise.all([invalidateRecordsCache(), invalidateMeetDetailsCache()])
-    const cleared = records + meetPages
+    const cleared = await invalidatePublicData("admin-manual")
     logger.info("Records cache cleared", { cleared, clearedBy: auth.user.vpfId })
 
     return ok({ cleared }, {
