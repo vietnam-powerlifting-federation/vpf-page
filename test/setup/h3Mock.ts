@@ -25,25 +25,14 @@ const getRequestHeader = vi.fn((event: H3Event, name: string) => {
   return headers[key] ?? headers[name] ?? null
 })
 const useRuntimeConfig = vi.fn(() => ({ vipUploadDir: "" }))
-// Nitro's cache layer is unavailable in-process; run the wrapped function uncached.
-const defineCachedFunction = vi.fn(<T>(fn: T) => fn)
-const defineCachedEventHandler = vi.fn((handler: Handler) => handler)
 // Multipart parts are injected onto the mock event by createMockH3Event.
 const readMultipartFormData = vi.fn(async (event: H3Event) => (event as { _multipartData?: unknown })._multipartData)
-// Nitro's unstorage layer is unavailable in-process. An in-memory map is enough:
-// nothing is cached here (defineCachedFunction is a passthrough above), so cache
-// invalidation just needs to be callable and report zero keys.
-const cacheStorage = new Map<string, unknown>()
-const useStorage = vi.fn(() => ({
-  getKeys: async (prefix = "") => [...cacheStorage.keys()].filter((key) => key.startsWith(prefix)),
-  getItem: async (key: string) => cacheStorage.get(key) ?? null,
-  setItem: async (key: string, value: unknown) => { cacheStorage.set(key, value) },
-  removeItem: async (key: string) => { cacheStorage.delete(key) },
-}))
+
+// No defineCachedFunction/defineCachedEventHandler or useStorage stubs: handlers
+// no longer touch Nitro's cache layer. Caching lives in server/service, which
+// test/setup/redisMock.ts replaces with an in-memory store.
 
 vi.stubGlobal("defineEventHandler", defineEventHandler)
-vi.stubGlobal("defineCachedFunction", defineCachedFunction)
-vi.stubGlobal("defineCachedEventHandler", defineCachedEventHandler)
 vi.stubGlobal("readBody", readBody)
 vi.stubGlobal("readMultipartFormData", readMultipartFormData)
 vi.stubGlobal("getRouterParam", getRouterParam)
@@ -52,4 +41,3 @@ vi.stubGlobal("setResponseStatus", setResponseStatus)
 vi.stubGlobal("setHeader", setHeader)
 vi.stubGlobal("getRequestHeader", getRequestHeader)
 vi.stubGlobal("useRuntimeConfig", useRuntimeConfig)
-vi.stubGlobal("useStorage", useStorage)

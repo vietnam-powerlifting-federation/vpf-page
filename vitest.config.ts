@@ -13,7 +13,12 @@ export default defineConfig({
           name: "api",
           include: ["test/api/**/*.test.ts"],
           environment: "nuxt",
-          setupFiles: ["test/setup/env.ts", "test/setup/globalDb.ts", "test/setup/h3Mock.ts"],
+          setupFiles: [
+            "test/setup/env.ts",
+            "test/setup/globalDb.ts",
+            "test/setup/h3Mock.ts",
+            "test/setup/redisMock.ts",
+          ],
           globalSetup: "test/setup/globalSetup.ts",
           testTimeout: 15000,
           globals: true,
