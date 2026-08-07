@@ -4,7 +4,7 @@ import { users, vipBenefits } from "~/lib/external/drizzle/migrations/schema"
 import { userPrivateSelect, userPublicSelect } from "~/lib/utils/queries/users"
 import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
 import { getPersonalBestSummary } from "~/lib/utils/queries/results"
-import { cachedFetchAthleteRecordStatus } from "~/server/utils/cached-records"
+import { getAthleteRecordStatus } from "~/server/service/records"
 import { isVipActive } from "~/lib/utils/vip"
 import { logger } from "~/lib/logger/logger"
 import type { ApiResponse } from "~/types/api"
@@ -118,7 +118,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
 
     let records: LiftRecord[] | undefined
     if (includeRecords) {
-      records = await cachedFetchAthleteRecordStatus(vpfId)
+      records = await getAthleteRecordStatus(vpfId)
     }
 
     return ok({

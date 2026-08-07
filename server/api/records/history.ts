@@ -1,17 +1,12 @@
-import { db } from "~/lib/external/drizzle/drizzle"
-import { meets } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
-import { getTargetDivisions, buildAttemptEvents } from "~/lib/utils/queries/records"
-import { cachedFetchRecordsForYear } from "~/server/utils/cached-records"
-import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
+import { getRecordHistory } from "~/server/service/records"
+import { ok, fail } from "~/server/utils/api-response"
+import { MSG } from "~/server/utils/messages"
 import type { ApiResponse } from "~/types/api"
 import type { LiftRecord } from "~/types/records"
 import type { MeetPublic } from "~/types/meets"
-import type { UserPublic, UserPublicWithDecorators } from "~/types/users"
-import { eq, and, sql } from "drizzle-orm"
+import type { UserPublicWithDecorators } from "~/types/users"
 import type { Result } from "~/types/results"
-import { ok, fail } from "~/server/utils/api-response"
-import { MSG } from "~/server/utils/messages"
 
 type HistoryResponse = {
   records: LiftRecord[]
@@ -23,113 +18,20 @@ type HistoryResponse = {
 export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResponse>> => {
   try {
     const query = getQuery(event)
-    let year = query.year ? parseInt(query.year as string, 10) : null
+    const year = query.year ? parseInt(query.year as string, 10) : null
 
-    const [{ maxYear }] = await db
-      .select({ maxYear: sql<number>`MAX(${meets.systemYear})` })
-      .from(meets)
-      .where(and(
-        eq(meets.type, "national"),
-        eq(meets.legacy, false),
-        eq(meets.hidden, false)
-      ))
+    const history = await getRecordHistory(year)
 
-    if (year === null || year > maxYear) year = maxYear
-
-    const { records: previousYearRecords, results: previousYearResults } =
-      await cachedFetchRecordsForYear({ maxYear: year - 1 })
-
-    const previousResultsById = new Map(previousYearResults.map(r => [r.resultId, r]))
-
-    const previousRecordsMap = new Map<string, number>()
-    for (const rec of previousYearRecords) {
-      const result = previousResultsById.get(rec.resultId)
-      if (!result) continue
-      previousRecordsMap.set(
-        `${result.sex}-${rec.recordDivision}-${result.weightClass}-${rec.lift}`,
-        rec.recordWeight
-      )
-    }
-
-    // Query meet, results, and athletes in a single optimized query
-    const { meets: returnedMeets, results, athletes } = await getMeetsAndResultsAndAthletes({
-      meetType: ["national"],
-      legacy: false,
-      hidden: false,
-      minYear: year,
-      maxYear: year,
-    })
-
-    const meet = returnedMeets[0] || null
-
-    if (!meet) {
-      return ok(
-        { records: [], meet: null, athletes: [] as UserPublicWithDecorators[], results: [] },
-        { en: "No national meet found", vi: "Không tìm thấy giải quốc gia" },
-      )
-    }
-
-    const usersMap = new Map<string, UserPublic>()
-    athletes.forEach(u => usersMap.set(u.vpfId, u))
-
-    // ---------- BUILD ATTEMPT TIMELINE ----------
-
-    const meetsMap = new Map([[meet.meetId, meet]])
-    const attemptEvents = buildAttemptEvents(results, meetsMap)
-    attemptEvents.sort((a, b) => {
-      if (a.liftOrder !== b.liftOrder) return a.liftOrder - b.liftOrder
-      if (a.attempt !== b.attempt) return a.attempt - b.attempt
-      if (a.weight !== b.weight) return a.weight - b.weight
-      return a.lot - b.lot
-    })
-
-    // ---------- RECORD PROCESSING ----------
-
-    const newRecords: LiftRecord[] = []
-    const groupBest = new Map<string, number>()
-    const processed = new Set<string>()
-    const systemYear = meet.systemYear
-
-    for (const e of attemptEvents) {
-      const { result, lift, attempt, weight } = e
-      if (weight <= 0) continue
-
-      const resultKey = `${result.vpfId}-${lift}-${attempt}-${weight}`
-      if (processed.has(resultKey)) continue
-      processed.add(resultKey)
-
-      const dob = usersMap.get(result.vpfId)?.dob ?? null
-      const targetDivisions = getTargetDivisions(dob, systemYear)
-
-      for (const div of targetDivisions) {
-        const key = `${result.sex}-${div}-${result.weightClass}-${lift}`
-        const prev = previousRecordsMap.get(key) ?? 0
-        const best = groupBest.get(key) ?? prev
-
-        if (weight > best) {
-          newRecords.push({
-            resultId: result.resultId,
-            lift,
-            attempt,
-            recordWeight: weight,
-            recordDivision: div,
-          })
-          groupBest.set(key, weight)
-        }
-      }
+    if (!history.meet) {
+      return ok(history, { en: "No national meet found", vi: "Không tìm thấy giải quốc gia" })
     }
 
     setHeader(event, "Cache-Control", "public, max-age=86400, s-maxage=86400")
 
-    return ok(
-      {
-        records: newRecords,
-        meet: meet as MeetPublic,
-        athletes: [...usersMap.values()],
-        results,
-      },
-      { en: "Record history retrieved successfully", vi: "Lấy lịch sử kỷ lục thành công" },
-    )
+    return ok(history, {
+      en: "Record history retrieved successfully",
+      vi: "Lấy lịch sử kỷ lục thành công",
+    })
   } catch (error) {
     logger.error("Error fetching record history", { error })
     return fail(event, 500, MSG.internalError)
