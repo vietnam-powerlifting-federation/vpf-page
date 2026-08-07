@@ -17,10 +17,12 @@ export type ResultsDataset = {
  * Every public result, unfiltered and unsorted, under a single cache key.
  *
  * `/api/results` accepts sort/division/weight-class/sex/meet-type filters, but
- * caching per filter combination means unbounded key growth with no TTL. The
- * whole dataset is one entry instead and the results service narrows it in
- * memory — the filters are equality checks over rows already loaded, so this
- * trades a little CPU per request for a bounded keyspace.
+ * caching per filter combination means a key per combination. The whole dataset
+ * is one entry instead and the results service narrows it in memory.
+ *
+ * Measured on production data: 2026 results across 23 meets serialises to about
+ * 1 MB, the database read takes ~1.8 s, and the cached read plus all the
+ * in-memory filtering, sorting and ranking takes ~17 ms.
  */
 export async function getAllResultsDataset(): Promise<ResultsDataset> {
   return redisRemember(

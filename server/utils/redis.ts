@@ -88,20 +88,24 @@ export async function redisGet<T>(key: string): Promise<T | null> {
 }
 
 /**
- * Without `ttlSeconds` the entry is held indefinitely and only leaves on an
- * explicit invalidation — which is why the instance must run `noeviction`.
+ * Every cached resource expires after a day.
+ *
+ * The alternative — holding entries forever and clearing them from each write
+ * path — means every new write endpoint is a chance to forget one, and a
+ * forgotten invalidation is a page that stays wrong until somebody notices. A
+ * TTL puts a ceiling on how wrong anything can get, at the cost of the data
+ * being up to a day old. scripts/warm-cache.sh re-populates the entries from
+ * cron so the expiry is not paid by a visitor.
  */
-export async function redisSet(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
+export const CACHE_TTL_SECONDS = 60 * 60 * 24
+
+/** Always writes an expiry: there is no code path that stores a key forever. */
+export async function redisSet(key: string, value: unknown, ttlSeconds: number = CACHE_TTL_SECONDS): Promise<void> {
   const redis = getRedis()
   if (!redis) return
 
   try {
-    const raw = JSON.stringify(value)
-    if (ttlSeconds === undefined) {
-      await redis.set(key, raw)
-    } else {
-      await redis.set(key, raw, "EX", ttlSeconds)
-    }
+    await redis.set(key, JSON.stringify(value), "EX", ttlSeconds)
   } catch (error) {
     logger.warn("Redis write failed", { key, error: (error as Error).message })
   }
@@ -155,7 +159,11 @@ export async function redisDelByPrefix(prefix: string): Promise<number> {
  * so caching it would mean writing the key back on every request that hits it —
  * "not found" simply stays uncached.
  */
-export async function redisRemember<T>(key: string, fetch: () => Promise<T>, ttlSeconds?: number): Promise<T> {
+export async function redisRemember<T>(
+  key: string,
+  fetch: () => Promise<T>,
+  ttlSeconds: number = CACHE_TTL_SECONDS,
+): Promise<T> {
   const cached = await redisGet<T>(key)
   if (cached !== null) return cached
 

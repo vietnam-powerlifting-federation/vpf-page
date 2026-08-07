@@ -99,11 +99,9 @@ function rankByLift(results: Result[], lift: "bestSquat" | "bestBench" | "bestDe
 /**
  * Drop every cached meet. Returns the number of keys removed.
  *
- * Deliberately prefix-wide rather than targeted at the meet that changed: a meet
- * is cached under both its id and its slug, a slug edit moves it between keys,
- * and a clone creates one. Meet writes are rare admin actions, so the cost of
- * over-invalidating is a cold read, while the cost of missing a key is a page
- * that stays wrong.
+ * Prefix-wide rather than targeted at a single meet: a meet is cached under both
+ * its id and its slug, so there is no one key to drop. Only reached through
+ * `invalidatePublicData` — ordinary meet edits wait for the day's TTL.
  */
 export async function invalidateMeets(): Promise<number> {
   return redisDelByPrefix(MEETS_CACHE_PREFIX)

@@ -11,8 +11,8 @@ import type { UserPublic, UserPublicWithDecorators } from "~/types/users"
 /**
  * Records are derived, not stored: every one of them is recomputed by walking the
  * full history of national attempts. That is why they are cached here rather than
- * in the repository, and why a single new result invalidates all of them — a lift
- * in one year changes which records were standing in every later year.
+ * in the repository, and why an import clears all of them at once — a lift in one
+ * year changes which records were standing in every later year.
  *
  * Keys are `vpf:records:<year>`, `vpf:records:latest` and `vpf:records:<vpfId>`.
  * They share one segment without colliding because a vpfId is always prefixed

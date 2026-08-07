@@ -14,15 +14,7 @@ services:
 
   redis:
     image: redis:8-alpine
-    # `noeviction` is not optional: cached meets, records and results are written
-    # without a TTL and are only meant to leave on an explicit invalidation. Any
-    # `allkeys-*` policy would drop them under memory pressure and the app would
-    # quietly serve nothing but misses.
-    #
-    # Appendonly keeps the cache across a restart. Losing it is survivable — the
-    # next request rebuilds — but rebuilding means replaying the full results
-    # query, so it is worth persisting.
-    command: ["redis-server", "--maxmemory-policy", "noeviction", "--appendonly", "yes"]
+    command: ["redis-server", "--maxmemory-policy", "allkeys-lru", "--appendonly", "yes"]
     volumes:
       - redis-data:/data
     restart: unless-stopped

@@ -14,18 +14,30 @@ import { beforeEach, vi } from "vitest"
  */
 const store = new Map<string, string>()
 
+/**
+ * The expiry each key was written with, so a test can assert that nothing is
+ * cached forever. `undefined` records a write that passed no TTL at all.
+ */
+const ttls = new Map<string, number | undefined>()
+
+declare global {
+  var __vpfRedisMockTtls: Map<string, number | undefined>
+}
+globalThis.__vpfRedisMockTtls = ttls
+
 vi.mock("~/server/utils/redis", async (importOriginal) => {
-  // cacheKey is pure string building; reuse it so the mock cannot drift from the
-  // key convention the invalidation prefixes depend on.
-  const { cacheKey } = await importOriginal<typeof import("~/server/utils/redis")>()
+  // cacheKey is pure string building and CACHE_TTL_SECONDS is the value under
+  // test; reuse both so the mock cannot drift from the real module.
+  const { cacheKey, CACHE_TTL_SECONDS } = await importOriginal<typeof import("~/server/utils/redis")>()
 
   const redisGet = async <T>(key: string): Promise<T | null> => {
     const raw = store.get(key)
     return raw === undefined ? null : (JSON.parse(raw) as T)
   }
 
-  const redisSet = async (key: string, value: unknown): Promise<void> => {
+  const redisSet = async (key: string, value: unknown, ttlSeconds?: number): Promise<void> => {
     store.set(key, JSON.stringify(value))
+    ttls.set(key, ttlSeconds)
   }
 
   const redisDel = async (...keys: string[]): Promise<number> => {
@@ -42,18 +54,25 @@ vi.mock("~/server/utils/redis", async (importOriginal) => {
     return removed
   }
 
-  const redisRemember = async <T>(key: string, fetch: () => Promise<T>): Promise<T> => {
+  // Mirrors the real signature, including its default, so a caller that passes no
+  // TTL is recorded as having been written with the default rather than with none.
+  const redisRemember = async <T>(
+    key: string,
+    fetch: () => Promise<T>,
+    ttlSeconds: number = CACHE_TTL_SECONDS,
+  ): Promise<T> => {
     const cached = await redisGet<T>(key)
     if (cached !== null) return cached
 
     const value = await fetch()
-    if (value !== null) await redisSet(key, value)
+    if (value !== null) await redisSet(key, value, ttlSeconds)
     return value
   }
 
   return {
     getRedis: () => null,
     cacheKey,
+    CACHE_TTL_SECONDS,
     redisGet,
     redisSet,
     redisDel,
@@ -67,4 +86,5 @@ vi.mock("~/server/utils/redis", async (importOriginal) => {
 // test's entries.
 beforeEach(() => {
   store.clear()
+  ttls.clear()
 })

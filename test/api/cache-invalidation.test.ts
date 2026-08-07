@@ -5,6 +5,13 @@ import { meets } from "~/lib/external/drizzle/migrations/schema"
 import { createMockH3Event } from "../utils/h3-event"
 import { fixtureUsers } from "../fixtures/data"
 
+const ONE_DAY_SECONDS = 60 * 60 * 24
+
+/** Expiries recorded by test/setup/redisMock.ts for the keys written so far. */
+function redisMockTtls(): Map<string, number | undefined> {
+  return globalThis.__vpfRedisMockTtls
+}
+
 const admin = { vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } as const
 
 const SLUG_PREFIX = "cache-inv-"
@@ -62,7 +69,10 @@ describe("API: public data cache invalidation", () => {
     expect(await readMeetName()).toBe("Before")
   })
 
-  it("shows a meet update immediately", async () => {
+  // Pins the trade-off deliberately rather than leaving it undiscovered: an
+  // ordinary meet edit is NOT invalidated, so it stays hidden until the day's TTL
+  // expires or someone clears the cache. Only a results import clears eagerly.
+  it("keeps serving a stale meet after an edit until the cache is cleared", async () => {
     const created = await createMeet("Before")
     expect(await readMeetName()).toBe("Before")
 
@@ -75,9 +85,25 @@ describe("API: public data cache invalidation", () => {
     }))
     expect(res.success).toBe(true)
 
-    // Before invalidation was wired into the write paths this returned "Before"
-    // until the cache entry aged out — and Redis entries never age out.
+    expect(await readMeetName()).toBe("Before")
+
+    const clear = await importClearCache()
+    expect((await clear(createMockH3Event({ method: "POST", context: { user: admin } }))).success).toBe(true)
+
     expect(await readMeetName()).toBe("After")
+  })
+
+  it("writes every cache entry with an expiry", async () => {
+    await createMeet("Before")
+    await readMeetName()
+
+    const ttls = redisMockTtls()
+    expect(ttls.size).toBeGreaterThan(0)
+    // Nothing may be stored without a TTL: an entry that never expires is one
+    // that can only be corrected by hand.
+    for (const [key, ttl] of ttls) {
+      expect(ttl, `${key} was cached without an expiry`).toBe(ONE_DAY_SECONDS)
+    }
   })
 
   it("clears the cache from the admin endpoint", async () => {

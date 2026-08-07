@@ -1,21 +1,26 @@
 import { logger } from "~/lib/logger/logger"
-import { userPublicSelect } from "~/lib/utils/queries/users"
 import { invalidateMeets } from "~/server/service/meets"
 import { invalidateRecords } from "~/server/service/records"
 import { invalidateResults } from "~/server/service/results"
 
 /**
- * Drop every cached public dataset after a write.
+ * Drop every cached public dataset.
  *
- * The three resources are not independent: results are computed from meets,
- * records are computed from results, and all of them embed the athletes who
- * appear in them. Any write that touches a meet, a result or an athlete's public
- * details can therefore change all three, and a partial invalidation leaves one
- * page contradicting another.
+ * Cached resources expire on their own after a day (`CACHE_TTL_SECONDS`), so
+ * this is not how the cache normally stays correct — it exists for the two cases
+ * where waiting out the day is unacceptable:
  *
- * These writes are rare admin actions — an import, a meet edit, a verification
- * approval — so invalidating broadly costs one cold rebuild, while invalidating
- * narrowly risks a records page that stays wrong until someone notices.
+ *   - a confirmed results import, where a records page that has not moved makes
+ *     an admin import a second time
+ *   - the admin's manual clear button, for when the data was fixed by hand
+ *
+ * Deliberately not called from the other write paths. Invalidating from every
+ * endpoint that touches a meet or an athlete means every *future* endpoint is a
+ * chance to forget one, and a forgotten invalidation is indistinguishable from a
+ * caching bug. The TTL bounds the damage instead.
+ *
+ * All three resources go together: results are computed from meets, records from
+ * results, and each embeds the athletes appearing in it.
  */
 export async function invalidatePublicData(reason: string): Promise<number> {
   const [meets, records, results] = await Promise.all([
@@ -28,23 +33,4 @@ export async function invalidatePublicData(reason: string): Promise<number> {
   logger.info("Public data cache invalidated", { reason, cleared, meets, records, results })
 
   return cleared
-}
-
-/**
- * Derived from `userPublicSelect` so the two cannot drift: whatever a cached
- * response exposes about an athlete is exactly what has to invalidate it.
- */
-const PUBLIC_ATHLETE_FIELDS = new Set(Object.keys(userPublicSelect))
-
-/**
- * Whether an athlete patch changes anything the cached pages actually show.
- *
- * Athletes edit their own profiles far more often than admins import results,
- * and most of what they edit — phone number, address, rack pins — appears
- * nowhere public. Only a change to a public field needs to clear the cache.
- * `dob` counts twice over: it decides which age divisions a lift sets a record
- * in, so editing it rewrites records rather than just a displayed name.
- */
-export function touchesPublicAthleteFields(patch: object): boolean {
-  return Object.keys(patch).some((field) => PUBLIC_ATHLETE_FIELDS.has(field))
 }
