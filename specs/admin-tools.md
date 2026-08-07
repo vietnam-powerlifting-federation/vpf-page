@@ -226,13 +226,15 @@ Two VPF-only columns have no CSV source and must survive a re-import: `ranked` a
 
 ### 3.6 Cache invalidation
 
-Records are served through `cachedFetchRecordsForYear` ([cached-records.ts](../server/utils/cached-records.ts)), and [/api/records](../server/api/records/index.ts) additionally sets `Cache-Control: max-age=86400`. **Importing results therefore does not change the public records page for up to a day.**
+Records are served through [server/service/records.ts](../server/service/records.ts) and cached in Redis for a day. **Importing results would therefore not change the public records page for up to a day** — so confirming an import calls `invalidatePublicData` ([service/cache.ts](../server/service/cache.ts)), which clears the cached meets, records and results together. Without it staff import, see nothing change, and import again — which is exactly what happened the first time the round trip was run end to end.
 
-Confirming an import invalidates both the records caches and the meet-detail cache (`invalidateRecordsCache` / `invalidateMeetDetailsCache`), and the dashboard carries a manual "rebuild records cache" button for when it drifts anyway. Without this, staff import, see nothing change, and import again — which is exactly what happened the first time the round trip was run end to end.
+The dashboard also carries a manual "rebuild records cache" button, for when the data is corrected some other way — directly in the database, say.
 
-The `Cache-Control` header on `/api/records` is a *browser* cache and cannot be invalidated server-side; a client that already holds the response keeps it until it expires.
+An import is one of only two places that invalidate eagerly; every other write waits for the day's expiry. See [the Redis caching spec](redis-caching-spec.md).
 
-**A caching hazard worth knowing about.** `/api/meets/**` used to carry an `swr` route rule. A cache route rule is keyed on the request URL alone, with no notion of who asked — so once `/api/meets` grew an admin branch (`?includeHidden=true`) and admin-only sub-routes appeared beneath it (entries, ban list), that rule would have stored an admin's response and replayed it to anyone requesting the same path. Narrowing it with `cache: false` exclusions is **not** a fix: Nitro compiles a cache route rule into its own handler entry in the route table, and the resulting entry shadowed every real handler under `/api/meets/`, 404-ing them all. The rule is gone; the one expensive public read under that prefix now caches itself with `defineCachedEventHandler` inside [meets/[id]/index.ts](../server/api/meets/[id]/index.ts), which cannot reach anything else.
+`/api/records` used to add `Cache-Control: max-age=86400` on top of this. That header is gone: a *browser* copy cannot be reached by the invalidation above, so it stacked on the server-side day and pushed the worst case for a returning visitor to nearly two days.
+
+**A caching hazard worth knowing about.** `/api/meets/**` and `/api/results` used to carry cache route rules. A route rule is keyed on the request URL alone, with no notion of who asked — so once `/api/meets` grew an admin branch (`?includeHidden=true`) and admin-only sub-routes appeared beneath it (entries, ban list), that rule would have stored an admin's response and replayed it to anyone requesting the same path. Narrowing it with `cache: false` exclusions is **not** a fix: Nitro compiles a cache route rule into its own handler entry in the route table, and the resulting entry shadowed every real handler under `/api/meets/`, 404-ing them all. There are no cache route rules any more; caching lives in `server/service/`, where the code that caches a response is the code that knows whether it is public.
 
 ### 3.7 Legacy meets
 

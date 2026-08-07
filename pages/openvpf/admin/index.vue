@@ -166,8 +166,9 @@ const stats = computed(() => [
 const rebuilding = ref(false)
 
 /**
- * Records are cached for a day and `/api/records` sends its own Cache-Control,
- * so staff need a visible way to force a rebuild when the cache drifts (§3.6).
+ * Cached public data expires on its own after a day, and only a results import
+ * clears it early. Staff need a visible way to force a rebuild for everything
+ * else — a meet renamed, or a record fixed directly in the database (§3.6).
  */
 async function rebuildCache() {
   rebuilding.value = true

@@ -1,11 +1,11 @@
-## Layers
+# Repository and service layers
 
-Introduce `server/repository/` and `server/service/` under `server/`, alongside existing `server/api/` and `server/utils/`. Current query functions in `lib/utils/queries/` (`getMeetsAndResultsAndAthletes`, `fetchRecordsForYear`, etc.) or manual drizzle query in apis will be migrated to these layers.
+`server/repository/` and `server/service/` sit under `server/`, alongside `server/api/` and `server/utils/`. The query functions in `lib/utils/queries/` (`getMeetsAndResultsAndAthletes`, the record maths) are reached through these layers rather than called from handlers.
 
-**`server/repository/`** — define functions to get data, such as getUsersPublic or getUserPublicById, will be cache indefinitely or with TTL based on the resources
+**`server/repository/`** — data access. Fetches raw resources and owns their cache keys, exporting a cache prefix per resource so the service layer can invalidate one without knowing how its keys are shaped.
 
-**`server/service/`** — own business logics. Records are derived resource and functions such as fetchRecordsForYear will be defined here with caching.
+**`server/service/`** — business logic, and the caching of *derived* resources. Records belong here because they are recomputed by walking the full attempt history rather than stored; so do per-lift placements and the filtering and ranking behind the results board.
 
-**`server/api/`** — handlers call the service layer, or call repository directly if the operation is small and require no validation, no direct repository or Redis access, no more `defineCachedEventHandler`/`defineCachedFunction`. 
+**`server/api/`** — handlers parse and validate the request, call a service, and map the result to an `ApiResponse`. No direct repository or Redis access, and no `defineCachedEventHandler` / `defineCachedFunction`.
 
-```
+Everything cached expires after a day; see [the Redis caching spec](../specs/redis-caching-spec.md) for keys, expiry and the two places invalidation still fires.

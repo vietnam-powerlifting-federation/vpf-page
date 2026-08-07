@@ -26,8 +26,6 @@ export default defineEventHandler(async (event): Promise<ApiResponse<HistoryResp
       return ok(history, { en: "No national meet found", vi: "Không tìm thấy giải quốc gia" })
     }
 
-    setHeader(event, "Cache-Control", "public, max-age=86400, s-maxage=86400")
-
     return ok(history, {
       en: "Record history retrieved successfully",
       vi: "Lấy lịch sử kỷ lục thành công",
