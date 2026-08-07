@@ -69,29 +69,43 @@ export default defineEventHandler(async (event): Promise<ApiResponse<VipBenefits
               type: part.type,
             })
           }
-        } else if (typeof part.data === "string") {
-          textFields[part.name] = part.data
+        } else if (typeof part.data !== "undefined") {
+          // readMultipartFormData yields Buffers, never strings — matching how
+          // verifications/self.post.ts and meets/[id]/register.post.ts read text fields.
+          textFields[part.name] = part.data.toString()
         }
       }
       const booleanKeys = [
         "displayProfileDescription", "displayAlias", "displayFacebook", "displayInstagram",
         "displayTiktok", "displayYoutube", "displayMobilePhone",
       ]
-      const imageUrlKeys = [
+      // Multipart cannot carry a JSON null, so an empty value means "clear this column".
+      // Covers every nullable text column, not just images, because the client sends a
+      // cleared text field as "" whenever a file upload forces the multipart path.
+      const nullableTextKeys = [
         "avatarImageUrl", "bannerImageUrl1", "bannerImageUrl2", "bannerImageUrl3", "bannerImageUrl4", "bannerImageUrl5",
+        "profileDescription", "alias", "facebook", "instagram", "tiktok", "youtube",
+        "vipPhoneNumber", "decorator1", "decorator2",
       ]
       const coerced: Record<string, unknown> = {}
       for (const [k, v] of Object.entries(textFields)) {
         if (booleanKeys.includes(k) && (v === "true" || v === "false")) {
           coerced[k] = v === "true"
-        } else if (imageUrlKeys.includes(k) && (v === "" || v === "null")) {
+        } else if (nullableTextKeys.includes(k) && (v === "" || v === "null")) {
           coerced[k] = null
         } else {
           coerced[k] = v
         }
       }
       const parsed = VipSettingsPatchSchema.safeParse(coerced)
-      if (parsed.success) patch = { ...patch, ...parsed.data }
+      // Reject before uploading, so a rejected request leaves no orphaned R2 objects.
+      if (!parsed.success) {
+        return fail(event, 400, {
+          en: "Invalid VIP settings data",
+          vi: "Dữ liệu cài đặt VIP không hợp lệ",
+        })
+      }
+      patch = { ...patch, ...parsed.data }
 
       for (const f of files) {
         const fieldLower = f.field.toLowerCase()

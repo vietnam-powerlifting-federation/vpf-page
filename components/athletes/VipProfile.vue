@@ -11,7 +11,7 @@
             :src="vipSettings.avatarImageUrl"
             :decorator1="vipSettings.decorator1"
             :decorator2="vipSettings.decorator2"
-            class="w-72 h-72"
+            class="w-28 h-28 sm:w-44 sm:h-44 lg:w-72 lg:h-72"
           />
         </div>
       </div>
@@ -20,7 +20,7 @@
     <!-- Name + Info Section -->
     <div
       class="container mx-auto px-4"
-      :class="banners.length > 0 && vipSettings.avatarImageUrl ? 'mt-24' : 'mt-8'"
+      :class="banners.length > 0 && vipSettings.avatarImageUrl ? 'mt-10 sm:mt-14 lg:mt-24' : 'mt-8'"
     >
       <div class="flex justify-between items-start mb-2">
         <div>

@@ -56,7 +56,16 @@ function calculateLiftPlacements(
   return placements
 }
 
-export default defineEventHandler(async (event): Promise<ApiResponse<MeetDetailsResponse>> => {
+/**
+ * Cached on the handler rather than by a `/api/meets/**` route rule.
+ *
+ * A route rule over that prefix would also cover every admin-only read beneath
+ * it — the entry roster, the ban list, `?includeHidden=true` — and the cache key
+ * is the URL alone, so one admin's response would be replayed to whoever asked
+ * for the same path. This endpoint is public-only, so caching it here is safe and
+ * cannot reach anything else.
+ */
+export default defineCachedEventHandler(async (event): Promise<ApiResponse<MeetDetailsResponse>> => {
   try {
     const identifier = getRouterParam(event, "id")
     
@@ -160,4 +169,10 @@ export default defineEventHandler(async (event): Promise<ApiResponse<MeetDetails
     logger.error("Error fetching meet details", { error })
     return fail(event, 500, MSG.internalError)
   }
+}, {
+  name: "meet-details",
+  maxAge: 60 * 10,
+  swr: true,
+  // Only the meet identifier decides the response; nothing here varies by caller.
+  getKey: (event) => getRouterParam(event, "id") ?? "unknown",
 })

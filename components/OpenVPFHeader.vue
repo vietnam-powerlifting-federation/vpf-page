@@ -77,6 +77,21 @@
               <i class="pi pi-cog text-sm" />
               {{ $t("openvpf.headerNav.profileSettings") }}
             </NuxtLinkLocale>
+            <!--
+              The only way into the admin console from the app. Everything under
+              /openvpf/admin was URL-typing-only before this entry existed.
+              Rendered from the client-side session, so the swr-cached markup
+              stays auth-agnostic like the rest of this menu.
+            -->
+            <NuxtLinkLocale
+              v-if="isAdmin"
+              to="/openvpf/admin"
+              class="flex items-center gap-2.5 px-3 py-2 text-sm text-surface-200 hover:bg-surface-800 hover:text-surface-0"
+              @click="open = false"
+            >
+              <i class="pi pi-shield text-sm" />
+              {{ $t("openvpf.headerNav.admin") }}
+            </NuxtLinkLocale>
             <div class="my-1 border-t border-surface-700" />
             <Button
               type="button"
@@ -127,7 +142,7 @@ const navItems = [
   { to: "/contact", label: "openvpf.headerNav.contact" },
 ] as const
 
-const { athlete, isLoggedIn, refresh: refreshSession } = useAuthSession()
+const { athlete, isLoggedIn, isAdmin, refresh: refreshSession } = useAuthSession()
 const athleteName = computed(() => athlete.value?.athlete?.fullName ?? "")
 const avatarUrl = computed(() => athlete.value?.vipSettings?.avatarImageUrl ?? null)
 

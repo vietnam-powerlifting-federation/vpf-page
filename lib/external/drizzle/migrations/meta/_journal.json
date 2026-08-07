@@ -127,6 +127,13 @@
       "when": 1784259838888,
       "tag": "0017_nullable_id_card_url",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1785402833194,
+      "tag": "0018_meet_entries",
+      "breakpoints": true
     }
   ]
 }

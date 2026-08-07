@@ -1,4 +1,4 @@
-import { or, isNull, gte, sql, and, eq } from "drizzle-orm"
+import { gte, sql, eq } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { users, vipBenefits } from "~/lib/external/drizzle/migrations/schema"
 import { logger } from "~/lib/logger/logger"
@@ -12,10 +12,9 @@ type VipDecoratorSettings = {
   decorator2: string | null
 }
 
-const vipMembershipActive = or(
-  isNull(users.vipMembershipExpiresAt),
-  gte(users.vipMembershipExpiresAt, sql`CURRENT_DATE`),
-)
+// Mirrors isVipActive in lib/utils/vip.ts: a null expiry means "never purchased",
+// so those athletes' decorators must not be published site-wide.
+const vipMembershipActive = gte(users.vipMembershipExpiresAt, sql`CURRENT_DATE`)
 
 export default defineEventHandler(async (event): Promise<ApiResponse<VipDecoratorSettings[]>> => {
   try {
@@ -27,7 +26,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<VipDecorato
       })
       .from(vipBenefits)
       .innerJoin(users, eq(vipBenefits.vpfId, users.vpfId))
-      .where(and(vipMembershipActive))
+      .where(vipMembershipActive)
 
     return ok(settings, {
       en: "VIP settings retrieved successfully",

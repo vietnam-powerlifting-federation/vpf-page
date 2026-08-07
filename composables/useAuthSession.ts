@@ -1,8 +1,12 @@
 import type { ApiResponse } from "~/types/api"
-import type { UserPublic } from "~/types/users"
+import type { UserPrivate } from "~/types/users"
 import type { VipBenefits } from "~/types/vip"
 
-type AuthAthlete = { athlete: UserPublic; vipSettings?: VipBenefits }
+/**
+ * `/api/athletes/self` returns the *private* column set for the caller's own
+ * record — including `role`, which is what gates the admin entry in the nav.
+ */
+type AuthAthlete = { athlete: UserPrivate; vipSettings?: VipBenefits }
 
 /**
  * Client-side session for the current athlete.
@@ -36,6 +40,12 @@ export function useAuthSession() {
     athlete,
     ready,
     isLoggedIn: computed(() => athlete.value !== null),
+    /**
+     * Convenience for rendering the admin nav entry. Not a security boundary —
+     * every admin route is guarded server-side by `middleware/admin` and by
+     * `requireAdmin` in each handler.
+     */
+    isAdmin: computed(() => athlete.value?.athlete?.role === "admin"),
     refresh,
   }
 }

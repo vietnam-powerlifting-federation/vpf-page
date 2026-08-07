@@ -12,6 +12,8 @@ import {
   userViolations,
   vipBenefits,
   purchases,
+  meetEntries,
+  competitionBanList,
 } from "../../lib/external/drizzle/migrations/schema"
 import {
   fixtureTeams,
@@ -71,8 +73,15 @@ export async function teardownTestDatabase(): Promise<void> {
   const vpfIds = fixtureUsers.map((u) => u.vpfId)
   const teamIds = fixtureTeams.map((t) => t.teamId)
 
+  const allMeetIds = [...new Set([...meetIds, ...legacyMeetIds, ...fixtureMeets.map((m) => m.meetId)])]
+
   await db.delete(legacyMeetResults).where(inArray(legacyMeetResults.meetId, [...new Set(legacyMeetIds)]))
   await db.delete(meetResults).where(inArray(meetResults.meetId, [...new Set(meetIds)]))
+  // Both cascade from meets, but tests create rows against fixture meets and
+  // athletes freely; clearing them explicitly keeps a failed run from poisoning
+  // the next one.
+  await db.delete(meetEntries).where(inArray(meetEntries.meetId, allMeetIds))
+  await db.delete(competitionBanList).where(inArray(competitionBanList.meetId, allMeetIds))
   await db.delete(userViolations).where(inArray(userViolations.vpfId, vpfIds))
   await db.delete(vipBenefits).where(inArray(vipBenefits.vpfId, vpfIds))
   await db.delete(purchases).where(inArray(purchases.vpfId, vpfIds))

@@ -3,6 +3,14 @@
     <h1 class="text-2xl font-bold mb-2 text-surface-900 dark:text-surface-0">{{ $t("adminVouchers.title") }}</h1>
     <p class="text-sm text-surface-600 dark:text-surface-300 mb-6">{{ $t("adminVouchers.subtitle") }}</p>
 
+    <!-- Issued vs redeemed vs expired, and what it cost (§8). -->
+    <div v-if="stats" class="mb-6 grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div v-for="stat in statTiles" :key="stat.label">
+        <p class="text-xs uppercase tracking-wide text-surface-500">{{ $t(stat.label) }}</p>
+        <p class="text-xl font-semibold text-surface-900 dark:text-surface-0">{{ stat.value }}</p>
+      </div>
+    </div>
+
     <!-- Issue form -->
     <form
       class="mb-8 border border-surface-200 dark:border-surface-700 rounded-lg p-4 md:p-5 space-y-4"
@@ -56,7 +64,40 @@
         </div>
       </div>
 
-      <Button type="submit" :label="$t('adminVouchers.issue')" :loading="isIssuing" :disabled="!canIssue" />
+      <!--
+        Bulk issue (§8): a Tết promotion to 200 athletes is otherwise 200 clicks.
+        Every recipient still gets their own code — a voucher is single-use and
+        per-athlete, and a shared code could be neither.
+      -->
+      <div class="flex items-center gap-2">
+        <Checkbox v-model="bulkMode" input-id="bulkMode" binary />
+        <label for="bulkMode" class="text-sm text-surface-700 dark:text-surface-200">{{ $t("adminVouchers.bulkMode") }}</label>
+      </div>
+
+      <div v-if="bulkMode" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("adminVouchers.bulkAudience") }}</label>
+          <Select
+            v-model="bulkAudience"
+            :options="audienceOptions"
+            option-label="label"
+            option-value="value"
+          />
+        </div>
+        <div v-if="bulkAudience === 'list'" class="flex flex-col gap-1">
+          <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("adminVouchers.bulkIds") }}</label>
+          <Textarea v-model="bulkIds" rows="3" :placeholder="$t('adminVouchers.bulkIdsHint')" />
+        </div>
+      </div>
+
+      <Button
+        v-if="bulkMode"
+        type="button"
+        :label="$t('adminVouchers.bulkIssue')"
+        :loading="isIssuing"
+        @click="issueBulk"
+      />
+      <Button v-else type="submit" :label="$t('adminVouchers.issue')" :loading="isIssuing" :disabled="!canIssue" />
     </form>
 
     <!-- Filters -->
@@ -107,17 +148,61 @@
       </Column>
       <Column :header="$t('adminVouchers.action')">
         <template #body="{ data }">
-          <Button
-            size="small"
-            severity="danger"
-            outlined
-            :label="$t('adminVouchers.revoke')"
-            :disabled="data.status === 'used' || actingCode === data.code"
-            @click="openRevoke(data)"
-          />
+          <div class="flex gap-1">
+            <!--
+              Editing exists so fixing an expiry date no longer means delete and
+              recreate, which loses the code the athlete was already given.
+            -->
+            <Button
+              size="small"
+              outlined
+              :label="$t('adminVouchers.edit')"
+              :disabled="data.status === 'used'"
+              @click="openEdit(data)"
+            />
+            <Button
+              size="small"
+              severity="danger"
+              outlined
+              :label="$t('adminVouchers.revoke')"
+              :disabled="data.status === 'used' || actingCode === data.code"
+              @click="openRevoke(data)"
+            />
+          </div>
         </template>
       </Column>
     </DataTable>
+
+    <Dialog v-model:visible="editDialog" :header="$t('adminVouchers.editTitle')" modal class="w-full max-w-md">
+      <p class="text-sm text-surface-500 font-mono mb-4">{{ editTarget?.code }}</p>
+      <div class="space-y-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm">{{ $t("adminVouchers.discountKind") }}</label>
+          <Select v-model="editForm.discountKind" :options="discountKindOptions" option-label="label" option-value="value" />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm">{{ $t("adminVouchers.discountValue") }}</label>
+          <InputNumber
+            v-model="editForm.discountValue"
+            :min="1"
+            :max="editForm.discountKind === 'percent' ? 100 : undefined"
+            :suffix="editForm.discountKind === 'percent' ? ' %' : ' ₫'"
+          />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm">{{ $t("adminVouchers.expiresAt") }}</label>
+          <DatePicker v-model="editForm.expiresAt" date-format="dd/mm/yy" show-icon />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm">{{ $t("adminVouchers.note") }}</label>
+          <InputText v-model="editForm.note" />
+        </div>
+      </div>
+      <template #footer>
+        <Button text :label="$t('adminVouchers.cancel')" @click="editDialog = false" />
+        <Button :label="$t('adminVouchers.saveEdit')" :loading="isEditing" @click="saveEdit" />
+      </template>
+    </Dialog>
 
     <Dialog v-model:visible="revokeDialog" :header="$t('adminVouchers.revokeTitle')" modal class="w-full max-w-md">
       <p class="text-sm text-surface-600 dark:text-surface-300">
@@ -144,7 +229,7 @@ import type { PurchaseType, VoucherDiscountKind } from "~/types/union-types"
 import type { Voucher, VoucherRevoked, VoucherWithUser } from "~/types/vouchers"
 
 definePageMeta({
-  layout: "openvpf",
+  layout: "openvpf-admin",
   middleware: "admin",
 })
 
@@ -237,11 +322,134 @@ async function issue() {
       life: 5000,
     })
     form.note = ""
-    await refresh()
+    await Promise.all([refresh(), refreshStats()])
   } catch (e) {
     toast.add({ severity: "error", summary: t("general.error"), detail: e instanceof Error ? e.message : "", life: 5000 })
   } finally {
     isIssuing.value = false
+  }
+}
+
+const bulkMode = ref(false)
+const bulkAudience = ref<"list" | "active_members">("list")
+const bulkIds = ref("")
+
+const audienceOptions = computed(() => [
+  { label: t("adminVouchers.audienceList"), value: "list" },
+  { label: t("adminVouchers.audienceActiveMembers"), value: "active_members" },
+])
+
+async function issueBulk() {
+  if (!form.expiresAt) return
+  isIssuing.value = true
+  try {
+    const vpfIds = bulkIds.value
+      .split(/[\s,;]+/)
+      .map((id) => id.trim())
+      .filter(Boolean)
+
+    const res = (await $fetch("/api/vouchers/bulk", {
+      method: "POST",
+      credentials: "include",
+      ignoreResponseError: true,
+      body: {
+        ...(bulkAudience.value === "active_members" ? { audience: "active_members" } : { vpfIds }),
+        type: form.type,
+        discountKind: form.discountKind,
+        discountValue: form.discountValue,
+        expiresAt: toIsoDate(form.expiresAt),
+        note: form.note.trim() || undefined,
+      },
+    })) as ApiResponse<{ issued: number; unknownVpfIds: string[] }>
+
+    toast.add({
+      severity: res.success ? "success" : "error",
+      summary: t(res.success ? "adminVouchers.issued" : "general.error"),
+      detail: msg(res),
+      life: 6000,
+    })
+    if (res.success && res.data.unknownVpfIds.length) {
+      toast.add({
+        severity: "warn",
+        summary: t("adminVouchers.bulkSkipped"),
+        detail: res.data.unknownVpfIds.join(", "),
+        life: 8000,
+      })
+    }
+    if (res.success) await refresh()
+  } finally {
+    isIssuing.value = false
+  }
+}
+
+const { data: statsResponse, refresh: refreshStats } = await useFetch<ApiResponse<{
+  issued: number
+  redeemed: number
+  expired: number
+  available: number
+  totalDiscount: number
+}>>("/api/vouchers/stats", { credentials: "include", ignoreResponseError: true })
+
+const stats = computed(() => (statsResponse.value?.success ? statsResponse.value.data : null))
+
+const statTiles = computed(() => [
+  { label: "adminVouchers.statIssued", value: stats.value?.issued ?? 0 },
+  { label: "adminVouchers.statRedeemed", value: stats.value?.redeemed ?? 0 },
+  { label: "adminVouchers.statAvailable", value: stats.value?.available ?? 0 },
+  { label: "adminVouchers.statExpired", value: stats.value?.expired ?? 0 },
+  {
+    label: "adminVouchers.statDiscount",
+    value: `${new Intl.NumberFormat("vi-VN").format(stats.value?.totalDiscount ?? 0)} ₫`,
+  },
+])
+
+const editDialog = ref(false)
+const editTarget = ref<VoucherWithUser | null>(null)
+const isEditing = ref(false)
+const editForm = reactive({
+  discountKind: "percent" as VoucherDiscountKind,
+  discountValue: 20 as number | null,
+  expiresAt: null as Date | null,
+  note: "",
+})
+
+function openEdit(voucher: VoucherWithUser) {
+  editTarget.value = voucher
+  editForm.discountKind = voucher.discountKind
+  editForm.discountValue = voucher.discountValue
+  editForm.expiresAt = new Date(`${voucher.expiresAt}T00:00:00`)
+  editForm.note = voucher.note ?? ""
+  editDialog.value = true
+}
+
+async function saveEdit() {
+  if (!editTarget.value || !editForm.expiresAt) return
+  isEditing.value = true
+  try {
+    const res = (await $fetch(`/api/vouchers/${editTarget.value.code}`, {
+      method: "PATCH",
+      credentials: "include",
+      ignoreResponseError: true,
+      body: {
+        discountKind: editForm.discountKind,
+        discountValue: editForm.discountValue,
+        expiresAt: toIsoDate(editForm.expiresAt),
+        note: editForm.note.trim() || null,
+      },
+    })) as ApiResponse<Voucher>
+
+    toast.add({
+      severity: res.success ? "success" : "error",
+      summary: t(res.success ? "general.success" : "general.error"),
+      detail: msg(res),
+      life: 5000,
+    })
+    if (res.success) {
+      editDialog.value = false
+      await refresh()
+    }
+  } finally {
+    isEditing.value = false
   }
 }
 
@@ -267,7 +475,7 @@ async function confirmRevoke() {
 
     if (res.success) {
       toast.add({ severity: "success", summary: t("adminVouchers.revoked"), detail: msg(res), life: 4000 })
-      await refresh()
+      await Promise.all([refresh(), refreshStats()])
     } else {
       toast.add({ severity: "error", summary: t("general.error"), detail: msg(res), life: 5000 })
     }

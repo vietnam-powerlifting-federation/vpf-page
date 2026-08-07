@@ -174,7 +174,7 @@ const confirmReject = async () => {
 useHead({ title: () => t("adminVerifications.title") })
 
 definePageMeta({
-  layout: "openvpf",
+  layout: "openvpf-admin",
   middleware: "admin",
 })
 </script>

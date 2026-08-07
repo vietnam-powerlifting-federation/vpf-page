@@ -104,9 +104,14 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-    "/api/meets/**": {
-      swr: 60 * 10
-    },
+    // There is deliberately no rule for "/api/meets/**" any more.
+    //
+    // A cache routeRule is keyed on the request URL alone, with no notion of who
+    // asked, so a blanket rule over /api/meets would store an admin's response
+    // and replay it to anyone requesting the same path — hidden meets from
+    // `?includeHidden=true`, the entry roster, the ban list. The one expensive
+    // *public* read under that prefix caches itself instead, via
+    // `defineCachedEventHandler` in server/api/meets/[id]/index.ts.
     "/api/results": {
       swr: 60 * 10
     }
@@ -127,8 +132,6 @@ export default defineNuxtConfig({
           routes.add("/openvpf/competitions")
           for (const slug of slugs) {
             routes.add(`/openvpf/competitions/${slug}`)
-            routes.add(`/openvpf/competitions/${slug}/detailed`)
-            routes.add(`/openvpf/competitions/${slug}/gl-ranking`)
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error)

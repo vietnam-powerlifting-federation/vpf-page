@@ -20,4 +20,16 @@ type AthleteDetailsData = {
 
 type UserPublicWithDecorators = UserPublic & { decorator1?: string | null; decorator2?: string | null }
 
-export type { UserPrivate, UserPublic, UserPublicWithDecorators, AthleteDetailsData }
+/**
+ * One page of `GET /api/athletes`. Paginated rather than a bare array because
+ * the admin list is the one screen that has to reach every athlete, including
+ * lapsed members, and it will not stay small.
+ */
+type AthleteListPage = {
+  items: (UserPrivate | UserPublic)[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+export type { UserPrivate, UserPublic, UserPublicWithDecorators, AthleteDetailsData, AthleteListPage }

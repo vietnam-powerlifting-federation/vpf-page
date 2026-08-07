@@ -57,6 +57,58 @@ function isDisqualified(
   return false
 }
 
+/**
+ * The same rules `isDisqualified` applies, spelled out for a human.
+ *
+ * The results importer's preview needs this: a LiftingCast row with 74.5 kg
+ * against the 74 class disqualifies that athlete with no error anywhere — the row
+ * imports fine and the athlete simply drops off the rankings. Showing the reason
+ * next to the row is the single most important job of the preview step.
+ */
+export function describeDisqualification(
+  bestSquat: number | null,
+  bestBench: number | null,
+  bestDeadlift: number | null,
+  bodyweight: number | null,
+  weightClass: number,
+  sex: Sex,
+  ranked: boolean | null | undefined,
+): { en: string; vi: string }[] {
+  const reasons: { en: string; vi: string }[] = []
+
+  const lifts = [
+    { value: bestSquat, en: "squat", vi: "squat" },
+    { value: bestBench, en: "bench", vi: "bench" },
+    { value: bestDeadlift, en: "deadlift", vi: "deadlift" },
+  ]
+  for (const lift of lifts) {
+    if (lift.value === null || lift.value === 0) {
+      reasons.push({
+        en: `No successful ${lift.en}`,
+        vi: `Không có lần ${lift.vi} thành công`,
+      })
+    }
+  }
+
+  if (!isValidBodyweight(bodyweight, weightClass, sex)) {
+    const classLabel = weightClass === 999 ? (sex === "male" ? "120+" : "84+") : String(weightClass)
+    reasons.push(
+      bodyweight === null
+        ? { en: "No bodyweight recorded", vi: "Không có cân nặng" }
+        : {
+          en: `Bodyweight ${bodyweight} kg is outside weight class ${classLabel}`,
+          vi: `Cân nặng ${bodyweight} kg nằm ngoài hạng cân ${classLabel}`,
+        },
+    )
+  }
+
+  if (ranked === false) {
+    reasons.push({ en: "Marked as not ranked", vi: "Được đánh dấu không xếp hạng" })
+  }
+
+  return reasons
+}
+
 export function calculateGLPointsRaw(totalKg: number, bodyweightKg: number, sex: Sex = "male") {
   const coeffs = {
     male:   { a: 1199.72839, b: 1025.18162, c: 0.009210 },

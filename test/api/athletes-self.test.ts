@@ -40,7 +40,10 @@ describe("API: athletes/[id] with id=self", () => {
       expect(res.message?.en).toMatch(/Unauthorized|phép/)
     })
 
-    it("returns 403 when id is not self", async () => {
+    it("returns 403 when a non-admin patches an id other than self", async () => {
+      // The endpoint serves both self-service and admin edits (admin tools spec
+      // §4.1), so any id but "self" now falls to the admin branch and is refused
+      // unless the caller actually is one.
       const handler = (await import("~/server/api/athletes/[id]/index.patch")).default
       const event = createMockH3Event({
         method: "PATCH",
@@ -50,7 +53,7 @@ describe("API: athletes/[id] with id=self", () => {
       })
       const res = await handler(event)
       expect(res.success).toBe(false)
-      expect(res.message?.en).toMatch(/Only the current|Chỉ có thể/)
+      expect(res.message?.en).toMatch(/Only admins|Chỉ quản trị viên/)
     })
 
     it("returns 400 for invalid patch data", async () => {

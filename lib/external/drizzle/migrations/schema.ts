@@ -28,7 +28,12 @@ export const meets = pgTable("meets", {
   allowGuestRegistration: boolean("allow_guest_registration").default(true),
   entryFee: integer("entry_fee"),
   legacy: boolean("legacy").default(false),
-})
+}, (table) => [
+  // The public URL. `resolveMeet` and /api/meets/[id] both resolve a slug with
+  // `.limit(1)` and no ordering, so a duplicate would make one meet unreachable
+  // non-deterministically (admin tools spec §11.1).
+  unique("meets_slug_key").on(table.meetSlug),
+])
 
 export const teams = pgTable("teams", {
   teamId: serial("team_id").primaryKey().notNull(),
@@ -318,6 +323,74 @@ export const competitionPurchaseMetadata = pgTable("competition_purchase_metadat
     name: "competition_purchase_metadata_meet_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
   check("chk_competition_weight_class_sex", sql`((sex = 'male'::sexes) AND (weight_class = ANY (ARRAY[53, 59, 66, 74, 83, 93, 105, 120, 999]))) OR ((sex = 'female'::sexes) AND (weight_class = ANY (ARRAY[43, 47, 52, 57, 63, 69, 76, 84, 999])))`),
+])
+
+/**
+ * The start list for one meet: the rows that exist between "registration closed"
+ * and "results imported" (admin tools spec §6).
+ *
+ * `sex` / `weightClass` / `division` are deliberately *copies* seeded from
+ * `competition_purchase_metadata` rather than references to it. That row is a
+ * payment record — what the athlete bought at the price they were charged, and
+ * what voucher redemption points at — so a lifter cutting weight must not rewrite
+ * it. They cannot live on `meet_results` either: a row there with null attempts
+ * computes as a disqualification, so pre-creating the start list would publish a
+ * meet full of DQ'd zero-total lifters before anyone lifted.
+ */
+export const meetEntries = pgTable("meet_entries", {
+  entryId: serial("entry_id").primaryKey().notNull(),
+  meetId: integer("meet_id").notNull(),
+  vpfId: text("vpf_id").notNull(),
+  /** Null for a door entry taken at the venue before its purchase was raised. */
+  purchaseId: integer("purchase_id"),
+  teamId: integer("team_id"),
+
+  sex: sexes().notNull(),
+  weightClass: integer("weight_class").notNull(),
+  division: division().notNull(),
+
+  platform: text(),
+  session: text(),
+  flight: text(),
+  lot: smallint(),
+
+  // LiftingCast fields VPF has no other home for.
+  rawOrEquipped: text("raw_or_equipped").default("Raw").notNull(),
+  wasDrugTested: boolean("was_drug_tested").default(false).notNull(),
+  squatOpener: numeric("squat_opener", { precision: 5, scale: 2, mode: "number" }),
+  benchOpener: numeric("bench_opener", { precision: 5, scale: 2, mode: "number" }),
+  deadliftOpener: numeric("deadlift_opener", { precision: 5, scale: 2, mode: "number" }),
+  additionalItems: text("additional_items"),
+
+  /** A withdrawal is a fact worth keeping, not a delete. Excluded from the export. */
+  withdrawn: boolean().default(false).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
+}, (table) => [
+  unique("meet_entries_meet_vpf_key").on(table.meetId, table.vpfId),
+  foreignKey({
+    columns: [table.meetId],
+    foreignColumns: [meets.meetId],
+    name: "meet_entries_meet_id_fkey"
+  }).onUpdate("cascade").onDelete("cascade"),
+  foreignKey({
+    columns: [table.vpfId],
+    foreignColumns: [users.vpfId],
+    name: "meet_entries_vpf_id_fkey"
+  }).onUpdate("cascade").onDelete("cascade"),
+  foreignKey({
+    columns: [table.purchaseId],
+    foreignColumns: [purchases.purchaseId],
+    name: "meet_entries_purchase_id_fkey"
+  }).onUpdate("cascade").onDelete("set null"),
+  foreignKey({
+    columns: [table.teamId],
+    foreignColumns: [teams.teamId],
+    name: "meet_entries_team_id_fkey"
+  }).onUpdate("cascade").onDelete("set null"),
+  // Same constraint as meet_results, so an invalid pair cannot reach the export
+  // and then fail on the way back in.
+  check("chk_entry_weight_class_sex", sql`((sex = 'male'::sexes) AND (weight_class = ANY (ARRAY[53, 59, 66, 74, 83, 93, 105, 120, 999]))) OR ((sex = 'female'::sexes) AND (weight_class = ANY (ARRAY[43, 47, 52, 57, 63, 69, 76, 84, 999])))`),
 ])
 
 /**

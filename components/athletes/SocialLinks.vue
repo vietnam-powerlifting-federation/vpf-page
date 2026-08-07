@@ -1,53 +1,55 @@
 <template>
   <div class="flex gap-3 items-center flex-wrap">
     <a
-      v-if="vipSettings.displayFacebook && vipSettings.facebook"
-      :href="vipSettings.facebook"
-      target="_blank"
-      rel="noopener noreferrer"
+      v-for="link in links"
+      :key="link.icon"
+      :href="link.href"
+      :target="link.external ? '_blank' : undefined"
+      :rel="link.external ? 'noopener noreferrer' : undefined"
       class="w-9 h-9 rounded-full bg-surface-700 hover:bg-surface-600 flex items-center justify-center text-surface-100 transition-colors"
     >
-      <i class="pi pi-facebook" />
-    </a>
-    <a
-      v-if="vipSettings.displayInstagram && vipSettings.instagram"
-      :href="vipSettings.instagram"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="w-9 h-9 rounded-full bg-surface-700 hover:bg-surface-600 flex items-center justify-center text-surface-100 transition-colors"
-    >
-      <i class="pi pi-instagram" />
-    </a>
-    <a
-      v-if="vipSettings.displayTiktok && vipSettings.tiktok"
-      :href="vipSettings.tiktok"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="w-9 h-9 rounded-full bg-surface-700 hover:bg-surface-600 flex items-center justify-center text-surface-100 transition-colors"
-    >
-      <i class="pi pi-tiktok" />
-    </a>
-    <a
-      v-if="vipSettings.displayYoutube && vipSettings.youtube"
-      :href="vipSettings.youtube"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="w-9 h-9 rounded-full bg-surface-700 hover:bg-surface-600 flex items-center justify-center text-surface-100 transition-colors"
-    >
-      <i class="pi pi-youtube" />
-    </a>
-    <a
-      v-if="vipSettings.displayMobilePhone && vipSettings.vipPhoneNumber"
-      :href="`tel:${vipSettings.vipPhoneNumber}`"
-      class="w-9 h-9 rounded-full bg-surface-700 hover:bg-surface-600 flex items-center justify-center text-surface-100 transition-colors"
-    >
-      <i class="pi pi-phone" />
+      <i :class="link.icon" />
     </a>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue"
+import { normalizeExternalUrl } from "~/lib/utils/client"
 import type { VipBenefits } from "~/types/vip"
 
-defineProps<{ vipSettings: VipBenefits }>()
+/** Partial so the VIP settings form can pass its in-progress state straight in. */
+type SocialSettings = Partial<
+  Pick<
+    VipBenefits,
+    | "facebook" | "displayFacebook"
+    | "instagram" | "displayInstagram"
+    | "tiktok" | "displayTiktok"
+    | "youtube" | "displayYoutube"
+    | "vipPhoneNumber" | "displayMobilePhone"
+  >
+>
+
+const props = defineProps<{ vipSettings: SocialSettings }>()
+
+const links = computed(() => {
+  const s = props.vipSettings
+  const socials: { icon: string; shown?: boolean | null; value?: string | null }[] = [
+    { icon: "pi pi-facebook", shown: s.displayFacebook, value: s.facebook },
+    { icon: "pi pi-instagram", shown: s.displayInstagram, value: s.instagram },
+    { icon: "pi pi-tiktok", shown: s.displayTiktok, value: s.tiktok },
+    { icon: "pi pi-youtube", shown: s.displayYoutube, value: s.youtube },
+  ]
+
+  const result = socials
+    .filter((item) => item.shown && item.value)
+    .map((item) => ({ icon: item.icon, href: normalizeExternalUrl(item.value), external: true }))
+    .filter((item): item is { icon: string; href: string; external: boolean } => !!item.href)
+
+  if (s.displayMobilePhone && s.vipPhoneNumber) {
+    result.push({ icon: "pi pi-phone", href: `tel:${s.vipPhoneNumber}`, external: false })
+  }
+
+  return result
+})
 </script>

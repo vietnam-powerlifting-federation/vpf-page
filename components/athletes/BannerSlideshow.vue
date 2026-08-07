@@ -2,7 +2,7 @@
   <div
     ref="container"
     class="relative w-full overflow-hidden bg-surface-900"
-    style="height: 400px"
+    :style="{ height: slideHeight + 'px' }"
   >
     <!-- Track -->
     <div
@@ -66,7 +66,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from "vue"
 
-const props = defineProps<{ banners: string[] }>()
+const props = withDefaults(
+  defineProps<{
+    banners: string[]
+    /** Tallest the slideshow may get. Narrow containers shrink below this to keep 24:9. */
+    height?: number
+  }>(),
+  { height: 400 },
+)
 
 /* duplicate slides */
 const loopedBanners = computed(() => {
@@ -83,12 +90,24 @@ const current = ref(1)
 const container = ref<HTMLElement | null>(null)
 const containerWidth = ref(0)
 
-/* sizes */
-const containerHeight = 400
-const slideWidth = containerHeight * (24 / 9)
+/* sizes — slides are always 24:9, capped by the height prop and by the container.
+   Without the container cap a 400px-tall slide is 1067px wide, so a phone would only
+   ever see the middle third of the banner. */
+const ASPECT = 24 / 9
 const gap = 16
 
-/* responsive width */
+const slideWidth = computed(() => {
+  const max = props.height * ASPECT
+  if (!containerWidth.value) return max
+  return Math.min(max, containerWidth.value * 0.92)
+})
+const slideHeight = computed(() => slideWidth.value / ASPECT)
+
+/* responsive width — the window listener covers viewport changes, the observer covers
+   container-only changes such as a dialog animating open (where clientWidth reads 0
+   on mount). Either alone leaves a gap. */
+let observer: ResizeObserver | null = null
+
 function updateWidth() {
   if (container.value) containerWidth.value = container.value.clientWidth
 }
@@ -96,18 +115,24 @@ function updateWidth() {
 onMounted(() => {
   updateWidth()
   window.addEventListener("resize", updateWidth)
+  if (container.value && typeof ResizeObserver !== "undefined") {
+    observer = new ResizeObserver(updateWidth)
+    observer.observe(container.value)
+  }
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", updateWidth)
+  observer?.disconnect()
+  observer = null
 })
 
 /* center active slide correctly */
 const translateX = computed(() => {
-  const total = slideWidth + gap
+  const total = slideWidth.value + gap
 
   return (
-    (containerWidth.value - slideWidth) / 2 - current.value * total
+    (containerWidth.value - slideWidth.value) / 2 - current.value * total
   )
 })
 

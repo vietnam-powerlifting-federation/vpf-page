@@ -23,7 +23,7 @@ RUN npm install -g npm@11.6.2
 # across source-only changes. Scripts are deferred because the root postinstall
 # (nuxt prepare) needs the source that has not been copied yet.
 COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+RUN npm i --ignore-scripts
 
 COPY . .
 

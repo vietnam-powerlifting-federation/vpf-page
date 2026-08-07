@@ -98,4 +98,87 @@ describe("API: athletes/[id]/vip-settings", () => {
       expect(res.message?.en).toMatch(/Invalid|không hợp lệ/)
     })
   })
+
+  describe("PATCH decorator validation", () => {
+    function patchDecorators(body: Record<string, unknown>) {
+      return createMockH3Event({
+        method: "PATCH",
+        params: { id: "self" },
+        body,
+        context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
+      })
+    }
+
+    it("accepts #RRGGBB decorators", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/vip-settings.patch")).default
+      const res = await handler(patchDecorators({ decorator1: "#FF0000", decorator2: "#00ff00" }))
+      expect(res.success).toBe(true)
+      expect(res.data!.decorator1).toBe("#FF0000")
+      expect(res.data!.decorator2).toBe("#00ff00")
+    })
+
+    it("accepts null decorators so the athlete can reset to the default name colour", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/vip-settings.patch")).default
+      const res = await handler(patchDecorators({ decorator1: null, decorator2: null }))
+      expect(res.success).toBe(true)
+      expect(res.data!.decorator1).toBeNull()
+      expect(res.data!.decorator2).toBeNull()
+    })
+
+    it("rejects a CSS url() decorator that would leak every profile visitor's IP", async () => {
+      // Decorators render into a style attribute on public leaderboards and profiles, so an
+      // unconstrained value would make every visitor call an attacker-controlled host.
+      const handler = (await import("~/server/api/athletes/[id]/vip-settings.patch")).default
+      const res = await handler(patchDecorators({ decorator1: "url(https://attacker.example/p.png)" }))
+      expect(res.success).toBe(false)
+      expect(res.message?.en).toMatch(/Invalid|không hợp lệ/)
+    })
+
+    it("rejects a named CSS colour", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/vip-settings.patch")).default
+      const res = await handler(patchDecorators({ decorator1: "red" }))
+      expect(res.success).toBe(false)
+    })
+
+    it("rejects 3-digit shorthand hex", async () => {
+      // ColorPicker format="hex" always emits 6 digits, so the strict regex loses nothing.
+      const handler = (await import("~/server/api/athletes/[id]/vip-settings.patch")).default
+      const res = await handler(patchDecorators({ decorator1: "#fff" }))
+      expect(res.success).toBe(false)
+    })
+  })
+
+  describe("PATCH multipart text fields", () => {
+    // No file parts in these — uploadVipImage needs live R2 credentials.
+    function patchMultipart(fields: Record<string, string>) {
+      return createMockH3Event({
+        method: "PATCH",
+        params: { id: "self" },
+        multipart: Object.entries(fields).map(([name, value]) => ({ name, data: Buffer.from(value) })),
+        context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
+      })
+    }
+
+    it("rejects an invalid decorator instead of silently dropping the whole patch", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/vip-settings.patch")).default
+      const res = await handler(patchMultipart({ decorator1: "javascript:alert(1)" }))
+      expect(res.success).toBe(false)
+      expect(res.message?.en).toMatch(/Invalid|không hợp lệ/)
+    })
+
+    it("coerces an empty decorator to null rather than failing the hex check", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/vip-settings.patch")).default
+      const res = await handler(patchMultipart({ decorator1: "", alias: "MultipartAlias" }))
+      expect(res.success).toBe(true)
+      expect(res.data!.decorator1).toBeNull()
+      expect(res.data!.alias).toBe("MultipartAlias")
+    })
+
+    it("coerces a cleared text field to null rather than an empty string", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/vip-settings.patch")).default
+      const res = await handler(patchMultipart({ profileDescription: "" }))
+      expect(res.success).toBe(true)
+      expect(res.data!.profileDescription).toBeNull()
+    })
+  })
 })

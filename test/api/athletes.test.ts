@@ -4,18 +4,21 @@ import { fixtureUsers } from "../fixtures/data"
 
 describe("API: athletes", () => {
   describe("GET /api/athletes", () => {
-    it("returns 200 and list of active athletes when authenticated as user", async () => {
+    it("returns 200 and a page of active athletes when authenticated as user", async () => {
       const handler = (await import("~/server/api/athletes/index")).default
       const event = createMockH3Event({
         context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
-      expect(Array.isArray(res.data)).toBe(true)
-      expect(res.data!.length).toBeGreaterThanOrEqual(1)
-      const athlete1 = res.data!.find((a: { vpfId: string }) => a.vpfId === fixtureUsers[0].vpfId)
+      expect(Array.isArray(res.data?.items)).toBe(true)
+      expect(res.data!.items.length).toBeGreaterThanOrEqual(1)
+      expect(res.data!.total).toBeGreaterThanOrEqual(res.data!.items.length)
+      const athlete1 = res.data!.items.find((a: { vpfId: string }) => a.vpfId === fixtureUsers[0].vpfId)
       expect(athlete1).toBeDefined()
       expect(athlete1!.fullName).toBe(fixtureUsers[0].fullName)
+      // Public columns only.
+      expect((athlete1 as { email?: string }).email).toBeUndefined()
     })
 
     it("returns 200 when authenticated as admin", async () => {
@@ -25,9 +28,46 @@ describe("API: athletes", () => {
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
-      expect(Array.isArray(res.data)).toBe(true)
+      expect(Array.isArray(res.data?.items)).toBe(true)
+      // Admins get the private columns they need to act on an athlete.
+      expect(res.data!.items[0]).toHaveProperty("email")
     })
 
+    it("searches by VPF id, name and email for admins", async () => {
+      const handler = (await import("~/server/api/athletes/index")).default
+      const event = createMockH3Event({
+        context: { user: { vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } },
+        query: { search: fixtureUsers[0].vpfId },
+      })
+      const res = await handler(event)
+      expect(res.success).toBe(true)
+      expect(res.data!.items.map((a: { vpfId: string }) => a.vpfId)).toEqual([fixtureUsers[0].vpfId])
+    })
+
+    it("ignores admin-only filters for a non-admin caller", async () => {
+      const handler = (await import("~/server/api/athletes/index")).default
+      const event = createMockH3Event({
+        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        query: { search: fixtureUsers[1].vpfId, includeInactive: "true" },
+      })
+      const res = await handler(event)
+      expect(res.success).toBe(true)
+      // The search would have narrowed to one row had it been honoured.
+      expect(res.data!.items.length).toBeGreaterThan(1)
+    })
+
+    it("paginates", async () => {
+      const handler = (await import("~/server/api/athletes/index")).default
+      const event = createMockH3Event({
+        context: { user: { vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } },
+        query: { page: "1", pageSize: "1" },
+      })
+      const res = await handler(event)
+      expect(res.success).toBe(true)
+      expect(res.data!.items).toHaveLength(1)
+      expect(res.data!.pageSize).toBe(1)
+      expect(res.data!.total).toBeGreaterThan(1)
+    })
   })
 
   describe("GET /api/athletes/[id]", () => {
