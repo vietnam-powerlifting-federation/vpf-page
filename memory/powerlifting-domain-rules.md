@@ -26,6 +26,6 @@ Total is the sum of the three best lifts. GL points come from `calculateGLPoints
 
 ## National records
 
-`RECORD_START_YEAR = 2022` — only meets from that year onward count. The logic in [lib/utils/queries/records.ts](../lib/utils/queries/records.ts) reconstructs the attempt-by-attempt timeline (`buildAttemptEvents`, `getRunningTotals`) so a record can be attributed to the exact attempt that set it.
+`RECORD_START_YEAR = 2022` — only meets from that year onward count. The pure maths in [lib/utils/queries/records.ts](../lib/utils/queries/records.ts) reconstructs the attempt-by-attempt timeline (`buildAttemptEvents`, `getRunningTotals`) so a record can be attributed to the exact attempt that set it.
 
-`fetchRecordsForYear` and `fetchAthleteRecordStatus` are wrapped in Nitro's `defineCachedFunction` with a one-day TTL in [server/utils/cached-records.ts](../server/utils/cached-records.ts). API handlers should call the cached wrappers, not the raw query functions.
+Records are computed and cached in [server/service/records.ts](../server/service/records.ts) — `getRecordsForYear`, `getAthleteRecordStatus`, `getRecordHistory` — with a one-day Redis TTL. API handlers call the service; `lib/utils/queries/records.ts` holds no queries and reads nothing itself. See [[repository-and-service-layers]].

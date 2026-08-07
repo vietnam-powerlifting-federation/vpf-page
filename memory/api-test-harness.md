@@ -16,10 +16,10 @@ Import inside the test body, not at module top level, because the H3 globals mus
 
 ## H3 globals are stubbed
 
-[test/setup/h3Mock.ts](../test/setup/h3Mock.ts) stubs the Nitro auto-imports (`defineEventHandler`, `readBody`, `getRouterParam`, `getQuery`, `setResponseStatus`, `getRequestHeader`, `defineCachedFunction`, and others) as globals. Two consequences:
+[test/setup/h3Mock.ts](../test/setup/h3Mock.ts) stubs the Nitro auto-imports (`defineEventHandler`, `readBody`, `getRouterParam`, `getQuery`, `setResponseStatus`, `getRequestHeader`, and others) as globals. Two consequences:
 
 - **A handler that uses an H3 global not stubbed there will fail** — add it to `h3Mock.ts`.
-- `defineCachedFunction` is replaced by the identity function, so Nitro caching is bypassed in tests.
+- Redis is mocked separately in [test/setup/redisMock.ts](../test/setup/redisMock.ts) with an in-memory store. It is *not* a passthrough: entries really are cached, so a handler that writes without invalidating serves stale data in tests too. Each test starts from a cold cache.
 
 The event is a hand-built object from `createMockH3Event({ body, params, query, context: { user }, method })` ([test/utils/h3-event.ts](../test/utils/h3-event.ts)). Authentication is simulated by putting the user straight into `context.user`, or by minting a token with `createTestToken` ([test/utils/auth.ts](../test/utils/auth.ts)) — not by sending a cookie.
 
