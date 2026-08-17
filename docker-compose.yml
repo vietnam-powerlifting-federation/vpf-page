@@ -6,6 +6,8 @@ services:
         - database_url
     image: vpf-page
     env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379
     ports:
       - "3001:3000"
     restart: unless-stopped
