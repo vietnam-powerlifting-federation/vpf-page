@@ -2,7 +2,7 @@
 
 VIP membership — and, through the same tables, VPF membership and competition entry — is paid by **Vietnamese bank transfer**, not a card processor.
 
-1. `POST /api/purchases` creates a `purchases` row with status `pending`, a random unique six-digit `refCode`, and the amount from `VIP_MEMBERSHIP_PLANS`. It also writes the type-specific metadata row (for VIP, `vip_purchase_metadata.durationMonths`). It returns a **VietQR image URL** (`img.vietqr.io/...`) whose transfer memo is `VPF<refCode>`. Admins may pass another athlete's `vpfId`; regular athletes may not.
+1. `POST /api/purchases` creates a `purchases` row with status `pending`, a random unique six-digit `refCode`, and the amount from `VIP_MEMBERSHIP_PLANS`. It also writes the type-specific metadata row (for VIP, `vip_purchase_metadata.durationMonths`). It returns a **QR image URL** (`vietqr.app/img?...`) whose transfer memo is `SEVQR <refCode>` — the `SEVQR` prefix is required for SePay to pick up the transaction. Admins may pass another athlete's `vpfId`; regular athletes may not.
 2. The athlete transfers the money. The bank notifies SePay, which calls `POST /api/webhook/sepay`. That handler extracts the ref code from the transfer content with `/VPF(\d{6})/i` and calls `approvePurchase(refCode, null)`. It **always returns `{ success: true }`** — failures are logged, never surfaced, so SePay does not retry.
 3. Admins can approve manually with `PATCH /api/purchases/:refCode/approve`, or cancel with `/cancel`. Both go through the same function.
 

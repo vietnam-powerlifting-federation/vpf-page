@@ -234,7 +234,7 @@ describe("API: admin console", () => {
       expect(res.success).toBe(true)
       const row = res.data!.find((purchase) => purchase.refCode === REF_CODE)!
       expect(row.userName).toBe(fixtureUsers[0].fullName)
-      expect(row.expectedMemo).toBe(`VPF${REF_CODE}`)
+      expect(row.expectedMemo).toBe(`SEVQR ${REF_CODE}`)
       expect(row.qrUrl).toBeDefined()
     })
 

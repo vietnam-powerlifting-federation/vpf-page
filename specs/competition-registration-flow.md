@@ -84,9 +84,9 @@ If the athlete registers as a **VPF member** and has **not** paid the membership
 
 Payment mirrors the [VIP purchase flow](vip-purchase-flow.md) — Vietnamese bank transfer, not a card processor — but as **one combined purchase** covering every owed category:
 
-- Backend creates **one `purchases` row** with `type` = the array of owed categories (always includes `competition`; adds `vpf_membership` when §6 applies), `amount` = entry fee (`meets.entryFee`) + membership fee (if owed) + Media Plus fee (if chosen), and a random unique **6-digit** transaction ref code (`refCode`, matching SePay's `VPF\d{6}`).
+- Backend creates **one `purchases` row** with `type` = the array of owed categories (always includes `competition`; adds `vpf_membership` when §6 applies), `amount` = entry fee (`meets.entryFee`) + membership fee (if owed) + Media Plus fee (if chosen), and a random unique **6-digit** transaction ref code (`refCode`, extracted by the SePay webhook from the `SEVQR`-anchored transfer content).
 - It writes the `competition_purchase_metadata` row (meet, sex, weight class, division, `mediaPlus`) and, when membership is owed, the `vpf_membership_purchase_metadata` row.
-- Frontend shows the matching **VietQR image** (memo `VPF<refCode>`) and **auto-refreshes in the background** until the app auto-detects the incoming transfer (SePay webhook), then shows the result.
+- Frontend shows the matching **QR image** (memo `SEVQR <refCode>`) and **auto-refreshes in the background** until the app auto-detects the incoming transfer (SePay webhook), then shows the result.
 - `approvePurchase` **dispatches on the type array**: for `competition` it confirms the entry; for `vpf_membership` it extends `users.vpfMembershipExpiresAt`; for `vip` it extends `users.vipMembershipExpiresAt` (existing behaviour). It stays the single activation point for the SePay webhook and the admin approve/cancel endpoints.
 
 The final message depends on verification status:

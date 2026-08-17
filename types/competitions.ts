@@ -62,7 +62,7 @@ export type CompetitionRegistrationCreated = {
   amount: number
   /** "active" when vouchers covered the full amount — there was nothing to pay. */
   status: "pending" | "active"
-  /** Absent when `amount` is 0: a VietQR for 0 VND is meaningless. */
+  /** Absent when `amount` is 0: a QR for 0 VND is meaningless. */
   qrUrl?: string
   /** Drives the post-payment message: confirmed vs submitted/pending review. */
   identityVerified: boolean

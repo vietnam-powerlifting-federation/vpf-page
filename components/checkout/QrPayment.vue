@@ -9,7 +9,7 @@
       </div>
       <div class="flex justify-between">
         <span class="text-surface-400">{{ $t("checkout.transferNote") }}</span>
-        <span class="font-mono font-bold text-primary">VPF{{ refCode }}</span>
+        <span class="font-mono font-bold text-primary">SEVQR {{ refCode }}</span>
       </div>
     </div>
 

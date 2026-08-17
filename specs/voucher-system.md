@@ -49,7 +49,7 @@ Constraints:
 
 Index `vouchers(vpf_id)` for the athlete's list query.
 
-**No change to `purchases`.** `purchases.amount` keeps its current meaning: **the amount the athlete must transfer**, i.e. post-discount, which is what [buildVietQrUrl](../server/utils/purchase-helpers.ts) already puts in the QR. The pre-discount subtotal is recoverable as `amount + sum(discountApplied)` over the purchase's vouchers, so it needs no column.
+**No change to `purchases`.** `purchases.amount` keeps its current meaning: **the amount the athlete must transfer**, i.e. post-discount, which is what [buildQrUrl](../server/utils/purchase-helpers.ts) already puts in the QR. The pre-discount subtotal is recoverable as `amount + sum(discountApplied)` over the purchase's vouchers, so it needs no column.
 
 Add `Voucher`-related unions to [types/union-types.ts](../types/union-types.ts) (`VoucherDiscountKind`) and response shapes to a new `types/vouchers.ts`, per the directory rules — no types exported from `server/api`.
 
@@ -82,7 +82,7 @@ payable = Σ(lineItem − discount) + mediaPlusFee
 
 ### The zero-amount case
 
-A 100% (or fully-clamping fixed) voucher makes `payable === 0`. A VietQR for 0 VND is meaningless and no SePay webhook will ever arrive, so the purchase would hang in `pending` forever.
+A 100% (or fully-clamping fixed) voucher makes `payable === 0`. A QR for 0 VND is meaningless and no SePay webhook will ever arrive, so the purchase would hang in `pending` forever.
 
 **When `payable === 0`, create the purchase and immediately activate it** through `approvePurchase(refCode, null)` — the same single activation point the webhook uses, so VIP/membership expiry extension happens through exactly one code path. `approvedBy` stays `null` (it already means "not a human admin"). Return the activated purchase with **no `qrUrl`**; the frontend must show a success state, not a QR.
 

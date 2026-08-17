@@ -19,7 +19,7 @@ import {
   hasExistingRegistration,
   isMembershipOwed,
 } from "~/server/utils/competition-registration"
-import { buildVietQrUrl, generateUniqueRefCode } from "~/server/utils/purchase-helpers"
+import { buildQrUrl, generateUniqueRefCode } from "~/server/utils/purchase-helpers"
 import { resolveVouchers, redeemVouchers, collectRedemptions } from "~/server/utils/voucher-helpers"
 import { approvePurchase } from "~/server/utils/approve-purchase"
 import { CompetitionRegisterSchema } from "~/lib/zod/schemas/competition-registration.schema"
@@ -321,7 +321,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<Competition
     }
 
     return ok(
-      { ...body, status: "pending" as const, qrUrl: buildVietQrUrl(refCode, amount) },
+      { ...body, status: "pending" as const, qrUrl: buildQrUrl(refCode, amount) },
       { en: "Registration created; awaiting payment", vi: "Đã tạo đăng ký; chờ thanh toán" },
     )
   } catch (error) {

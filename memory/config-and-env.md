@@ -11,7 +11,7 @@
 
 ## Defaults
 
-`LOG_LEVEL=info`, `JWT_EXPIRES_IN=30d`, `NODE_ENV=development`. The VietQR variables default to empty strings and silently produce a broken QR URL rather than throwing — worth remembering when a payment QR renders blank.
+`LOG_LEVEL=info`, `JWT_EXPIRES_IN=30d`, `NODE_ENV=development`. The bank account variables (`BANK_NAME`, `BANK_ACCOUNT_NO`, `BANK_ACCOUNT_NAME`) default to empty strings and silently produce a broken QR URL rather than throwing — worth remembering when a payment QR renders blank.
 
 ## Logging
 

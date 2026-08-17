@@ -17,8 +17,9 @@ interface SepayWebhookPayload {
   description: string
 }
 
-// Transfer content uses "VPF" + 6-digit refCode, e.g. "VPF123456"
-const REF_CODE_PATTERN = /VPF(\d{6})/i
+// Transfer content is "SEVQR <refCode>" — the SEVQR prefix is required for SePay to pick
+// up the transaction at all, and doubles here as the anchor for extracting the ref code.
+const REF_CODE_PATTERN = /SEVQR\D*(\d{6})/i
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<SepayWebhookPayload>(event)
@@ -27,7 +28,7 @@ export default defineEventHandler(async (event) => {
   const match = REF_CODE_PATTERN.exec(content)
 
   if (!match) {
-    logger.warn("SePay webhook: no VPF ref code found in transfer content", {
+    logger.warn("SePay webhook: no ref code found in transfer content", {
       transactionId: body?.id,
       content,
       transferAmount: body?.transferAmount,

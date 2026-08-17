@@ -5,7 +5,7 @@ import { logger } from "~/lib/logger/logger"
 import { ok, fail } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
 import { requireUser } from "~/server/utils/auth-guard"
-import { buildVietQrUrl } from "~/server/utils/purchase-helpers"
+import { buildQrUrl } from "~/server/utils/purchase-helpers"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseStatus } from "~/types/purchases"
 
@@ -41,7 +41,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseSta
         createdAt: p.createdAt,
         confirmedAt: p.confirmedAt ?? null,
         cancelledAt: p.cancelledAt ?? null,
-        ...(p.status === "pending" ? { qrUrl: buildVietQrUrl(p.refCode, p.amount) } : {}),
+        ...(p.status === "pending" ? { qrUrl: buildQrUrl(p.refCode, p.amount) } : {}),
       })),
       { en: "Purchases retrieved successfully", vi: "Lấy danh sách giao dịch thành công" },
     )

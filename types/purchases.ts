@@ -46,7 +46,7 @@ export type PurchaseCreated = {
   /** "active" when a voucher covered the full amount — there was nothing to pay. */
   status: "pending" | "active"
   createdAt: string
-  /** Absent when `amount` is 0: a VietQR for 0 VND is meaningless. */
+  /** Absent when `amount` is 0: a QR for 0 VND is meaningless. */
   qrUrl?: string
   /** Line-item total before discounts. */
   subtotal: number

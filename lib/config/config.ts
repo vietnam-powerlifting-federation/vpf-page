@@ -44,9 +44,10 @@ if (!emailVerificationSkip) {
   }
 }
 
-const vietqrBankId = process.env.VIETQR_BANK_ID || ""
-const vietqrAccountNo = process.env.VIETQR_ACCOUNT_NO || ""
-const vietqrAccountName = process.env.VIETQR_ACCOUNT_NAME || ""
+/** Our receiving bank account, used to render a payment QR. Bank name (e.g. "VietinBank"), not a NAPAS BIN. */
+const bankName = process.env.BANK_NAME || ""
+const bankAccountNo = process.env.BANK_ACCOUNT_NO || ""
+const bankAccountName = process.env.BANK_ACCOUNT_NAME || ""
 
 /** Cloudflare R2 config for VIP image uploads (S3-compatible API). All must be set for server-side upload to work. */
 const r2AccountId = process.env.CLOUDFLARE_R2_ACCOUNT_ID
@@ -96,9 +97,9 @@ export const config = {
     vipBucket: r2VipBucket!,
     vipPublicUrlBase: r2VipPublicUrlBase!,
   },
-  vietqr: {
-    bankId: vietqrBankId,
-    accountNo: vietqrAccountNo,
-    accountName: vietqrAccountName,
+  bankAccount: {
+    bankName,
+    accountNo: bankAccountNo,
+    accountName: bankAccountName,
   },
 }

@@ -9,7 +9,7 @@ import { ok, fail } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
 import { requireUser } from "~/server/utils/auth-guard"
 import { readZodBody } from "~/server/utils/validate"
-import { buildVietQrUrl, generateUniqueRefCode } from "~/server/utils/purchase-helpers"
+import { buildQrUrl, generateUniqueRefCode } from "~/server/utils/purchase-helpers"
 import { resolveVouchers, redeemVouchers, collectRedemptions } from "~/server/utils/voucher-helpers"
 import { approvePurchase } from "~/server/utils/approve-purchase"
 import type { ApiResponse } from "~/types/api"
@@ -153,7 +153,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<PurchaseCre
     }
 
     return ok(
-      { ...body, status: "pending" as const, qrUrl: buildVietQrUrl(refCode, amount) },
+      { ...body, status: "pending" as const, qrUrl: buildQrUrl(refCode, amount) },
       { en: "Purchase created successfully", vi: "Tạo giao dịch thành công" },
     )
   } catch (error) {

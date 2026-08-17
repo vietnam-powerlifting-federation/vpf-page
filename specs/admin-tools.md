@@ -441,7 +441,7 @@ Once results are imported, the entries screen becomes read-only history for that
 
 ### 7.2 Reconciliation
 
-The core finance job is matching bank transfers to purchases. The list needs a **pending, ordered by age** view — with the amount, the expected memo (`VPF<refCode>`), and one-click approve/cancel with a note. Approval goes through `approvePurchase` and nothing else ([vip-purchase-flow.md](vip-purchase-flow.md)).
+The core finance job is matching bank transfers to purchases. The list needs a **pending, ordered by age** view — with the amount, the expected memo (`SEVQR <refCode>`), and one-click approve/cancel with a note. Approval goes through `approvePurchase` and nothing else ([vip-purchase-flow.md](vip-purchase-flow.md)).
 
 ### 7.3 Reporting
 
