@@ -4,6 +4,7 @@ import { db } from "~/lib/external/drizzle/drizzle"
 import { users } from "~/lib/external/drizzle/migrations/schema"
 import { userPrivateSelect } from "~/lib/utils/queries/users"
 import { logger } from "~/lib/logger/logger"
+import { uploadVipImage } from "~/lib/utils/r2-vip-upload"
 import { UserSelfPatchSchema, UserRequiredSchema, UserAdminPatchSchema } from "~/lib/zod/schemas/users.schema"
 import type { ApiResponse } from "~/types/api"
 import type { JwtPayload } from "~/lib/utils/jwt"
@@ -12,6 +13,10 @@ import { ok, fail } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
 import { requireUser } from "~/server/utils/auth-guard"
 import { readZodBody } from "~/server/utils/validate"
+
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"]
+const PHOTO_FIELD = "competitionPhoto"
+const NUMERIC_KEYS = ["dob", "squatRackPin", "benchRackPin", "benchSafetyPin", "benchFootBlock"]
 
 export default defineEventHandler(async (event): Promise<ApiResponse<UserPrivate>> => {
   try {
@@ -31,10 +36,56 @@ export default defineEventHandler(async (event): Promise<ApiResponse<UserPrivate
   }
 })
 
-/** The athlete editing their own profile. Unchanged behaviour. */
+/** The athlete editing their own profile. Also accepts multipart, to replace the competition photo. */
 async function patchSelf(event: H3Event, vpfId: string): Promise<ApiResponse<UserPrivate>> {
-  const validated = await readZodBody(event, UserSelfPatchSchema)
-  if (!validated.success) return fail(event, 400, MSG.invalidInput)
+  const contentType = getRequestHeader(event, "content-type") || ""
+  let patch: Partial<typeof users.$inferInsert> = {}
+
+  if (contentType.includes("multipart/form-data")) {
+    const form = await readMultipartFormData(event)
+    if (!form?.length) {
+      return fail(event, 400, { en: "Invalid or empty form data", vi: "Dữ liệu form không hợp lệ hoặc trống" })
+    }
+
+    const textFields: Record<string, string> = {}
+    let photoFile: { data: Buffer; filename: string; type?: string } | null = null
+    for (const part of form) {
+      if (!part.name) continue
+      if (part.name === PHOTO_FIELD && part.filename && part.data) {
+        if (!ALLOWED_IMAGE_TYPES.includes(part.type || "")) {
+          return fail(event, 400, {
+            en: "Invalid image type. Allowed: JPEG, PNG, WebP",
+            vi: "Loại ảnh không hợp lệ. Cho phép: JPEG, PNG, WebP",
+          })
+        }
+        photoFile = { data: part.data, filename: part.filename, type: part.type }
+      } else if (typeof part.data !== "undefined") {
+        textFields[part.name] = part.data.toString()
+      }
+    }
+
+    // Multipart fields arrive as text; numeric columns need coercing before validation.
+    const coerced: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(textFields)) {
+      coerced[k] = NUMERIC_KEYS.includes(k) && v !== "" ? Number(v) : v
+    }
+    const parsed = UserSelfPatchSchema.safeParse(coerced)
+    if (!parsed.success) return fail(event, 400, MSG.invalidInput)
+    patch = parsed.data
+
+    if (photoFile) {
+      patch.competitionPhotoUrl = await uploadVipImage(
+        vpfId,
+        "competition-photo",
+        new Uint8Array(photoFile.data),
+        { filename: photoFile.filename, mimeType: photoFile.type },
+      )
+    }
+  } else {
+    const validated = await readZodBody(event, UserSelfPatchSchema)
+    if (!validated.success) return fail(event, 400, MSG.invalidInput)
+    patch = validated.data
+  }
 
   const currentUserData = await db
     .select(userPrivateSelect)
@@ -47,7 +98,7 @@ async function patchSelf(event: H3Event, vpfId: string): Promise<ApiResponse<Use
 
   // Required fields are validated against the merged record, so a patch cannot
   // blank out something the profile needs.
-  const requiredResult = UserRequiredSchema.safeParse({ ...currentUserData, ...validated.data })
+  const requiredResult = UserRequiredSchema.safeParse({ ...currentUserData, ...patch })
   if (!requiredResult.success) {
     return fail(event, 400, {
       en: "Required fields are missing or invalid",
@@ -55,7 +106,7 @@ async function patchSelf(event: H3Event, vpfId: string): Promise<ApiResponse<Use
     })
   }
 
-  await db.update(users).set(validated.data).where(eq(users.vpfId, vpfId))
+  await db.update(users).set(patch).where(eq(users.vpfId, vpfId))
 
   const updatedUser = await db
     .select(userPrivateSelect)

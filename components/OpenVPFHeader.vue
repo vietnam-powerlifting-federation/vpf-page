@@ -62,7 +62,7 @@
             class="absolute right-0 top-full mt-2 w-52 rounded-lg border border-surface-700 bg-surface-900 shadow-lg py-1 z-50"
           >
             <NuxtLinkLocale
-              to="/openvpf/athletes/self"
+              to="/openvpf/athletes/me"
               class="flex items-center gap-2.5 px-3 py-2 text-sm text-surface-200 hover:bg-surface-800 hover:text-surface-0"
               @click="open = false"
             >

@@ -83,4 +83,46 @@ describe("API: athletes/[id] with id=me", () => {
       expect(res.data?.nationality).toBe("US")
     })
   })
+
+  describe("PATCH /api/athletes/me multipart (competition photo upload)", () => {
+    it("coerces numeric text fields (e.g. rack pins) before saving", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/index.patch")).default
+      const event = createMockH3Event({
+        method: "PATCH",
+        params: { id: "me" },
+        multipart: [{ name: "squatRackPin", data: Buffer.from("5") }],
+        context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
+      })
+      const res = await handler(event)
+      expect(res.success).toBe(true)
+      expect(res.data?.squatRackPin).toBe(5)
+    })
+
+    it("returns 400 when the photo part has a disallowed mime type", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/index.patch")).default
+      const event = createMockH3Event({
+        method: "PATCH",
+        params: { id: "me" },
+        multipart: [
+          { name: "competitionPhoto", data: Buffer.from("not-an-image"), filename: "photo.svg", type: "image/svg+xml" },
+        ],
+        context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
+      })
+      const res = await handler(event)
+      expect(res.success).toBe(false)
+      expect(res.message?.en).toMatch(/Invalid image type|không hợp lệ/)
+    })
+
+    it("returns 400 for empty multipart form data", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/index.patch")).default
+      const event = createMockH3Event({
+        method: "PATCH",
+        params: { id: "me" },
+        multipart: [],
+        context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
+      })
+      const res = await handler(event)
+      expect(res.success).toBe(false)
+    })
+  })
 })
