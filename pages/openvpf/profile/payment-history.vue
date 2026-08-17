@@ -65,7 +65,7 @@ definePageMeta({
 const { t } = useI18n()
 const toast = useToast()
 
-const { data, pending, error, refresh } = await useFetch<ApiResponse<PurchaseStatus[]>>("/api/purchases")
+const { data, pending, error, refresh } = await useFetch<ApiResponse<PurchaseStatus[]>>("/api/athletes/me/purchases")
 
 const purchases = computed(() => data.value?.data ?? [])
 

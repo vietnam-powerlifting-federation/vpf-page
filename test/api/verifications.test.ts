@@ -91,18 +91,18 @@ describe("API: POST /api/auth/verify-email", () => {
   })
 })
 
-describe("API: GET /api/verifications/self", () => {
+describe("API: GET /api/athletes/me/verification", () => {
   it("returns 401 when not authenticated", async () => {
-    const handler = (await import("~/server/api/verifications/self.get")).default
-    const event = createMockH3Event({ context: { user: undefined } })
+    const handler = (await import("~/server/api/athletes/[id]/verification/index.get")).default
+    const event = createMockH3Event({ params: { id: "me" }, context: { user: undefined } })
     const res = await handler(event)
     expect(res.success).toBe(false)
   })
 
   it("returns email-verified status and null verification for a new user", async () => {
     await resetTempUser({ emailVerified: true })
-    const handler = (await import("~/server/api/verifications/self.get")).default
-    const event = createMockH3Event({ context: tempCtx })
+    const handler = (await import("~/server/api/athletes/[id]/verification/index.get")).default
+    const event = createMockH3Event({ params: { id: "me" }, context: tempCtx })
     const res = await handler(event)
     expect(res.success).toBe(true)
     expect(res.data?.emailVerified).toBe(true)
@@ -111,11 +111,11 @@ describe("API: GET /api/verifications/self", () => {
   })
 })
 
-describe("API: POST /api/verifications/self", () => {
+describe("API: POST /api/athletes/me/verification", () => {
   it("returns 403 when email is not verified", async () => {
     await resetTempUser({ emailVerified: false })
-    const handler = (await import("~/server/api/verifications/self.post")).default
-    const event = createMockH3Event({ method: "POST", context: tempCtx })
+    const handler = (await import("~/server/api/athletes/[id]/verification/index.post")).default
+    const event = createMockH3Event({ method: "POST", params: { id: "me" }, context: tempCtx })
     const res = await handler(event)
     expect(res.success).toBe(false)
     expect(res.message?.en).toMatch(/verify your email/)

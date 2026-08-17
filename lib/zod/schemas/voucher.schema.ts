@@ -69,10 +69,17 @@ export const BulkVoucherSchema = z
     path: ["discountValue"],
   })
 
-/** Query params for the athlete's own voucher list. */
+/**
+ * Query params for GET /api/vouchers. `vpfId` and `redeemed` are admin-only —
+ * a non-admin passing a `vpfId` other than their own is rejected by the handler.
+ */
 export const VoucherListQuerySchema = z.object({
   type: z.enum(["vip", "vpf_membership", "competition"]).optional(),
   available: z
+    .preprocess((v) => (typeof v === "string" ? v === "true" : v), z.boolean())
+    .optional(),
+  vpfId: z.string().optional(),
+  redeemed: z
     .preprocess((v) => (typeof v === "string" ? v === "true" : v), z.boolean())
     .optional(),
 })

@@ -107,24 +107,13 @@
             <p class="text-xl font-semibold text-surface-900 dark:text-surface-0">{{ stat.value }}</p>
           </div>
         </div>
-        <Button
-          class="mt-6"
-          size="small"
-          outlined
-          severity="secondary"
-          icon="pi pi-refresh"
-          :label="$t('admin.dashboard.rebuildCache')"
-          :loading="rebuilding"
-          @click="rebuildCache"
-        />
-        <p class="mt-2 text-xs text-surface-500">{{ $t("admin.dashboard.rebuildCacheHint") }}</p>
       </div>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue"
+import { computed } from "vue"
 import { formatDateDMY } from "~/lib/utils/date"
 import type { ApiResponse } from "~/types/api"
 import type { AdminDashboard } from "~/types/admin"
@@ -132,8 +121,6 @@ import type { AdminDashboard } from "~/types/admin"
 definePageMeta({ layout: "openvpf-admin", middleware: "admin" })
 
 const { t } = useI18n()
-const toast = useToast()
-const msg = useApiMessage()
 
 const { data: response, pending } = await useFetch<ApiResponse<AdminDashboard>>("/api/admin/dashboard", {
   credentials: "include",
@@ -162,32 +149,6 @@ const stats = computed(() => [
   { label: "admin.dashboard.statMeets", value: data.value?.totals.meets ?? 0 },
   { label: "admin.dashboard.statPendingValue", value: formatVnd(data.value?.totals.pendingValue ?? 0) },
 ])
-
-const rebuilding = ref(false)
-
-/**
- * Cached public data expires on its own after a day, and only a results import
- * clears it early. Staff need a visible way to force a rebuild for everything
- * else — a meet renamed, or a record fixed directly in the database (§3.6).
- */
-async function rebuildCache() {
-  rebuilding.value = true
-  try {
-    const res = await $fetch<ApiResponse<{ cleared: number }>>("/api/admin/records-cache", {
-      method: "POST",
-      credentials: "include",
-      ignoreResponseError: true,
-    })
-    toast.add({
-      severity: res.success ? "success" : "error",
-      summary: t(res.success ? "general.success" : "general.error"),
-      detail: msg(res),
-      life: 4000,
-    })
-  } finally {
-    rebuilding.value = false
-  }
-}
 
 useHead({ title: () => t("admin.dashboard.title") })
 </script>

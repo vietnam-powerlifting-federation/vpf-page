@@ -30,10 +30,10 @@ async function importPatch() {
   return (await import("~/server/api/meets/[id]/entries/[entryId].patch")).default
 }
 async function importExport() {
-  return (await import("~/server/api/meets/[id]/entries/export.csv.get")).default
+  return (await import("~/server/api/meets/[id]/entries/csv.get")).default
 }
 async function importAssign() {
-  return (await import("~/server/api/meets/[id]/entries/assign.patch")).default
+  return (await import("~/server/api/meets/[id]/entries/index.patch")).default
 }
 
 function adminEvent(extra: Record<string, unknown> = {}) {
@@ -232,7 +232,7 @@ describe("API: meet entries and the LiftingCast export", () => {
     })
   })
 
-  describe("PATCH /api/meets/[id]/entries/assign", () => {
+  describe("PATCH /api/meets/[id]/entries", () => {
     it("bulk-sets session and flight across a selection", async () => {
       await registerAndPay(fixtureUsers[0].vpfId, REF_CODES[0])
       await registerAndPay(fixtureUsers[2].vpfId, REF_CODES[1])
@@ -250,7 +250,7 @@ describe("API: meet entries and the LiftingCast export", () => {
     })
   })
 
-  describe("GET /api/meets/[id]/entries/export.csv", () => {
+  describe("GET /api/meets/[id]/entries/csv", () => {
     it("emits the 29 columns in order, with vpfId as the member number", async () => {
       await registerAndPay(fixtureUsers[0].vpfId, REF_CODES[0])
       await (await importGenerate())(adminEvent({ method: "POST" }))

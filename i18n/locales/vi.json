@@ -756,9 +756,7 @@
       "statAthletes": "Vận động viên",
       "statActiveMembers": "Hội viên còn hạn",
       "statMeets": "Giải đấu",
-      "statPendingValue": "Đang chờ (₫)",
-      "rebuildCache": "Dựng lại bộ nhớ đệm kỷ lục",
-      "rebuildCacheHint": "Kỷ lục được lưu đệm một ngày. Xác nhận nhập kết quả sẽ tự xoá đệm; dùng nút này nếu trang công khai vẫn chưa cập nhật."
+      "statPendingValue": "Đang chờ (₫)"
     },
     "meets": {
       "title": "Giải đấu",

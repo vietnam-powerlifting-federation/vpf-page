@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach, afterAll } from "vitest"
 import { eq, like } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { meets } from "~/lib/external/drizzle/migrations/schema"
+import { invalidatePublicData } from "~/server/service/cache"
 import { createMockH3Event } from "../utils/h3-event"
 import { fixtureUsers } from "../fixtures/data"
 
@@ -25,9 +26,6 @@ async function importPatch() {
 }
 async function importMeetDetails() {
   return (await import("~/server/api/meets/[id]/index")).default
-}
-async function importClearCache() {
-  return (await import("~/server/api/admin/records-cache.post")).default
 }
 
 async function createMeet(meetName: string) {
@@ -87,8 +85,7 @@ describe("API: public data cache invalidation", () => {
 
     expect(await readMeetName()).toBe("Before")
 
-    const clear = await importClearCache()
-    expect((await clear(createMockH3Event({ method: "POST", context: { user: admin } }))).success).toBe(true)
+    await invalidatePublicData("test-manual")
 
     expect(await readMeetName()).toBe("After")
   })
@@ -106,27 +103,16 @@ describe("API: public data cache invalidation", () => {
     }
   })
 
-  it("clears the cache from the admin endpoint", async () => {
+  it("clears the cache when invalidated by hand", async () => {
     const created = await createMeet("Before")
     await readMeetName()
 
     await db.update(meets).set({ meetName: "Fixed By Hand" })
       .where(eq(meets.meetId, created.meetId))
 
-    const handler = await importClearCache()
-    const res = await handler(createMockH3Event({ method: "POST", context: { user: admin } }))
-    expect(res.success).toBe(true)
-    expect(res.data!.cleared).toBeGreaterThan(0)
+    const cleared = await invalidatePublicData("test-manual")
+    expect(cleared).toBeGreaterThan(0)
 
     expect(await readMeetName()).toBe("Fixed By Hand")
-  })
-
-  it("rejects a cache clear from a non-admin", async () => {
-    const handler = await importClearCache()
-    const res = await handler(createMockH3Event({
-      method: "POST",
-      context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
-    }))
-    expect(res.success).toBe(false)
   })
 })

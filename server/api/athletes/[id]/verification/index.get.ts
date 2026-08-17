@@ -20,6 +20,14 @@ export default defineEventHandler(async (event): Promise<ApiResponse<SelfVerific
     if (!auth.ok) return auth.error
     const currentUser = auth.user
 
+    const idParam = getRouterParam(event, "id")
+    if (idParam !== "me" && idParam !== currentUser.vpfId) {
+      return fail(event, 403, {
+        en: "You may only view your own verification status",
+        vi: "Bạn chỉ có thể xem trạng thái xác minh của mình",
+      })
+    }
+
     const account = await db
       .select({ emailVerified: users.emailVerified, identityVerified: users.identityVerified })
       .from(users)

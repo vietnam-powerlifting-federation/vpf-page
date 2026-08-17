@@ -22,9 +22,6 @@ async function importCreate() {
 async function importDelete() {
   return (await import("~/server/api/vouchers/[code]/index.delete")).default
 }
-async function importAdminList() {
-  return (await import("~/server/api/vouchers/all.get")).default
-}
 
 async function issue(values: Partial<typeof vouchers.$inferInsert> & { code: string }) {
   const [row] = await db
@@ -105,6 +102,34 @@ describe("API: vouchers", () => {
       const handler = await importList()
       const res = await handler(createMockH3Event({ context: { user }, query: { type: "vip" } }))
       expect(res.data?.map((v) => v.code)).toEqual(["VPF-T-VIP"])
+    })
+
+    it("rejects a non-admin querying another athlete's vpfId", async () => {
+      const handler = await importList()
+      const res = await handler(
+        createMockH3Event({ context: { user }, query: { vpfId: user2.vpfId } }),
+      )
+      expect(res.success).toBe(false)
+    })
+
+    it("returns every athlete's vouchers with owner identity when called by an admin", async () => {
+      await issue({ code: "VPF-ALL-1" })
+      await issue({ code: "VPF-ALL-2", vpfId: user2.vpfId })
+      const handler = await importList()
+      const res = await handler(createMockH3Event({ context: { user: admin } }))
+      expect(res.success).toBe(true)
+      const codes = res.data!.map((v) => v.code)
+      expect(codes).toContain("VPF-ALL-1")
+      expect(codes).toContain("VPF-ALL-2")
+      expect(res.data!.find((v) => v.code === "VPF-ALL-2")?.userName).toBe(fixtureUsers[2].fullName)
+    })
+
+    it("lets an admin filter by vpfId to view a single athlete's vouchers", async () => {
+      await issue({ code: "VPF-ALL-3" })
+      await issue({ code: "VPF-ALL-4", vpfId: user2.vpfId })
+      const handler = await importList()
+      const res = await handler(createMockH3Event({ context: { user: admin }, query: { vpfId: user2.vpfId } }))
+      expect(res.data?.map((v) => v.code)).toEqual(["VPF-ALL-4"])
     })
   })
 
@@ -230,34 +255,6 @@ describe("API: vouchers", () => {
 
       const rows = await db.select().from(vouchers).where(eq(vouchers.voucherId, issued.voucherId))
       expect(rows).toHaveLength(1)
-    })
-  })
-
-  describe("GET /api/vouchers/all", () => {
-    it("returns 403 for a non-admin", async () => {
-      const handler = await importAdminList()
-      const res = await handler(createMockH3Event({ context: { user } }))
-      expect(res.success).toBe(false)
-    })
-
-    it("returns every athlete's vouchers with owner identity", async () => {
-      await issue({ code: "VPF-ALL-1" })
-      await issue({ code: "VPF-ALL-2", vpfId: user2.vpfId })
-      const handler = await importAdminList()
-      const res = await handler(createMockH3Event({ context: { user: admin } }))
-      expect(res.success).toBe(true)
-      const codes = res.data!.map((v) => v.code)
-      expect(codes).toContain("VPF-ALL-1")
-      expect(codes).toContain("VPF-ALL-2")
-      expect(res.data!.find((v) => v.code === "VPF-ALL-2")?.userName).toBe(fixtureUsers[2].fullName)
-    })
-
-    it("filters by vpfId", async () => {
-      await issue({ code: "VPF-ALL-3" })
-      await issue({ code: "VPF-ALL-4", vpfId: user2.vpfId })
-      const handler = await importAdminList()
-      const res = await handler(createMockH3Event({ context: { user: admin }, query: { vpfId: user2.vpfId } }))
-      expect(res.data?.map((v) => v.code)).toEqual(["VPF-ALL-4"])
     })
   })
 })

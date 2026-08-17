@@ -756,9 +756,7 @@
       "statAthletes": "Athletes",
       "statActiveMembers": "Active members",
       "statMeets": "Meets",
-      "statPendingValue": "Pending (₫)",
-      "rebuildCache": "Rebuild records cache",
-      "rebuildCacheHint": "Records are cached for a day. Confirming an import clears this automatically; use the button if the public page still looks stale."
+      "statPendingValue": "Pending (₫)"
     },
     "meets": {
       "title": "Meets",

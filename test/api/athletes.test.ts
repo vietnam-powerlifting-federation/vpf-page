@@ -127,10 +127,10 @@ describe("API: athletes", () => {
       expect(Array.isArray(res.data?.meets)).toBe(true)
     })
 
-    it("returns 200 for id=self when authenticated (caller's own data)", async () => {
+    it("returns 200 for id=me when authenticated (caller's own data)", async () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
-        params: { id: "self" },
+        params: { id: "me" },
         context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
@@ -140,10 +140,10 @@ describe("API: athletes", () => {
       expect(Array.isArray(res.data?.meets)).toBe(true)
     })
 
-    it("returns 401 for id=self when not authenticated", async () => {
+    it("returns 401 for id=me when not authenticated", async () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
-        params: { id: "self" },
+        params: { id: "me" },
         context: {},
       })
       const res = await handler(event)
@@ -165,7 +165,7 @@ describe("API: athletes", () => {
     it("returns 200 with vipSettings when includeVipSettings is true and athlete has active VIP", async () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
-        params: { id: "self" },
+        params: { id: "me" },
         context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
         query: { includeVipSettings: "true" },
       })

@@ -22,7 +22,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<UserPrivate
     if (!auth.ok) return auth.error
     const currentUser = auth.user
 
-    return idParam === "self"
+    return idParam === "me"
       ? await patchSelf(event, currentUser.vpfId)
       : await patchAsAdmin(event, idParam, currentUser)
   } catch (error) {

@@ -167,7 +167,7 @@ const toast = useToast()
 const msg = useApiMessage()
 
 const meetId = computed(() => String(route.params.id))
-const exportUrl = computed(() => `/api/meets/${meetId.value}/entries/export.csv`)
+const exportUrl = computed(() => `/api/meets/${meetId.value}/entries/csv`)
 
 const { data: response, pending, refresh } = await useFetch<ApiResponse<EntryRoster>>(
   () => `/api/meets/${meetId.value}/entries`,
@@ -248,7 +248,7 @@ async function bulkAssign() {
     if (bulk.session) body.session = bulk.session
     if (bulk.flight) body.flight = bulk.flight
 
-    const res = await $fetch<ApiResponse<{ updated: number }>>(`/api/meets/${meetId.value}/entries/assign`, {
+    const res = await $fetch<ApiResponse<{ updated: number }>>(`/api/meets/${meetId.value}/entries`, {
       method: "PATCH",
       credentials: "include",
       ignoreResponseError: true,

@@ -472,7 +472,7 @@ async function handleSubmit(): Promise<boolean> {
       body = fd
     }
 
-    const res = (await $fetch("/api/athletes/self/vip-settings", {
+    const res = (await $fetch("/api/athletes/me/vip-settings", {
       method: "PATCH",
       body,
     })) as ApiResponse<VipBenefits>

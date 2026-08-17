@@ -162,7 +162,7 @@ const query = computed(() => ({
   order: oldestFirst.value ? "oldest" : "newest",
 }))
 
-const { data: response, pending, refresh } = await useFetch<ApiResponse<AdminPurchase[]>>("/api/purchases/all", {
+const { data: response, pending, refresh } = await useFetch<ApiResponse<AdminPurchase[]>>("/api/purchases", {
   query,
   credentials: "include",
   ignoreResponseError: true,

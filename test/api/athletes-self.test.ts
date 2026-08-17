@@ -2,11 +2,11 @@ import { describe, it, expect } from "vitest"
 import { createMockH3Event } from "../utils/h3-event"
 import { fixtureUsers } from "../fixtures/data"
 
-describe("API: athletes/[id] with id=self", () => {
-  describe("GET /api/athletes/self", () => {
+describe("API: athletes/[id] with id=me", () => {
+  describe("GET /api/athletes/me", () => {
     it("returns 401 when not authenticated", async () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
-      const event = createMockH3Event({ params: { id: "self" }, context: { user: undefined } })
+      const event = createMockH3Event({ params: { id: "me" }, context: { user: undefined } })
       const res = await handler(event)
       expect(res.success).toBe(false)
       expect(res.message?.en).toMatch(/Unauthorized|phép/)
@@ -15,7 +15,7 @@ describe("API: athletes/[id] with id=self", () => {
     it("returns 200 and current athlete profile when authenticated", async () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
-        params: { id: "self" },
+        params: { id: "me" },
         context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
@@ -26,12 +26,12 @@ describe("API: athletes/[id] with id=self", () => {
     })
   })
 
-  describe("PATCH /api/athletes/self", () => {
+  describe("PATCH /api/athletes/me", () => {
     it("returns 401 when not authenticated", async () => {
       const handler = (await import("~/server/api/athletes/[id]/index.patch")).default
       const event = createMockH3Event({
         method: "PATCH",
-        params: { id: "self" },
+        params: { id: "me" },
         body: { nationality: "US" },
         context: { user: undefined },
       })
@@ -40,9 +40,9 @@ describe("API: athletes/[id] with id=self", () => {
       expect(res.message?.en).toMatch(/Unauthorized|phép/)
     })
 
-    it("returns 403 when a non-admin patches an id other than self", async () => {
+    it("returns 403 when a non-admin patches an id other than me", async () => {
       // The endpoint serves both self-service and admin edits (admin tools spec
-      // §4.1), so any id but "self" now falls to the admin branch and is refused
+      // §4.1), so any id but "me" now falls to the admin branch and is refused
       // unless the caller actually is one.
       const handler = (await import("~/server/api/athletes/[id]/index.patch")).default
       const event = createMockH3Event({
@@ -60,7 +60,7 @@ describe("API: athletes/[id] with id=self", () => {
       const handler = (await import("~/server/api/athletes/[id]/index.patch")).default
       const event = createMockH3Event({
         method: "PATCH",
-        params: { id: "self" },
+        params: { id: "me" },
         body: { email: "not-an-email" },
         context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
@@ -73,7 +73,7 @@ describe("API: athletes/[id] with id=self", () => {
       const handler = (await import("~/server/api/athletes/[id]/index.patch")).default
       const event = createMockH3Event({
         method: "PATCH",
-        params: { id: "self" },
+        params: { id: "me" },
         body: { nationality: "US" },
         context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
       })

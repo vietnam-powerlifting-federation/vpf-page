@@ -8,7 +8,7 @@ describe("API: athletes/[id]/vip-settings", () => {
       const handler = (await import("~/server/api/athletes/[id]/vip-settings.patch")).default
       const event = createMockH3Event({
         method: "PATCH",
-        params: { id: "self" },
+        params: { id: "me" },
         body: { profileDescription: "Test" },
         context: { user: undefined },
       })
@@ -34,7 +34,7 @@ describe("API: athletes/[id]/vip-settings", () => {
       const handler = (await import("~/server/api/athletes/[id]/vip-settings.patch")).default
       const event = createMockH3Event({
         method: "PATCH",
-        params: { id: "self" },
+        params: { id: "me" },
         body: {
           profileDescription: "Test profile",
           displayProfileDescription: true,
@@ -89,7 +89,7 @@ describe("API: athletes/[id]/vip-settings", () => {
       const handler = (await import("~/server/api/athletes/[id]/vip-settings.patch")).default
       const event = createMockH3Event({
         method: "PATCH",
-        params: { id: "self" },
+        params: { id: "me" },
         body: { displayProfileDescription: "not-a-boolean" },
         context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
@@ -103,7 +103,7 @@ describe("API: athletes/[id]/vip-settings", () => {
     function patchDecorators(body: Record<string, unknown>) {
       return createMockH3Event({
         method: "PATCH",
-        params: { id: "self" },
+        params: { id: "me" },
         body,
         context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
       })
@@ -153,7 +153,7 @@ describe("API: athletes/[id]/vip-settings", () => {
     function patchMultipart(fields: Record<string, string>) {
       return createMockH3Event({
         method: "PATCH",
-        params: { id: "self" },
+        params: { id: "me" },
         multipart: Object.entries(fields).map(([name, value]) => ({ name, data: Buffer.from(value) })),
         context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
       })

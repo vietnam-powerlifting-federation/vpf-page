@@ -38,7 +38,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
     }
 
     let vpfId: string | undefined
-    if (idParam === "self") {
+    if (idParam === "me") {
       vpfId = currentUser?.vpfId
     } else if (idParam.startsWith("VPF")) {
       vpfId = idParam
@@ -53,7 +53,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<AthleteDeta
     }
 
     if (!vpfId) {
-      if (idParam === "self") {
+      if (idParam === "me") {
         return fail(event, 401, MSG.unauthorized)
       }
       return fail(event, 404, MSG.athleteNotFound)

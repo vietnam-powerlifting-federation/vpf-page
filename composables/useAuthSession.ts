@@ -3,7 +3,7 @@ import type { UserPrivate } from "~/types/users"
 import type { VipBenefits } from "~/types/vip"
 
 /**
- * `/api/athletes/self` returns the *private* column set for the caller's own
+ * `/api/athletes/me` returns the *private* column set for the caller's own
  * record — including `role`, which is what gates the admin entry in the nav.
  */
 type AuthAthlete = { athlete: UserPrivate; vipSettings?: VipBenefits }
@@ -23,7 +23,7 @@ export function useAuthSession() {
 
   async function refresh() {
     try {
-      const res = await $fetch<ApiResponse<AuthAthlete>>("/api/athletes/self", {
+      const res = await $fetch<ApiResponse<AuthAthlete>>("/api/athletes/me", {
         query: { includeVipSettings: true },
         credentials: "include",
         ignoreResponseError: true,

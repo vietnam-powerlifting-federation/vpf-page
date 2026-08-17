@@ -3,7 +3,7 @@ import type { AthleteDetailsData } from "~/types/users"
 
 export function useProfileAthlete() {
   const { data, pending, error, refresh } = useFetch<ApiResponse<AthleteDetailsData>>(
-    "/api/athletes/self",
+    "/api/athletes/me",
     {
       query: { includeVipSettings: true },
     },

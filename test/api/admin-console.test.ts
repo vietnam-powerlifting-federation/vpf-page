@@ -214,7 +214,7 @@ describe("API: admin console", () => {
     })
   })
 
-  describe("GET /api/purchases/all (§7.1)", () => {
+  describe("GET /api/purchases (§7.1)", () => {
     beforeEach(async () => {
       await db.delete(purchases).where(eq(purchases.refCode, REF_CODE))
       await db
@@ -223,12 +223,12 @@ describe("API: admin console", () => {
     })
 
     it("returns 403 for a non-admin", async () => {
-      const handler = (await import("~/server/api/purchases/all.get")).default
+      const handler = (await import("~/server/api/purchases/index.get")).default
       expect((await handler(createMockH3Event({ context: { user } }))).success).toBe(false)
     })
 
     it("shows the athlete and the memo needed to match a transfer", async () => {
-      const handler = (await import("~/server/api/purchases/all.get")).default
+      const handler = (await import("~/server/api/purchases/index.get")).default
       const res = await handler(adminEvent({ query: { search: REF_CODE } }))
 
       expect(res.success).toBe(true)
@@ -239,7 +239,7 @@ describe("API: admin console", () => {
     })
 
     it("filters by status and orders oldest-first for reconciliation", async () => {
-      const handler = (await import("~/server/api/purchases/all.get")).default
+      const handler = (await import("~/server/api/purchases/index.get")).default
       const res = await handler(adminEvent({ query: { status: "pending", order: "oldest" } }))
       expect(res.success).toBe(true)
       expect(res.data!.every((purchase) => purchase.status === "pending")).toBe(true)

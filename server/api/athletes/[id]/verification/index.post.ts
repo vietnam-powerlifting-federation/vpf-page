@@ -19,6 +19,14 @@ export default defineEventHandler(async (event): Promise<ApiResponse<IdentityVer
     if (!auth.ok) return auth.error
     const currentUser = auth.user
 
+    const idParam = getRouterParam(event, "id")
+    if (idParam !== "me" && idParam !== currentUser.vpfId) {
+      return fail(event, 403, {
+        en: "You may only submit your own verification",
+        vi: "Bạn chỉ có thể gửi hồ sơ xác minh của mình",
+      })
+    }
+
     // Email must be verified before an athlete can submit identity verification.
     const account = await db
       .select({ emailVerified: users.emailVerified })

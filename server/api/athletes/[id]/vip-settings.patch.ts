@@ -21,7 +21,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<VipBenefits
     if (!auth.ok) return auth.error
     const currentUser = auth.user
 
-    const vpfId = idParam === "self" ? currentUser.vpfId : idParam
+    const vpfId = idParam === "me" ? currentUser.vpfId : idParam
     if (!vpfId) {
       return fail(event, 400, {
         en: "Athlete ID is required",
@@ -30,7 +30,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<VipBenefits
     }
 
     const isAdmin = currentUser.role === "admin"
-    const isSelf = idParam === "self" || currentUser.vpfId === vpfId
+    const isSelf = idParam === "me" || currentUser.vpfId === vpfId
     if (!isSelf && !isAdmin) {
       return fail(event, 403, {
         en: "You may only update your own VIP settings, or an admin may update any athlete's",
@@ -71,7 +71,7 @@ export default defineEventHandler(async (event): Promise<ApiResponse<VipBenefits
           }
         } else if (typeof part.data !== "undefined") {
           // readMultipartFormData yields Buffers, never strings — matching how
-          // verifications/self.post.ts and meets/[id]/register.post.ts read text fields.
+          // athletes/[id]/verification/index.post.ts and meets/[id]/registrations/index.post.ts read text fields.
           textFields[part.name] = part.data.toString()
         }
       }

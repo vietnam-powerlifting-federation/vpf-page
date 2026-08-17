@@ -301,7 +301,7 @@ const { t } = useI18n()
 const apiMessage = useApiMessage()
 const toast = useToast()
 
-const { data, pending, refresh } = await useFetch<ApiResponse<RegistrationEligibility>>(`/api/meets/${slug}/registration`)
+const { data, pending, refresh } = await useFetch<ApiResponse<RegistrationEligibility>>(`/api/meets/${slug}/registrations/me`)
 
 const eligibility = computed<RegistrationEligibility | null>(() => (data.value?.success ? data.value.data : null))
 
@@ -496,7 +496,7 @@ async function submit() {
     fd.append("voucherCodes", appliedVouchers.value.map((v) => v.code).join(","))
     if (photoFile.value) fd.append("competitionPhoto", photoFile.value)
 
-    const res = await $fetch<ApiResponse<CompetitionRegistrationCreated>>(`/api/meets/${slug}/register`, {
+    const res = await $fetch<ApiResponse<CompetitionRegistrationCreated>>(`/api/meets/${slug}/registrations`, {
       method: "POST",
       body: fd,
     })

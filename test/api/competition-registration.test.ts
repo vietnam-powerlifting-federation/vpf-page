@@ -52,10 +52,10 @@ const validMemberFields: Fields = {
 }
 
 async function importRegister() {
-  return (await import("~/server/api/meets/[id]/register.post")).default
+  return (await import("~/server/api/meets/[id]/registrations/index.post")).default
 }
 async function importEligibility() {
-  return (await import("~/server/api/meets/[id]/registration.get")).default
+  return (await import("~/server/api/meets/[id]/registrations/me.get")).default
 }
 
 /** Registration requires a submitted identity verification (admin approval is not required). */
@@ -125,7 +125,7 @@ describe("API: competition registration", () => {
     await db.delete(meets).where(inArray(meets.meetId, [OPEN_MEET_ID, CLOSED_MEET_ID]))
   })
 
-  describe("GET /api/meets/[id]/registration", () => {
+  describe("GET /api/meets/[id]/registrations/me", () => {
     it("returns 401 when not authenticated", async () => {
       const handler = await importEligibility()
       const res = await handler(createMockH3Event({ params: { id: OPEN_MEET_SLUG }, context: { user: undefined } }))
@@ -154,7 +154,7 @@ describe("API: competition registration", () => {
     })
   })
 
-  describe("POST /api/meets/[id]/register — guards", () => {
+  describe("POST /api/meets/[id]/registrations — guards", () => {
     it("returns 401 when not authenticated", async () => {
       const handler = await importRegister()
       const res = await handler(
@@ -215,7 +215,7 @@ describe("API: competition registration", () => {
     })
   })
 
-  describe("POST /api/meets/[id]/register — happy paths", () => {
+  describe("POST /api/meets/[id]/registrations — happy paths", () => {
     it("creates a combined competition + membership purchase for a member", async () => {
       const handler = await importRegister()
       const res = await handler(registerEvent(OPEN_MEET_SLUG, validMemberFields))
@@ -270,7 +270,7 @@ describe("API: competition registration", () => {
     })
   })
 
-  describe("POST /api/meets/[id]/register — vouchers", () => {
+  describe("POST /api/meets/[id]/registrations — vouchers", () => {
     /** Issue a voucher directly; the admin endpoint has its own coverage in vouchers.test.ts. */
     async function issue(values: Partial<typeof vouchers.$inferInsert> & { code: string }) {
       const [row] = await db
@@ -459,7 +459,7 @@ describe("API: competition registration", () => {
     })
   })
 
-  describe("POST /api/meets/[id]/register — ban gates (verified athletes)", () => {
+  describe("POST /api/meets/[id]/registrations — ban gates (verified athletes)", () => {
     beforeAll(async () => {
       await db.delete(purchases).where(eq(purchases.vpfId, user.vpfId))
       await db.update(users).set({ identityVerified: true }).where(eq(users.vpfId, user.vpfId))

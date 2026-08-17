@@ -61,7 +61,7 @@ const msg = useApiMessage()
 
 onMounted(async () => {
   // If already verified, skip straight to the identity verification form.
-  const res = await $fetch("/api/verifications/self", {
+  const res = await $fetch("/api/athletes/me/verification", {
     ignoreResponseError: true,
     credentials: "include",
   }) as ApiResponse<StatusData>

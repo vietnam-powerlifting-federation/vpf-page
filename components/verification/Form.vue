@@ -125,7 +125,7 @@ import type { IdentityVerification } from "~/types/verifications"
 
 /**
  * The identity verification form (personal info + front-of-CCCD photo).
- * Self-loading: reads the athlete's current submission from /api/verifications/self
+ * Self-loading: reads the athlete's current submission from /api/athletes/me/verification
  * and prefills. Once approved the form renders read-only, so the same component
  * doubles as the "review your saved personal info" view.
  * Used by the standalone verification page and by the competition registration wizard.
@@ -205,7 +205,7 @@ function applyVerification(v: IdentityVerification) {
 
 onMounted(async () => {
   // Route middleware guards authentication; a failure here just leaves an empty form.
-  const res = (await $fetch("/api/verifications/self", {
+  const res = (await $fetch("/api/athletes/me/verification", {
     ignoreResponseError: true,
     credentials: "include",
   })) as ApiResponse<StatusData>
@@ -251,7 +251,7 @@ const handleSubmit = async () => {
     fd.append("phoneNumber", form.phoneNumber.trim())
     if (idCardFile.value) fd.append("idCardFront", idCardFile.value)
 
-    const res = (await $fetch("/api/verifications/self", {
+    const res = (await $fetch("/api/athletes/me/verification", {
       method: "POST",
       body: fd,
       ignoreResponseError: true,

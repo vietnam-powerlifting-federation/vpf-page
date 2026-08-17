@@ -138,7 +138,7 @@ const userData = computed(() => profileResponse.value?.athlete ?? null)
 
 // Identity verification status, surfaced on the profile with a link back to the verification page.
 type SelfVerification = { emailVerified: boolean; identityVerified: boolean; verification: IdentityVerification | null }
-const { data: verifyResponse } = useFetch<ApiResponse<SelfVerification>>("/api/verifications/self", {
+const { data: verifyResponse } = useFetch<ApiResponse<SelfVerification>>("/api/athletes/me/verification", {
   credentials: "include",
   ignoreResponseError: true,
 })
@@ -203,7 +203,7 @@ async function handleSubmit() {
   if (Object.keys(payload).length === 0) return
   isSubmitting.value = true
   try {
-    const response = (await $fetch("/api/athletes/self", {
+    const response = (await $fetch("/api/athletes/me", {
       method: "PATCH",
       body: payload,
     })) as ApiResponse<UserPrivate>

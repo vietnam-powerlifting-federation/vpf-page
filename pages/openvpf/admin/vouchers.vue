@@ -275,7 +275,7 @@ const query = computed(() => ({
   ...(vpfIdFilter.value.trim() ? { vpfId: vpfIdFilter.value.trim() } : {}),
 }))
 
-const { data: listResponse, pending, refresh } = await useFetch<ApiResponse<VoucherWithUser[]>>("/api/vouchers/all", {
+const { data: listResponse, pending, refresh } = await useFetch<ApiResponse<VoucherWithUser[]>>("/api/vouchers", {
   query,
   credentials: "include",
   ignoreResponseError: true,
