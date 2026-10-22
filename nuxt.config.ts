@@ -54,7 +54,9 @@ export default defineNuxtConfig({
     display: "swap",
     download: true,
     inject: true,
-    preload: true,
+    // Absolute URLs, served by Nitro from the download folder, so the critical
+    // faces can be preloaded below under a stable name.
+    fontsPath: "/fonts",
   },
 
   icon: {
@@ -86,6 +88,14 @@ export default defineNuxtConfig({
     head: {
       htmlAttrs: { lang: "en" },
       meta: [{ name: "theme-color", content: "#0b0d11" }],
+      // The page title, nav and body faces start downloading with the HTML rather
+      // than after the stylesheet, so they are usually in before first paint and
+      // the swap from the fallback does not shift the title band.
+      link: [
+        "Barlow_Condensed-normal-800-latin",
+        "Barlow_Condensed-normal-700-latin",
+        "Barlow-normal-400-latin",
+      ].map((face) => ({ rel: "preload", as: "font", type: "font/woff2", href: `/fonts/${face}.woff2`, crossorigin: "anonymous" })),
     },
   },
 
@@ -132,6 +142,14 @@ export default defineNuxtConfig({
         }
       },
     },
+  },
+
+  experimental: {
+    // Prerendered competition pages inline their data instead of fetching a
+    // separate _payload.json. With extraction on, the client did not know the
+    // route was prerendered until the app manifest arrived, hydrated without
+    // data and refetched, which emptied the list for a moment (CLS ~0.2).
+    payloadExtraction: false,
   },
 
   devtools: {
