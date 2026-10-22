@@ -1,19 +1,5 @@
 <template>
-  <Drawer
-    v-model:visible="visible"
-    position="right"
-    class="!w-[min(420px,92vw)]"
-    :pt="{ header: { class: 'border-b border-surface-200 !py-3' } }"
-  >
-    <template #header>
-      <strong class="font-display text-lg font-bold tracking-[0.06em] uppercase">{{ title }}</strong>
-    </template>
-    <template #closebutton="{ closeCallback }">
-      <button type="button" autofocus class="grid size-11 cursor-pointer place-items-center rounded hover:bg-surface-100" :aria-label="$t('general.close')" @click="closeCallback">
-        <AppIcon name="lucide:x" class="size-5" />
-      </button>
-    </template>
-
+  <SideDrawer v-model:visible="visible" :title="title" :close-label="$t('general.close')" width-class="w-[min(420px,92vw)]" body-class="p-4">
     <div v-if="record" class="grid gap-6 pt-2">
       <p class="font-display text-6xl leading-none font-extrabold tabular-nums">
         {{ formatKg(record.weight, locale) }}<span class="ml-1 font-sans text-xl font-semibold text-accent">kg</span>
@@ -56,7 +42,7 @@
         </div>
       </dl>
     </div>
-  </Drawer>
+  </SideDrawer>
 </template>
 
 <script setup lang="ts">

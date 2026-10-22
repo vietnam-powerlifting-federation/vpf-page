@@ -6,32 +6,16 @@
       <TableSkeleton v-if="pending && !meet" />
       <div v-else-if="error || !meet" class="rounded-md border border-surface-200 bg-surface-0">
         <TableEmpty :title="$t('meets.meetNotFound')" :body="$t('error.notFoundBody')">
-          <Button v-slot="slotProps" as-child severity="secondary">
-            <NuxtLinkLocale to="/competitions" :class="slotProps.class">{{ $t("meets.title") }}</NuxtLinkLocale>
-          </Button>
+          <AppButton variant="secondary" to="/competitions">{{ $t("meets.title") }}</AppButton>
         </TableEmpty>
       </div>
       <div v-else-if="results.length === 0" class="rounded-md border border-surface-200 bg-surface-0">
         <TableEmpty :title="$t('meets.noResults')" />
       </div>
 
-      <Tabs v-else :value="activeTab" @update:value="setActiveTab">
-        <TabList unstyled :aria-label="$t('meets.tabsLabel')" :pt="{ tabList: { class: 'flex overflow-x-auto overflow-y-hidden border-b border-surface-200' }, activeBar: { class: 'hidden' } }">
-          <Tab v-for="tab in tabs" :key="tab.value" v-slot="{ active, a11yAttrs, onClick }" :value="tab.value" as-child>
-            <button
-              type="button"
-              v-bind="a11yAttrs"
-              class="-mb-px min-h-12 shrink-0 cursor-pointer border-b-[3px] px-4 font-display text-base font-bold tracking-[0.06em] whitespace-nowrap uppercase transition-colors duration-120 ease-snap focus-visible:-outline-offset-2"
-              :class="active ? 'border-accent-fill text-color' : 'border-transparent text-muted-color hover:text-color'"
-              @click="onClick"
-            >
-              {{ tab.label }}
-            </button>
-          </Tab>
-        </TabList>
-        <TabPanels unstyled class="pt-6">
-          <TabPanel value="scoresheet" unstyled>
-            <div v-if="visitedTabs.has('scoresheet')" class="grid gap-8">
+      <AppTabs v-else :model-value="activeTab" :tabs="tabs" :label="$t('meets.tabsLabel')" @update:model-value="setActiveTab">
+          <template #scoresheet>
+            <div class="grid gap-8">
               <section
                 v-for="group in groups"
                 :key="group.key"
@@ -68,10 +52,10 @@
                 </div>
               </section>
             </div>
-          </TabPanel>
+          </template>
 
-          <TabPanel value="detailed" unstyled>
-            <div v-if="visitedTabs.has('detailed')" class="grid gap-8">
+          <template #detailed>
+            <div class="grid gap-8">
               <section
                 v-for="group in groups"
                 :key="group.key"
@@ -102,10 +86,10 @@
                 </div>
               </section>
             </div>
-          </TabPanel>
+          </template>
 
-          <TabPanel value="gl-ranking" unstyled>
-            <div v-if="visitedTabs.has('gl-ranking')" class="overflow-clip rounded-md border border-surface-200 bg-surface-0">
+          <template #gl-ranking>
+            <div class="overflow-clip rounded-md border border-surface-200 bg-surface-0">
               <ResultsTable
                 :columns="glColumns"
                 :rows="glPage"
@@ -137,9 +121,8 @@
               </ResultsTable>
               <TablePager v-model:page="glPageNumber" v-model:page-size="glPageSize" :total="glRanked.length" />
             </div>
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
+          </template>
+      </AppTabs>
     </PageSection>
   </div>
 </template>
@@ -170,11 +153,7 @@ const activeTab = computed<TabValue>(() => {
   return validTabs.includes(tab as TabValue) ? (tab as TabValue) : "scoresheet"
 })
 
-// A tab renders the first time it is opened and then stays mounted.
-const visitedTabs = ref(new Set<TabValue>([activeTab.value]))
-watch(activeTab, (tab) => visitedTabs.value.add(tab))
-
-function setActiveTab(value: string | number) {
+function setActiveTab(value: string) {
   const tab = value as TabValue
   router.replace({ query: { ...route.query, tab: tab === "scoresheet" ? undefined : tab } })
 }

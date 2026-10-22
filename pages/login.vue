@@ -2,7 +2,7 @@
   <AuthCard :title="$t('login.title')" :subtitle="$t('login.subtitle')" :image="loginBg">
     <form ref="formEl" class="grid gap-5" novalidate @submit.prevent="handleLogin">
       <AppField v-slot="f" :label="$t('login.emailLabel')" :error="errors.vpfIdOrEmail">
-        <InputText
+        <AppInput
           :id="f.id"
           v-model="vpfIdOrEmail"
           :placeholder="$t('login.emailPlaceholder')"
@@ -16,17 +16,12 @@
       </AppField>
 
       <AppField v-slot="f" :label="$t('login.password')" :error="errors.password">
-        <Password
-v-model="password"
-          :input-props="{ 'aria-expanded': undefined }"
-          :input-id="f.id"
+        <PasswordInput
+:id="f.id"
+          v-model="password"
           :invalid="f.invalid"
           :aria-describedby="f.describedBy"
-          :feedback="false"
-          toggle-mask
           autocomplete="current-password"
-          class="w-full"
-          input-class="w-full"
         />
       </AppField>
 
@@ -34,7 +29,7 @@ v-model="password"
         {{ $t("login.forgotPassword") }}
       </NuxtLinkLocale>
 
-      <Button type="submit" :label="$t('login.loginButton')" class="w-full" :loading="isLoading" />
+      <AppButton type="submit" block :loading="isLoading">{{ $t('login.loginButton') }}</AppButton>
 
       <button type="button" class="justify-self-start text-left text-sm text-muted-color underline underline-offset-3 hover:text-color" @click="showNoticeModal = true">
         {{ $t("login.noticeTitle") }}
@@ -46,12 +41,12 @@ v-model="password"
       <NuxtLinkLocale to="/register" class="font-semibold text-accent underline-offset-3 hover:underline">{{ $t("login.registerNow") }}</NuxtLinkLocale>
     </template>
 
-    <Dialog v-model:visible="showNoticeModal" :header="$t('login.noticeTitle')" modal class="w-[min(40rem,94vw)]">
+    <AppDialog v-model:visible="showNoticeModal" :title="$t('login.noticeTitle')" :close-label="$t('login.close')">
       <p class="whitespace-pre-line">{{ $t("login.noticeContent") }}</p>
       <template #footer>
-        <Button :label="$t('login.close')" severity="secondary" @click="showNoticeModal = false" />
+        <AppButton variant="secondary" @click="showNoticeModal = false">{{ $t('login.close') }}</AppButton>
       </template>
-    </Dialog>
+    </AppDialog>
   </AuthCard>
 </template>
 
@@ -157,7 +152,7 @@ const handleLogin = async () => {
 
 // Set page meta
 useHead({
-  title: t("login.title"),
+  title: () => t("login.title"),
 })
 
 definePageMeta({ layout: "auth", wide: "split" })

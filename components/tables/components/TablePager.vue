@@ -1,14 +1,8 @@
 <template>
   <nav :aria-label="$t('tables.pages')" class="flex flex-wrap items-center justify-between gap-3 border-t border-surface-200 px-4 py-3 text-sm">
     <div class="flex items-center gap-2">
-      <label :id="sizeLabelId" class="text-muted-color">{{ $t("tables.perPage") }}</label>
-      <Select
-        :model-value="pageSize"
-        :options="sizes"
-        :aria-labelledby="sizeLabelId"
-        size="small"
-        @update:model-value="emit('update:pageSize', $event)"
-      />
+      <label :for="sizeId" class="text-muted-color">{{ $t("tables.perPage") }}</label>
+      <NativeSelect :id="sizeId" :model-value="pageSize" :options="sizes" compact class="w-20" @update:model-value="emit('update:pageSize', $event)" />
     </div>
     <div class="flex items-center gap-2">
       <span class="whitespace-nowrap text-muted-color tabular-nums">
@@ -41,8 +35,8 @@
 const props = defineProps<{ page: number; pageSize: number; total: number }>()
 const emit = defineEmits<{ "update:page": [page: number]; "update:pageSize": [size: number] }>()
 
-const sizes = [25, 50, 100]
-const sizeLabelId = useId()
+const sizes = [25, 50, 100].map((n) => ({ value: n, label: String(n) }))
+const sizeId = useId()
 
 const pages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 const from = computed(() => (props.page - 1) * props.pageSize + 1)

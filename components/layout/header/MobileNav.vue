@@ -1,27 +1,5 @@
 <template>
-  <Drawer
-    v-model:visible="visible"
-    position="right"
-    :block-scroll="true"
-    class="!w-[min(320px,86vw)]"
-    :pt="{ header: { class: 'border-b border-surface-200 !py-3' }, content: { class: '!p-0 flex flex-col' } }"
-    @hide="emit('closed')"
-  >
-    <template #header>
-      <strong class="font-display text-lg font-bold tracking-[0.06em] uppercase">{{ $t("nav.menu") }}</strong>
-    </template>
-    <template #closebutton="{ closeCallback }">
-      <button
-        type="button"
-        autofocus
-        class="grid size-11 cursor-pointer place-items-center rounded hover:bg-surface-100"
-        :aria-label="$t('nav.closeMenu')"
-        @click="closeCallback"
-      >
-        <AppIcon name="lucide:x" class="size-5" />
-      </button>
-    </template>
-
+  <SideDrawer v-model:visible="visible" :title="$t('nav.menu')" :close-label="$t('nav.closeMenu')" body-class="flex flex-col" @closed="emit('closed')">
     <nav :aria-label="$t('nav.main')">
       <ul class="grid gap-1 p-3">
         <li v-for="item in items" :key="item.to">
@@ -47,7 +25,7 @@
         <ThemeToggle with-text />
       </div>
     </div>
-  </Drawer>
+  </SideDrawer>
 </template>
 
 <script setup lang="ts">

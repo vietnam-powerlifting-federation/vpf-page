@@ -38,16 +38,10 @@
         </div>
       </dl>
       <div v-if="state === 'open'" class="mt-auto flex flex-wrap gap-2">
-        <Button v-slot="slotProps" as-child>
-          <NuxtLinkLocale :to="`/competitions/${meet.meetSlug}/register`" :class="slotProps.class">
-            {{ $t("meets.registerNow") }}
-          </NuxtLinkLocale>
-        </Button>
-        <Button v-if="meet.allowSpotterRegistration" v-slot="slotProps" as-child severity="secondary" variant="outlined">
-          <NuxtLinkLocale :to="`/competitions/${meet.meetSlug}`" :class="slotProps.class">
-            {{ $t("meets.registerAsSpotter") }}
-          </NuxtLinkLocale>
-        </Button>
+        <AppButton :to="`/competitions/${meet.meetSlug}/register`">{{ $t("meets.registerNow") }}</AppButton>
+        <AppButton v-if="meet.allowSpotterRegistration" variant="secondary" :to="`/competitions/${meet.meetSlug}`">
+          {{ $t("meets.registerAsSpotter") }}
+        </AppButton>
       </div>
     </div>
   </article>

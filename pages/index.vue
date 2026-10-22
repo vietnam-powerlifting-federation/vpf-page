@@ -146,7 +146,7 @@
             />
           </template>
           <TableEmpty v-else :title="$t('ranking.emptyTitle')" :body="$t('ranking.emptyBody')">
-            <Button severity="secondary" @click="resetAll">{{ $t("filters.reset") }}</Button>
+            <AppButton variant="secondary" @click="resetAll">{{ $t("filters.reset") }}</AppButton>
           </TableEmpty>
         </div>
       </div>

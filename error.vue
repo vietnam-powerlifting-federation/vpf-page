@@ -6,7 +6,7 @@
       :lede="notFound ? $t('error.notFoundBody') : $t('error.genericBody')"
     >
       <template #actions>
-        <Button @click="clearError({ redirect: localePath('/') })">{{ $t("error.home") }}</Button>
+        <AppButton @click="clearError({ redirect: localePath('/') })">{{ $t("error.home") }}</AppButton>
       </template>
     </PageHeader>
   </NuxtLayout>

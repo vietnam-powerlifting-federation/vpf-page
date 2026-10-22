@@ -6,15 +6,15 @@
     <!-- Step 1: request a reset code -->
     <form v-if="step === 'request'" class="grid gap-5" novalidate @submit.prevent="handleRequestCode()">
       <AppField v-slot="f" :label="$t('forgotPassword.emailLabel')">
-        <InputText :id="f.id" v-model="email" type="email" autocomplete="email" class="w-full" />
+        <AppInput :id="f.id" v-model="email" type="email" autocomplete="email" class="w-full" />
       </AppField>
-      <Button type="submit" :label="$t('forgotPassword.sendCodeButton')" class="w-full" :loading="isLoading" />
+      <AppButton type="submit" block :loading="isLoading">{{ $t('forgotPassword.sendCodeButton') }}</AppButton>
     </form>
 
     <!-- Step 2: enter the code and the new password -->
     <form v-else ref="formEl" class="grid gap-5" novalidate @submit.prevent="handleResetPassword">
       <AppField v-slot="f" :label="$t('forgotPassword.codeLabel')" :error="errors.code">
-        <InputText
+        <AppInput
           :id="f.id"
           v-model="code"
           inputmode="numeric"
@@ -25,12 +25,12 @@
         />
       </AppField>
       <AppField v-slot="f" :label="$t('forgotPassword.newPassword')" :hint="$t('register.passwordHint')" :error="errors.newPassword">
-        <Password :input-props="{ 'aria-expanded': undefined }" v-model="newPassword" :input-id="f.id" :invalid="f.invalid" :aria-describedby="f.describedBy" :feedback="false" toggle-mask autocomplete="new-password" class="w-full" input-class="w-full" />
+        <PasswordInput :id="f.id" v-model="newPassword" :invalid="f.invalid" :aria-describedby="f.describedBy" autocomplete="new-password" />
       </AppField>
       <AppField v-slot="f" :label="$t('forgotPassword.confirmPassword')" :error="errors.confirmPassword">
-        <Password :input-props="{ 'aria-expanded': undefined }" v-model="confirmPassword" :input-id="f.id" :invalid="f.invalid" :aria-describedby="f.describedBy" :feedback="false" toggle-mask autocomplete="new-password" class="w-full" input-class="w-full" />
+        <PasswordInput :id="f.id" v-model="confirmPassword" :invalid="f.invalid" :aria-describedby="f.describedBy" autocomplete="new-password" />
       </AppField>
-      <Button type="submit" :label="$t('forgotPassword.resetButton')" class="w-full" :loading="isLoading" />
+      <AppButton type="submit" block :loading="isLoading">{{ $t('forgotPassword.resetButton') }}</AppButton>
       <p class="text-center text-sm text-muted-color">
         {{ $t("forgotPassword.noCode") }}
         <button type="button" class="min-h-11 cursor-pointer font-semibold text-accent underline-offset-3 hover:underline disabled:opacity-50" :disabled="isResending" @click="handleRequestCode(true)">

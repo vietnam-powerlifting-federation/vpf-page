@@ -2,7 +2,7 @@
   <AuthCard :title="$t('register.title')" :subtitle="$t('register.subtitle')" :image="loginBg">
     <form ref="formEl" class="grid gap-5" novalidate @submit.prevent="handleRegister">
       <AppField v-slot="f" :label="$t('register.emailLabel')" :error="errors.email">
-        <InputText
+        <AppInput
           :id="f.id"
           v-model="email"
           type="email"
@@ -15,34 +15,26 @@
       </AppField>
 
       <AppField v-slot="f" :label="$t('register.password')" :hint="$t('register.passwordHint')" :error="errors.password">
-        <Password :input-props="{ 'aria-expanded': undefined }"
+        <PasswordInput
+:id="f.id"
           v-model="password"
-          :input-id="f.id"
           :invalid="f.invalid"
           :aria-describedby="f.describedBy"
-          :feedback="false"
-          toggle-mask
           autocomplete="new-password"
-          class="w-full"
-          input-class="w-full"
         />
       </AppField>
 
       <AppField v-slot="f" :label="$t('register.confirmPassword')" :error="errors.confirmPassword">
-        <Password :input-props="{ 'aria-expanded': undefined }"
+        <PasswordInput
+:id="f.id"
           v-model="confirmPassword"
-          :input-id="f.id"
           :invalid="f.invalid"
           :aria-describedby="f.describedBy"
-          :feedback="false"
-          toggle-mask
           autocomplete="new-password"
-          class="w-full"
-          input-class="w-full"
         />
       </AppField>
 
-      <Button type="submit" :label="$t('register.registerButton')" class="w-full" :loading="isLoading" />
+      <AppButton type="submit" block :loading="isLoading">{{ $t('register.registerButton') }}</AppButton>
     </form>
 
     <template #footer>

@@ -11,7 +11,6 @@ export default defineNuxtConfig({
     "@nuxtjs/i18n",
     "@nuxtjs/color-mode",
     "@nuxtjs/google-fonts",
-    "@nuxt/icon",
     "@nuxt/image",
     "@primevue/nuxt-module",
   ],
@@ -59,17 +58,21 @@ export default defineNuxtConfig({
     fontsPath: "/fonts",
   },
 
-  icon: {
-    mode: "svg",
-    // Bundle the icons the app uses instead of fetching them from the Iconify API.
-    serverBundle: { collections: ["lucide"] },
-    clientBundle: { scan: true, sizeLimitKb: 64 },
-    fallbackToApi: false,
-  },
-
   css: ["~/assets/styles/main.css"],
 
   primevue: {
+    // Register only the components the app uses. By default every PrimeVue
+    // component (~140) is registered globally, which put a stub for each into
+    // the entry bundle and SSR-injected every component's styles into each page.
+    components: {
+      include: [
+        "Button", "Checkbox", "ColorPicker", "Column", "DataTable", "DatePicker", "Dialog", "Drawer",
+        "IconField", "InputIcon", "InputNumber", "InputText", "Menu", "Message", "MultiSelect", "Password",
+        "ProgressSpinner", "RadioButton", "Select", "SelectButton", "Tab", "TabList", "TabPanel", "TabPanels",
+        "Tabs", "Tag", "Textarea", "Toast", "ToggleSwitch",
+      ],
+    },
+    directives: { exclude: "*" },
     options: {
       theme: {
         preset: ScoreboardPreset,

@@ -19,19 +19,17 @@
           </span>
         </template>
         <template #cell-status="{ row }">
-          <Tag :severity="row.record.status === 'holding' ? 'success' : 'secondary'" :value="row.record.status === 'holding' ? $t('athlete.holding') : $t('athlete.broken')" />
+          <AppTag :tone="row.record.status === 'holding' ? 'success' : 'neutral'">{{ row.record.status === 'holding' ? $t('athlete.holding') : $t('athlete.broken') }}</AppTag>
         </template>
         <template #cell-certificate="{ row }">
-          <Button
-            size="small"
-            severity="secondary"
-            variant="outlined"
+          <AppButton
+            variant="secondary"
             :aria-label="$t('athlete.certificateFor', { lift: liftLabel(row.record.lift), kg: formatKg(row.record.recordWeight, locale) })"
             @click="openCertificate(row)"
           >
             <AppIcon name="lucide:award" class="size-4" />
             {{ $t("athlete.view") }}
-          </Button>
+          </AppButton>
         </template>
       </ResultsTable>
     </div>

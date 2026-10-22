@@ -2,9 +2,9 @@
   <AuthCard :title="$t('verifyEmail.title')" :subtitle="$t('verifyEmail.subtitle')">
     <form class="grid gap-5" novalidate @submit.prevent="handleVerify">
       <AppField v-slot="f" :label="$t('verifyEmail.codeLabel')">
-        <InputText :id="f.id" v-model="code" inputmode="numeric" autocomplete="one-time-code" class="w-full font-display text-xl tracking-[0.3em]" />
+        <AppInput :id="f.id" v-model="code" inputmode="numeric" autocomplete="one-time-code" class="w-full font-display text-xl tracking-[0.3em]" />
       </AppField>
-      <Button type="submit" :label="$t('verifyEmail.verifyButton')" class="w-full" :loading="isLoading" />
+      <AppButton type="submit" block :loading="isLoading">{{ $t('verifyEmail.verifyButton') }}</AppButton>
       <p class="text-center text-sm text-muted-color">
         {{ $t("verifyEmail.noCode") }}
         <button type="button" class="min-h-11 cursor-pointer font-semibold text-accent underline-offset-3 hover:underline disabled:opacity-50" :disabled="isResending" @click="handleResend">
