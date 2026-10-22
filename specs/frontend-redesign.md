@@ -189,3 +189,28 @@ Each step is its own commit or PR, and the app works after each one.
 4. **Competition registration,** checkout, profile tabs, auth pages.
 5. **Admin screens.**
 6. **Cleanup:** remove dependencies, then run Lighthouse, axe and the viewport matrix (320/375/414/768/1024/1440).
+
+## 10. Progress
+
+| Step | Commit | State |
+| --- | --- | --- |
+| 1 Foundation | `fcb1dcf` | Done |
+| 2 Tables, filters, Rankings | `70001a5` | Done |
+| 3 Records, competitions, athlete | `d1fac34` | Done |
+| 4 Registration, checkout, profile, auth | `32d28ed` | Done |
+| 5 Admin | `1e27ecd` | Done |
+| 6 Cleanup and audit | `5f95b18`, `1aa27c2` | Done except the JS budget (below) |
+
+Audit (2026-10-23):
+
+- **Accessibility:** axe (WCAG 2.2 AA) ran on 34 page-and-theme combinations. It found two problems, both fixed: the PrimeVue password field's invalid `aria-expanded`, and missing labels on the VIP colour inputs. The colour-picker page hasn't been re-checked since its fix.
+- **Widths:** no sideways scrolling on 12 main pages at 320, 375, 414, 768, 1024 or 1440px. Tables scroll inside their own panel, as intended.
+- **Keyboard:** the skip link and the mobile-menu focus handling work.
+- **Build:** the production build succeeds.
+
+Open:
+
+1. **JS budget missed.** Each route loads about 185–220 KB gzip against the 120 KB target. 156 KB of that is the shared bundle every page loads: Vue, Nuxt, the router, vue-i18n, PrimeVue core and Toast. Options: load Toast only when needed, and use less PrimeVue on the public pages.
+2. **LCP and CLS not measured yet.**
+3. **Registration after identity verification** hasn't been tested end to end, because that would mean submitting a verification for the test account.
+4. **Deviation from §4:** the login page keeps a photo panel (from 768px, hidden on phones). The register page doesn't have it yet; adding it is a one-line change if wanted.
