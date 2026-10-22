@@ -69,7 +69,7 @@ import { computed } from "vue"
 import AthleteAvatar from "~/components/athletes/AthleteAvatar.vue"
 import BannerSlideshow from "~/components/athletes/BannerSlideshow.vue"
 import SocialLinks from "~/components/athletes/SocialLinks.vue"
-import { nameGradientStyle } from "~/lib/utils/client"
+import { nameGradientStyle } from "~/lib/domain/patch-payload"
 import type { VipSettingsFormState } from "~/types/vip"
 
 const props = withDefaults(

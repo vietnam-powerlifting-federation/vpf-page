@@ -1,10 +1,10 @@
-import { logger } from "~/lib/logger/logger"
+import { defineApiHandler } from "~/server/utils/api-handler"
 import { ok, fail } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
 import { requireAdmin } from "~/server/utils/auth-guard"
-import { resolveMeet } from "~/server/utils/competition-registration"
-import { buildImportContext } from "~/server/utils/liftingcast-import"
-import { readImportUpload } from "~/server/utils/liftingcast-upload"
+import { resolveMeet } from "~/server/service/competition-registration"
+import { buildImportContext } from "~/server/service/liftingcast-import"
+import { readImportUpload } from "~/server/service/liftingcast-upload"
 import type { ApiResponse } from "~/types/api"
 import type { ImportPreview } from "~/types/attempts"
 
@@ -18,31 +18,26 @@ import type { ImportPreview } from "~/types/attempts"
  * off the rankings — so the derived block this returns is the only place that
  * mistake is visible before it becomes the public record.
  */
-export default defineEventHandler(async (event): Promise<ApiResponse<ImportPreview>> => {
-  try {
-    const auth = requireAdmin(event, {
-      en: "Only admins can import results",
-      vi: "Chỉ quản trị viên mới có thể nhập kết quả",
-    })
-    if (!auth.ok) return auth.error
+export default defineApiHandler(async (event): Promise<ApiResponse<ImportPreview>> => {
+  const auth = requireAdmin(event, {
+    en: "Only admins can import results",
+    vi: "Chỉ quản trị viên mới có thể nhập kết quả",
+  })
+  if (!auth.ok) return auth.error
 
-    const identifier = getRouterParam(event, "id")
-    if (!identifier) return fail(event, 400, MSG.invalidInput)
+  const identifier = getRouterParam(event, "id")
+  if (!identifier) return fail(event, 400, MSG.invalidInput)
 
-    const meet = await resolveMeet(identifier)
-    if (!meet) return fail(event, 404, { en: "Meet not found", vi: "Không tìm thấy meet" })
+  const meet = await resolveMeet(identifier)
+  if (!meet) return fail(event, 404, { en: "Meet not found", vi: "Không tìm thấy meet" })
 
-    const upload = await readImportUpload(event)
-    if (!upload.ok) return fail(event, upload.statusCode, upload.message)
+  const upload = await readImportUpload(event)
+  if (!upload.ok) return fail(event, upload.statusCode, upload.message)
 
-    const context = await buildImportContext(meet, upload.upload.csv, upload.upload.overrides)
+  const context = await buildImportContext(meet, upload.upload.csv, upload.upload.overrides)
 
-    return ok(context.preview, {
-      en: "Import preview ready — nothing has been written yet",
-      vi: "Đã sẵn sàng xem trước — chưa có gì được ghi",
-    })
-  } catch (error) {
-    logger.error("Error previewing results import", { error: (error as Error).message })
-    return fail(event, 500, MSG.internalError)
-  }
+  return ok(context.preview, {
+    en: "Import preview ready — nothing has been written yet",
+    vi: "Đã sẵn sàng xem trước — chưa có gì được ghi",
+  })
 })

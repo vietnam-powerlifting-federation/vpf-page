@@ -138,7 +138,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue"
 import { useProfileAthlete } from "~/composables/useProfileData"
-import { buildPatchPayload } from "~/lib/utils/client"
+import { buildPatchPayload } from "~/lib/domain/patch-payload"
 import type { ApiResponse } from "~/types/api"
 import type { UserPrivate } from "~/types/users"
 import type { IdentityVerification } from "~/types/verifications"

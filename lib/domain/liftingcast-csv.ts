@@ -12,7 +12,7 @@
  * formula) or `Glossbrenner` (a different coefficient set) into a GL field would
  * silently corrupt every ranking. We take none of them.
  */
-import { parseDivision, parseSex, parseWeightClass } from "~/lib/utils/liftingcast-mapping"
+import { parseDivision, parseSex, parseWeightClass } from "~/lib/domain/liftingcast-mapping"
 import { SUPPORTED_EQUIPMENT } from "~/lib/constants/liftingcast"
 import type {
   AttemptSet,
@@ -119,7 +119,7 @@ function parseLight(value: string | undefined): boolean | null {
 
 /**
  * Best lift as VPF computes it: `max(attempts, 0)`, null only when no attempt was
- * taken. Mirrors `calculateBestLift` in `lib/utils/meet-result.ts` — the two must
+ * taken. Mirrors `calculateBestLift` in `lib/domain/meet-result.ts` — the two must
  * agree, which is exactly what the cross-check below proves against LiftingCast.
  */
 export function bestOf(attempts: (number | null)[]): number | null {

@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue"
-import { normalizeExternalUrl } from "~/lib/utils/client"
+import { normalizeExternalUrl } from "~/lib/domain/patch-payload"
 import type { VipBenefits } from "~/types/vip"
 
 /** Partial so the VIP settings form can pass its in-progress state straight in. */

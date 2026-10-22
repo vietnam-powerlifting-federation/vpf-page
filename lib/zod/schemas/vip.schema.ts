@@ -4,7 +4,7 @@ import { vipBenefits } from "~/lib/external/drizzle/migrations/schema"
 
 /**
  * Decorators are interpolated raw into `style="background: linear-gradient(...)"` by
- * nameGradientStyle (lib/utils/client.ts) and AthleteAvatar.vue, and GET /api/vip-settings
+ * nameGradientStyle (lib/domain/patch-payload.ts) and AthleteAvatar.vue, and GET /api/vip-settings
  * publishes every VIP athlete's pair site-wide (leaderboards, records, meet rankings).
  * An unconstrained value such as `url(https://attacker.example/p.png)` would therefore make
  * every visitor's browser call an attacker-controlled host. Restricting to #RRGGBB leaves no

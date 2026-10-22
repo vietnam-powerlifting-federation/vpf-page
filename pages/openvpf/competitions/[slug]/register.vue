@@ -283,8 +283,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from "vue"
-import { formatWeightClass } from "~/lib/utils/client"
-import { computeVoucherTotals } from "~/lib/utils/vouchers"
+import { formatWeightClass } from "~/lib/domain/patch-payload"
+import { computeVoucherTotals } from "~/lib/domain/vouchers"
 import type { ApiResponse } from "~/types/api"
 import type { RegistrationEligibility, CompetitionRegistrationCreated, RegistrationIdentityState } from "~/types/competitions"
 import type { PurchaseType } from "~/types/union-types"

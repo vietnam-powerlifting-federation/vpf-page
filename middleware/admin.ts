@@ -1,18 +1,15 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  // Auth token is an HttpOnly cookie, so verify role via the server session endpoint.
-  // eslint-disable-next-line nuxt/prefer-import-meta
-  const headers = process.server ? useRequestHeaders(["cookie"]) : undefined
-  const res = await $fetch("/api/auth/session", {
-    ignoreResponseError: true,
-    credentials: "include",
-    headers,
-  }) as { success?: boolean; data?: { role?: string } } | null
+  // Shares the session fetch with `middleware/auth` and the header; see
+  // `useAuthSession`. This guard only decides what to render — `requireAdmin`
+  // in each handler is what actually stands between a non-admin and the data.
+  const { ensureLoaded, isLoggedIn, isAdmin } = useAuthSession()
+  await ensureLoaded()
 
-  if (!res || res.success !== true) {
+  if (!isLoggedIn.value) {
     return navigateTo({ path: "/login", query: { to: to.fullPath } })
   }
 
-  if (res.data?.role !== "admin") {
+  if (!isAdmin.value) {
     return navigateTo("/openvpf")
   }
 })

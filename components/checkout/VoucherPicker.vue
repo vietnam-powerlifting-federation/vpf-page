@@ -21,7 +21,7 @@
 
 <script setup lang="ts">
 import { computed, useId } from "vue"
-import { formatDateDMY } from "~/lib/utils/date"
+import { formatDateDMY } from "~/lib/domain/date"
 import type { PurchaseType } from "~/types/union-types"
 import type { Voucher } from "~/types/vouchers"
 

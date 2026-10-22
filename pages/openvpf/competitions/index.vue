@@ -158,7 +158,7 @@
 <script setup lang="ts">
 import type { MeetPublic } from "~/types/meets"
 import { useMeetsList } from "~/composables/useMeetsList"
-import { formatMeetDate, formatMeetTypeLabel } from "~/lib/utils/meet-formatters"
+import { formatMeetDate, formatMeetTypeLabel } from "~/lib/domain/meet-formatters"
 
 definePageMeta({
   layout: "openvpf-competitions",

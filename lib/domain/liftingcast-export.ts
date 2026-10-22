@@ -2,11 +2,11 @@
  * The outbound half of the LiftingCast round trip (admin tools spec §6.3).
  *
  * Pure: rows in, CSV text out. Every enum translation here goes through
- * `lib/utils/liftingcast-mapping.ts`, which is the same table the importer reads —
+ * `lib/domain/liftingcast-mapping.ts`, which is the same table the importer reads —
  * if the two drift, a meet exports as "Masters 1", fails to import as `mas1`, and
  * the failure surfaces days later with the results in hand.
  */
-import { formatDivision, formatSex, formatWeightClass } from "~/lib/utils/liftingcast-mapping"
+import { formatDivision, formatSex, formatWeightClass } from "~/lib/domain/liftingcast-mapping"
 import type { MeetEntryWithAthlete } from "~/types/entries"
 
 /** The 29 columns LiftingCast's entry import expects, in exactly this order. */

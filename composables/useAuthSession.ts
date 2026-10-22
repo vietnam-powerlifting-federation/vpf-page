@@ -1,34 +1,59 @@
 import type { ApiResponse } from "~/types/api"
-import type { UserPrivate } from "~/types/users"
+import type { AthleteRecordData, UserPrivate } from "~/types/users"
 import type { VipBenefits } from "~/types/vip"
 
 /**
- * `/api/athletes/me` returns the *private* column set for the caller's own
- * record — including `role`, which is what gates the admin entry in the nav.
+ * `/api/athletes/me` resolves to the caller's own record, so it always answers
+ * with the *private* column set — including `role`, which gates the admin nav.
+ * The `scope` discriminant is checked once here so pages get a plain
+ * `UserPrivate` rather than a union each has to narrow.
  */
-type AuthAthlete = { athlete: UserPrivate; vipSettings?: VipBenefits }
+type AuthAthlete = { athlete: UserPrivate; vipSettings: VipBenefits | null }
+
+/** Holds the in-flight fetch on the Nuxt app instance so concurrent callers share one request. */
+const INFLIGHT_KEY = "$vpfAuthSession"
+
+type NuxtAppWithSession = ReturnType<typeof useNuxtApp> & {
+  [INFLIGHT_KEY]?: Promise<void> | null
+}
 
 /**
- * Client-side session for the current athlete.
+ * The session for the current athlete — the single source for "who is asking".
  *
- * Deliberately avoids `useFetch`/`useAsyncData`: pages under "/openvpf/**" are
- * swr-cached and prerendered (see nuxt.config routeRules), so any server-fetched
- * session would be baked into the shared page payload and served to the wrong
- * user. State defaults to `null` (logged out) and is only ever populated by a
- * fresh client fetch, keeping the session strictly per-visitor.
+ * Route guards, the header and the profile pages all read this rather than
+ * fetching for themselves. They used to fetch separately: `middleware/auth` hit
+ * `/api/auth/session`, the header hit `/api/athletes/me`, and `useProfileAthlete`
+ * hit it a third time, so one guarded page load cost three round trips for the
+ * same answer. `ensureLoaded` collapses them into one.
+ *
+ * State is deliberately not populated during prerender: a prerendered page's
+ * payload is one file served to every visitor, so a session baked into it would
+ * be handed to the wrong person. Prerendering stays logged-out and the browser
+ * fetches for real on hydration.
  */
 export function useAuthSession() {
   const athlete = useState<AuthAthlete | null>("auth-session-athlete", () => null)
   const ready = useState<boolean>("auth-session-ready", () => false)
 
-  async function refresh() {
+  async function fetchSession(): Promise<void> {
+    // No visitor exists at prerender time, and anything stored would be shared.
+    if (import.meta.prerender) {
+      athlete.value = null
+      ready.value = true
+      return
+    }
+
     try {
-      const res = await $fetch<ApiResponse<AuthAthlete>>("/api/athletes/me", {
-        query: { includeVipSettings: true },
+      const res = await $fetch<ApiResponse<AthleteRecordData>>("/api/athletes/me", {
         credentials: "include",
         ignoreResponseError: true,
+        // On the server $fetch does not inherit the visitor's cookies, and the
+        // auth token is HttpOnly, so it has to be forwarded explicitly.
+        headers: import.meta.server ? useRequestHeaders(["cookie"]) : undefined,
       })
-      athlete.value = res.success ? res.data : null
+      athlete.value = res.success && res.data.scope === "private"
+        ? { athlete: res.data.athlete, vipSettings: res.data.vipSettings }
+        : null
     } catch {
       athlete.value = null
     } finally {
@@ -36,16 +61,43 @@ export function useAuthSession() {
     }
   }
 
+  /**
+   * Resolve the session once per page load. Repeat callers get the settled
+   * state; concurrent callers — a route guard and the header racing during
+   * hydration — await the same request instead of issuing a second one.
+   *
+   * The in-flight promise hangs off the Nuxt app instance rather than module
+   * scope, because on the server module scope is shared by every concurrent
+   * request and parking it there would hand one visitor's session to another.
+   */
+  async function ensureLoaded(): Promise<void> {
+    if (ready.value) return
+
+    const nuxtApp = useNuxtApp() as NuxtAppWithSession
+    if (!nuxtApp[INFLIGHT_KEY]) {
+      nuxtApp[INFLIGHT_KEY] = fetchSession().finally(() => {
+        nuxtApp[INFLIGHT_KEY] = null
+      })
+    }
+    await nuxtApp[INFLIGHT_KEY]
+  }
+
+  /** Force a re-read, e.g. after the athlete edits their own profile. */
+  async function refresh(): Promise<void> {
+    await fetchSession()
+  }
+
   return {
     athlete,
     ready,
     isLoggedIn: computed(() => athlete.value !== null),
     /**
-     * Convenience for rendering the admin nav entry. Not a security boundary —
-     * every admin route is guarded server-side by `middleware/admin` and by
-     * `requireAdmin` in each handler.
+     * Gates the admin nav entry and the `admin` route guard. Not the security
+     * boundary — that is `requireAdmin` in every handler, which is what actually
+     * stands between a non-admin and the data.
      */
     isAdmin: computed(() => athlete.value?.athlete?.role === "admin"),
+    ensureLoaded,
     refresh,
   }
 }

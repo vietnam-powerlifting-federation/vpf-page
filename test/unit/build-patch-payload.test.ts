@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { buildPatchPayload } from "~/lib/utils/client"
+import { buildPatchPayload } from "~/lib/domain/patch-payload"
 
 describe("buildPatchPayload", () => {
   it("emits only changed keys", () => {

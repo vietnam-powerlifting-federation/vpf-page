@@ -100,7 +100,7 @@
 <script setup lang="ts">
 import AthletesRankingFilter from "@/components/AthletesRankingFilter.vue"
 import { useRankingFilters } from "@/composables/useRankingFilters"
-import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL, nameGradientStyle } from "@/lib/utils/client"
+import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL, nameGradientStyle } from "@/lib/domain/patch-payload"
 import type { ResultRanked } from "~/types/results"
 import type { UserPublicWithDecorators } from "~/types/users"
 import type { ApiResponse } from "~/types/api"

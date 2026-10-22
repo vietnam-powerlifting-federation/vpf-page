@@ -134,9 +134,9 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref } from "vue"
-import { formatDateDMY } from "~/lib/utils/date"
+import { formatDateDMY } from "~/lib/domain/date"
 import type { ApiResponse } from "~/types/api"
-import type { UserPrivate } from "~/types/users"
+import type { AthleteRecordData, UserPrivate } from "~/types/users"
 import type { Role } from "~/types/union-types"
 import type { UserViolationWithUser } from "~/types/violations"
 
@@ -195,12 +195,18 @@ function fromIsoDate(value: string | null) {
   return value ? new Date(`${value}T00:00:00`) : null
 }
 
-const detail = await $fetch<ApiResponse<{ athlete: UserPrivate }>>(`/api/athletes/${vpfId.value}`, {
+const detail = await $fetch<ApiResponse<AthleteRecordData>>(`/api/athletes/${vpfId.value}`, {
   credentials: "include",
   ignoreResponseError: true,
 })
 
-if (detail.success) {
+/**
+ * The `scope` check is not a formality. This form reads and writes back private
+ * columns, and the server answers publicly to a caller it does not consider an
+ * admin — an expired session, a revoked role. Without the check those columns
+ * would be `undefined` here and get saved as blanks over real data.
+ */
+if (detail.success && detail.data.scope === "private") {
   const athlete = detail.data.athlete
   Object.assign(form, {
     fullName: athlete.fullName,

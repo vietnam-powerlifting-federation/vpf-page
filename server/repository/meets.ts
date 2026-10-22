@@ -1,7 +1,7 @@
-import { and, eq, sql } from "drizzle-orm"
+import { and, desc, eq, sql } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
-import { meets } from "~/lib/external/drizzle/migrations/schema"
-import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
+import { competitionBanList, meets, users } from "~/lib/external/drizzle/migrations/schema"
+import { getMeetsAndResultsAndAthletes } from "~/server/repository/dataset"
 import { cacheKey, redisRemember } from "~/server/utils/redis"
 import type { ResultsDataset } from "~/server/repository/results"
 import type { MeetPublic } from "~/types/meets"
@@ -59,4 +59,78 @@ export async function getLatestNationalYear(): Promise<number | null> {
 
     return row?.maxYear ?? null
   })
+}
+
+/**
+ * The meet list. `includeHidden` is the admin console's view of unpublished
+ * drafts; the public list has never shown them.
+ *
+ * Not cached, unlike the reads above: the result varies by caller, and a cache
+ * keyed on the URL alone would eventually replay an admin's list to the public.
+ */
+export async function listMeets(includeHidden: boolean): Promise<MeetPublic[]> {
+  return db
+    .select()
+    .from(meets)
+    .where(includeHidden ? undefined : eq(meets.hidden, false))
+    .orderBy(sql`${meets.hostDate} DESC`, sql`${meets.meetId} DESC`)
+}
+
+export async function insertMeet(values: typeof meets.$inferInsert): Promise<MeetPublic | undefined> {
+  return db.insert(meets).values(values).returning().then((rows) => rows[0])
+}
+
+export async function updateMeet(
+  meetId: number,
+  patch: Partial<typeof meets.$inferInsert>,
+): Promise<MeetPublic | null> {
+  return db
+    .update(meets)
+    .set(patch)
+    .where(eq(meets.meetId, meetId))
+    .returning()
+    .then((rows) => rows[0] ?? null)
+}
+
+export async function deleteMeet(meetId: number): Promise<void> {
+  await db.delete(meets).where(eq(meets.meetId, meetId))
+}
+
+// --- competition ban list -------------------------------------------------
+
+export async function listBanList(meetId: number) {
+  return db
+    .select({
+      id: competitionBanList.id,
+      meetId: competitionBanList.meetId,
+      vpfId: competitionBanList.vpfId,
+      reason: competitionBanList.reason,
+      createdAt: competitionBanList.createdAt,
+      userName: users.fullName,
+    })
+    .from(competitionBanList)
+    .innerJoin(users, eq(users.vpfId, competitionBanList.vpfId))
+    .where(eq(competitionBanList.meetId, meetId))
+    .orderBy(desc(competitionBanList.createdAt))
+}
+
+/** Banning an already-banned athlete rewrites the reason rather than failing. */
+export async function upsertBanListEntry(meetId: number, vpfId: string, reason: string) {
+  return db
+    .insert(competitionBanList)
+    .values({ meetId, vpfId, reason })
+    .onConflictDoUpdate({
+      target: [competitionBanList.meetId, competitionBanList.vpfId],
+      set: { reason },
+    })
+    .returning()
+    .then((rows) => rows[0])
+}
+
+export async function deleteBanListEntry(meetId: number, vpfId: string) {
+  return db
+    .delete(competitionBanList)
+    .where(and(eq(competitionBanList.meetId, meetId), eq(competitionBanList.vpfId, vpfId)))
+    .returning({ id: competitionBanList.id })
+    .then((rows) => rows[0] ?? null)
 }

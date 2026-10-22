@@ -1,7 +1,7 @@
 import type { H3Event } from "h3"
 import { ImportOverridesSchema } from "~/lib/zod/schemas/results-import.schema"
 import type { I18nMessage } from "~/server/utils/api-response"
-import type { ImportOverrides } from "~/server/utils/liftingcast-import"
+import type { ImportOverrides } from "~/server/service/liftingcast-import"
 
 /**
  * The H3 side of the results import: pull the CSV and the admin's per-row

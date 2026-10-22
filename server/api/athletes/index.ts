@@ -1,18 +1,10 @@
-import { and, asc, count, eq, gte, ilike, isNull, lt, or, sql } from "drizzle-orm"
 import { z } from "zod"
-import { db } from "~/lib/external/drizzle/drizzle"
-import { users } from "~/lib/external/drizzle/migrations/schema"
-import { userPrivateSelect, userPublicSelect } from "~/lib/utils/queries/users"
-import { logger } from "~/lib/logger/logger"
+import { countAthletes, listAthletes, type AthleteListFilters } from "~/server/repository/athletes"
+import { defineApiHandler } from "~/server/utils/api-handler"
 import { ok, fail } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
 import type { ApiResponse } from "~/types/api"
 import type { AthleteListPage } from "~/types/users"
-
-const vpfMembershipActive = or(
-  isNull(users.vpfMembershipExpiresAt),
-  gte(users.vpfMembershipExpiresAt, sql`CURRENT_DATE`),
-)
 
 const boolean = z.preprocess((v) => (typeof v === "string" ? v === "true" : v), z.boolean())
 
@@ -38,66 +30,27 @@ const AthleteQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(200).default(50),
 })
 
-export default defineEventHandler(async (event): Promise<ApiResponse<AthleteListPage>> => {
-  try {
-    const isAdmin = event.context.user?.role === "admin"
+export default defineApiHandler(async (event): Promise<ApiResponse<AthleteListPage>> => {
+  const isAdmin = event.context.user?.role === "admin"
 
-    const parsed = AthleteQuerySchema.safeParse(getQuery(event))
-    if (!parsed.success) return fail(event, 400, MSG.invalidInput)
-    const query = parsed.data
+  const parsed = AthleteQuerySchema.safeParse(getQuery(event))
+  if (!parsed.success) return fail(event, 400, MSG.invalidInput)
+  const { page, pageSize, ...filters } = parsed.data
 
-    // Non-admins get the old behaviour regardless of what they ask for.
-    const filters = isAdmin
-      ? [
-        query.includeInactive ? undefined : vpfMembershipActive,
-        query.membership === "active" ? vpfMembershipActive : undefined,
-        query.membership === "expired"
-          ? and(
-            sql`${users.vpfMembershipExpiresAt} IS NOT NULL`,
-            lt(users.vpfMembershipExpiresAt, sql`CURRENT_DATE`),
-          )
-          : undefined,
-        query.search
-          ? or(
-            ilike(users.vpfId, `%${query.search}%`),
-            ilike(users.fullName, `%${query.search}%`),
-            ilike(users.email, `%${query.search}%`),
-            ilike(users.nationalId, `%${query.search}%`),
-          )
-          : undefined,
-        query.identityVerified === undefined ? undefined : eq(users.identityVerified, query.identityVerified),
-        query.emailVerified === undefined ? undefined : eq(users.emailVerified, query.emailVerified),
-        query.drugViolate === undefined ? undefined : eq(users.drugViolate, query.drugViolate),
-        query.role ? eq(users.role, query.role) : undefined,
-      ]
-      : [vpfMembershipActive]
+  // The repository ignores every filter for a non-admin caller, so asking for
+  // lapsed members or private columns from the public list changes nothing.
+  const listFilters: AthleteListFilters = filters
 
-    const where = and(...filters)
-    const offset = (query.page - 1) * query.pageSize
+  const [total, items] = await Promise.all([
+    countAthletes(listFilters, isAdmin),
+    listAthletes(listFilters, isAdmin, { limit: pageSize, offset: (page - 1) * pageSize }),
+  ])
 
-    const total = await db
-      .select({ value: count() })
-      .from(users)
-      .where(where)
-      .then((rows) => rows[0]?.value ?? 0)
-
-    const items = await db
-      .select(isAdmin ? userPrivateSelect : userPublicSelect)
-      .from(users)
-      .where(where)
-      .orderBy(asc(users.fullName), asc(users.vpfId))
-      .limit(query.pageSize)
-      .offset(offset)
-
-    return ok(
-      { items, total, page: query.page, pageSize: query.pageSize },
-      {
-        en: "Athletes retrieved successfully",
-        vi: "Lấy danh sách vận động viên thành công",
-      },
-    )
-  } catch (error) {
-    logger.error("Error fetching athletes", { error })
-    return fail(event, 500, MSG.internalError)
-  }
+  return ok(
+    { items, total, page, pageSize },
+    {
+      en: "Athletes retrieved successfully",
+      vi: "Lấy danh sách vận động viên thành công",
+    },
+  )
 })

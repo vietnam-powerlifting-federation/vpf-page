@@ -78,7 +78,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue"
-import { formatDateDMY } from "~/lib/utils/date"
+import { formatDateDMY } from "~/lib/domain/date"
 import type { ApiResponse } from "~/types/api"
 import type { MeetPublic } from "~/types/meets"
 

@@ -121,7 +121,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useI18n } from "vue-i18n"
-import { formatDivision, formatSex, formatWeightClass } from "~/lib/utils/client"
+import { formatDivision, formatSex, formatWeightClass } from "~/lib/domain/patch-payload"
 import borderUrl from "~/assets/img/record-certificate/border.png"
 import canvaUrl from "~/assets/img/record-certificate/canva.png"
 import signatureUrl from "~/assets/img/record-certificate/signature.png"

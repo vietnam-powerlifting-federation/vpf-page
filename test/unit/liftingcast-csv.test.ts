@@ -7,7 +7,7 @@ import {
   parseBirthYear,
   parseCsvText,
   parseLiftingCastCsv,
-} from "~/lib/utils/liftingcast-csv"
+} from "~/lib/domain/liftingcast-csv"
 import type { AttemptSet, ReportedTotals } from "~/types/attempts"
 
 const fixture = readFileSync(

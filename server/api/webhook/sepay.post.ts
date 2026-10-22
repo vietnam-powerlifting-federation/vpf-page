@@ -1,5 +1,6 @@
-import { approvePurchase } from "~/server/utils/approve-purchase"
+import { approvePurchase } from "~/server/service/purchases"
 import { logger } from "~/lib/logger/logger"
+import { defineApiHandler } from "~/server/utils/api-handler"
 
 // SePay webhook payload: https://docs.sepay.vn/webhook.html
 interface SepayWebhookPayload {
@@ -21,7 +22,7 @@ interface SepayWebhookPayload {
 // up the transaction at all, and doubles here as the anchor for extracting the ref code.
 const REF_CODE_PATTERN = /SEVQR\D*(\d{6})/i
 
-export default defineEventHandler(async (event) => {
+export default defineApiHandler(async (event) => {
   const body = await readBody<SepayWebhookPayload>(event)
 
   const content = body?.content ?? ""

@@ -7,7 +7,7 @@
  * Keeping one table for the pair is what stops a meet exporting as "Masters 1"
  * and failing to import as `mas1` days later with the results in hand.
  *
- * The functions that read these tables live in `lib/utils/liftingcast-mapping.ts`.
+ * The functions that read these tables live in `lib/domain/liftingcast-mapping.ts`.
  */
 import type { Division, Sex } from "~/types/union-types"
 

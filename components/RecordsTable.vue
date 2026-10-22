@@ -48,8 +48,8 @@
 import type { UserPublicWithDecorators } from "~/types/users"
 import type { MeetPublic } from "~/types/meets"
 import type { Sex } from "~/types/union-types"
-import { formatWeightClass, nameGradientStyle } from "@/lib/utils/client"
-import { formatDateDMY } from "@/lib/utils/date"
+import { formatWeightClass, nameGradientStyle } from "@/lib/domain/patch-payload"
+import { formatDateDMY } from "@/lib/domain/date"
 
 interface RecordRow {
   weightClass: number

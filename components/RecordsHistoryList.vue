@@ -76,7 +76,7 @@ import type { LiftRecord } from "~/types/records"
 import type { Result } from "~/types/results"
 import type { UserPublicWithDecorators } from "~/types/users"
 import type { Sex, Division } from "~/types/union-types"
-import { formatWeightClass, nameGradientStyle } from "@/lib/utils/client"
+import { formatWeightClass, nameGradientStyle } from "@/lib/domain/patch-payload"
 
 const { t } = useI18n()
 

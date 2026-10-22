@@ -17,16 +17,31 @@ export type MeetDetails = {
   athletes: UserPublicWithDecorators[]
 }
 
+export type GetMeetDetailsOptions = {
+  /** Admins only. Hidden meets are unpublished drafts and stay invisible otherwise. */
+  includeHidden?: boolean
+}
+
 /**
  * A meet's public page: the meet, its results with per-lift placements, and the
  * athletes who competed.
  *
- * `null` means no such meet. Nothing here varies by caller — this is public data
- * only, which is what makes it safe to cache under the meet identifier alone.
+ * `null` means no such meet — or a hidden one this caller may not see. The two
+ * are deliberately indistinguishable, so a draft's slug cannot be confirmed by
+ * probing the endpoint.
+ *
+ * The visibility check lives here rather than in the repository because the cache
+ * underneath is keyed on the identifier alone. Caching the row and filtering
+ * per-caller keeps one shared entry correct for both audiences; caching the
+ * *decision* would let an admin's lookup populate an entry replayed to the public.
  */
-export async function getMeetDetails(identifier: string): Promise<MeetDetails | null> {
+export async function getMeetDetails(
+  identifier: string,
+  options: GetMeetDetailsOptions = {},
+): Promise<MeetDetails | null> {
   const meet = await findMeetByIdentifier(identifier)
   if (!meet) return null
+  if (meet.hidden && !options.includeHidden) return null
 
   const { results, athletes } = await getMeetDataset(meet.meetId)
 

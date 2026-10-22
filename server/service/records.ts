@@ -1,5 +1,5 @@
 import { RECORD_START_YEAR } from "~/lib/constants/constants"
-import { buildAttemptEvents, getBestAttempt, getRunningTotals, getTargetDivisions } from "~/lib/utils/queries/records"
+import { buildAttemptEvents, getBestAttempt, getRunningTotals, getTargetDivisions } from "~/lib/domain/records"
 import { getLatestNationalYear } from "~/server/repository/meets"
 import { getNationalResultsDataset, RECORDS_CACHE_PREFIX } from "~/server/repository/records"
 import { cacheKey, redisDelByPrefix, redisRemember } from "~/server/utils/redis"

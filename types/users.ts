@@ -1,6 +1,7 @@
 import type { InferSelectModel } from "drizzle-orm"
 import type { users } from "~/lib/external/drizzle/migrations/schema"
 import type { MeetPublic } from "~/types/meets"
+import type { LiftRecord } from "~/types/records"
 import type { Result, PersonalBestSummary } from "~/types/results"
 import type { VipBenefits } from "~/types/vip"
 
@@ -10,12 +11,32 @@ type UserInternal = "password" | "identityVerified" | "emailVerified" | "emailVe
 type UserPrivate = Omit<User, UserInternal>
 type UserPublic = Omit<User, UserInternal | "nationalId" | "phoneNumber" | "address" | "squatRackPin" | "benchRackPin" | "benchSafetyPin" | "benchFootBlock" | "legacyEmail" | "email" | "vpfMembershipExpiresAt" | "vipMembershipExpiresAt" | "legacyEmail" | "notes" | "drugViolate" | "role" | "competitionPhotoUrl">
 
-type AthleteDetailsData = {
-  athlete: UserPrivate
+/**
+ * `GET /api/athletes/[id]` — one athlete's record.
+ *
+ * `scope` names which column set the server decided to answer with, so a caller
+ * needing private fields has to check rather than assume. Without it, an admin
+ * screen whose session had expired would receive public columns and silently
+ * read `undefined` for everything it wanted.
+ */
+type AthleteRecordData =
+  | { scope: "private"; athlete: UserPrivate; vipSettings: VipBenefits | null }
+  | { scope: "public"; athlete: UserPublic; vipSettings: VipBenefits | null }
+
+/**
+ * `GET /api/athletes/[id]/profile` — the competition history aggregate.
+ *
+ * Every field is always present. This replaced a set of `include*` query flags
+ * that made the response shape a function of the query string, which the type
+ * could not express and every caller had to narrow by hand.
+ */
+type AthleteProfileData = {
+  athlete: UserPublic
   personalBest: PersonalBestSummary
   compHistory: Result[]
   meets: MeetPublic[]
-  vipSettings?: VipBenefits
+  records: LiftRecord[]
+  vipSettings: VipBenefits | null
 }
 
 type UserPublicWithDecorators = UserPublic & { decorator1?: string | null; decorator2?: string | null }
@@ -32,4 +53,11 @@ type AthleteListPage = {
   pageSize: number
 }
 
-export type { UserPrivate, UserPublic, UserPublicWithDecorators, AthleteDetailsData, AthleteListPage }
+export type {
+  UserPrivate,
+  UserPublic,
+  UserPublicWithDecorators,
+  AthleteRecordData,
+  AthleteProfileData,
+  AthleteListPage,
+}

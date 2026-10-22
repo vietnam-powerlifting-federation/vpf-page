@@ -78,7 +78,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue"
-import { formatDateDMY } from "~/lib/utils/date"
+import { formatDateDMY } from "~/lib/domain/date"
 import type { ApiResponse } from "~/types/api"
 import type { AthleteListPage, UserPrivate } from "~/types/users"
 

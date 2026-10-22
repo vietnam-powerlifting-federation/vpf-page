@@ -1,7 +1,7 @@
 import { and, eq, ne } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { meets } from "~/lib/external/drizzle/migrations/schema"
-import { slugifyMeetName } from "~/lib/utils/meet-formatters"
+import { slugifyMeetName } from "~/lib/domain/meet-formatters"
 import type { I18nMessage } from "~/server/utils/api-response"
 
 export const MEET_NOT_FOUND: I18nMessage = { en: "Meet not found", vi: "Không tìm thấy meet" }

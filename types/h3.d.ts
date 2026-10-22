@@ -1,4 +1,4 @@
-import type { JwtPayload } from "~/lib/utils/jwt"
+import type { JwtPayload } from "~/lib/external/jwt"
 
 declare module "h3" {
   interface H3EventContext {

@@ -1,5 +1,5 @@
 import { RECORD_START_YEAR } from "~/lib/constants/constants"
-import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
+import { getMeetsAndResultsAndAthletes } from "~/server/repository/dataset"
 import { cacheKey, redisRemember } from "~/server/utils/redis"
 import type { ResultsDataset } from "~/server/repository/results"
 

@@ -114,7 +114,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue"
-import { formatDateDMY } from "~/lib/utils/date"
+import { formatDateDMY } from "~/lib/domain/date"
 import type { ApiResponse } from "~/types/api"
 import type { AdminDashboard } from "~/types/admin"
 

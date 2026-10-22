@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { isVipActive } from "~/lib/utils/vip"
+import { isVipActive } from "~/lib/domain/vip"
 
 function isoOffsetDays(days: number): string {
   const d = new Date()

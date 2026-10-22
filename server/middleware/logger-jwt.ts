@@ -1,5 +1,5 @@
 import { logger } from "~/lib/logger/logger"
-import { verifyToken } from "~/lib/utils/jwt"
+import { verifyToken } from "~/lib/external/jwt"
 
 export default defineEventHandler(async (event) => {
   const url = getRequestURL(event)

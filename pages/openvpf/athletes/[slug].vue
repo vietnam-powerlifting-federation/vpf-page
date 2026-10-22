@@ -4,27 +4,27 @@
       <ProgressSpinner />
     </div>
 
-    <div v-else-if="error || !data?.data" class="flex justify-center items-center min-h-screen">
+    <div v-else-if="error || !profile" class="flex justify-center items-center min-h-screen">
       <p class="text-error text-lg">{{ $t("athlete.notFound") }}</p>
     </div>
 
     <VipProfile
-      v-else-if="data.data.vipSettings"
-      :athlete="data.data.athlete"
-      :vip-settings="data.data.vipSettings"
-      :personal-best="data.data.personalBest"
-      :comp-history="data.data.compHistory"
-      :meets="data.data.meets"
-      :records="data.data.records ?? []"
+      v-else-if="profile.vipSettings"
+      :athlete="profile.athlete"
+      :vip-settings="profile.vipSettings"
+      :personal-best="profile.personalBest"
+      :comp-history="profile.compHistory"
+      :meets="profile.meets"
+      :records="profile.records"
     />
 
     <NormalProfile
       v-else
-      :athlete="data.data.athlete"
-      :personal-best="data.data.personalBest"
-      :comp-history="data.data.compHistory"
-      :meets="data.data.meets"
-      :records="data.data.records ?? []"
+      :athlete="profile.athlete"
+      :personal-best="profile.personalBest"
+      :comp-history="profile.compHistory"
+      :meets="profile.meets"
+      :records="profile.records"
     />
   </div>
 </template>
@@ -32,28 +32,18 @@
 <script setup lang="ts">
 import NormalProfile from "~/components/athletes/NormalProfile.vue"
 import VipProfile from "~/components/athletes/VipProfile.vue"
-import type { UserPublic } from "~/types/users"
-import type { VipBenefits } from "~/types/vip"
-import type { PersonalBestSummary, Result } from "~/types/results"
-import type { MeetPublic } from "~/types/meets"
-import type { LiftRecord } from "~/types/records"
+import type { ApiResponse } from "~/types/api"
+import type { AthleteProfileData } from "~/types/users"
 
 const route = useRoute()
 
-const { data, pending, error } = await useFetch<{
-  success: boolean
-  data: {
-    athlete: UserPublic
-    personalBest: PersonalBestSummary
-    compHistory: Result[]
-    meets: MeetPublic[]
-    records?: LiftRecord[]
-    vipSettings?: VipBenefits
-  } | null
-  message: { en: string; vi: string }
-}>(`/api/athletes/${route.params.slug}`, {
-  query: { includeVipSettings: "true", includeRecords: "true" },
-})
+// The /profile route always returns the whole aggregate — the records and VIP
+// settings this page needs used to be opt-in through query flags.
+const { data, pending, error } = await useFetch<ApiResponse<AthleteProfileData>>(
+  `/api/athletes/${route.params.slug}/profile`,
+)
+
+const profile = computed(() => (data.value?.success ? data.value.data : null))
 
 definePageMeta({
   layout: "openvpf",

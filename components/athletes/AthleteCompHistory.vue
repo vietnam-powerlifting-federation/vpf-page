@@ -68,7 +68,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue"
-import { formatWeightClass, formatDivision, formatWeight, formatGL } from "~/lib/utils/client"
+import { formatWeightClass, formatDivision, formatWeight, formatGL } from "~/lib/domain/patch-payload"
 import type { Result } from "~/types/results"
 import type { MeetPublic } from "~/types/meets"
 

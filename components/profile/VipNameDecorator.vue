@@ -97,7 +97,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue"
-import { nameGradientStyle } from "~/lib/utils/client"
+import { nameGradientStyle } from "~/lib/domain/patch-payload"
 
 type Mode = "none" | "solid" | "gradient"
 type Preset = { key: string; from: string; to: string }

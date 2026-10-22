@@ -333,7 +333,7 @@
 import MeetTabContent from "@/components/meets/MeetTabContent.vue"
 import LazyMount from "@/components/meets/LazyMount.vue"
 import { DISQUALIFIED } from "~/lib/constants/constants"
-import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL, formatSexAlternative, nameGradientStyle } from "@/lib/utils/client"
+import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL, formatSexAlternative, nameGradientStyle } from "@/lib/domain/patch-payload"
 
 const route = useRoute()
 const router = useRouter()

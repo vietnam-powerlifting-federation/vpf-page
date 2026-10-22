@@ -13,10 +13,10 @@ import { createHash } from "node:crypto"
 import { and, eq, inArray, or, sql } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { meetResults, teams, users } from "~/lib/external/drizzle/migrations/schema"
-import { parseLiftingCastCsv } from "~/lib/utils/liftingcast-csv"
-import { addMetadataToMeetResults, describeDisqualification } from "~/lib/utils/meet-result"
+import { parseLiftingCastCsv } from "~/lib/domain/liftingcast-csv"
+import { addMetadataToMeetResults, describeDisqualification } from "~/lib/domain/meet-result"
 import { DISQUALIFIED, RANKED_DIVISION } from "~/lib/constants/constants"
-import type { MeetRow } from "~/server/utils/competition-registration"
+import type { MeetRow } from "~/server/service/competition-registration"
 import type {
   FieldChange,
   ImportDeletion,

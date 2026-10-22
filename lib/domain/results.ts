@@ -1,38 +1,13 @@
-import { eq } from "drizzle-orm"
-import { db } from "~/lib/external/drizzle/drizzle"
-import { legacyMeetResults, meetResults } from "~/lib/external/drizzle/migrations/schema"
-import { addMetadataToMeetResults } from "~/lib/utils/meet-result"
-import type { Result, LegacyResultRaw, ResultRaw, PersonalBestSummary } from "~/types/results"
+import type { Result, PersonalBestSummary } from "~/types/results"
+
+/**
+ * Ranking and summary maths over results. Pure and isomorphic — the pages and the
+ * API endpoints share these so a total shown on a profile is computed the same way
+ * as one shown on the records table. Reading results is `server/repository/results`.
+ */
 
 export type SortKey = "bestSquat" | "bestBench" | "bestDeadlift" | "total" | "gl"
 export type MeetType = "national" | "amateur" | "professional" | "national_qualifier" | "other"
-
-/**
- * Fetches all results for a given athlete (vpfId).
- * Handles both legacy and non-legacy results by querying the appropriate table.
- * Results are automatically transformed with metadata (totals, GL points, placements).
- */
-export async function getResultsForAthlete(vpfId: string): Promise<Result[]> {
-  // Query all modern meet results
-  const modernResults: ResultRaw[] = await db
-    .select()
-    .from(meetResults)
-    .where(eq(meetResults.vpfId, vpfId))
-
-  // Query all legacy meet results
-  const legacyResults: LegacyResultRaw[] = await db
-    .select()
-    .from(legacyMeetResults)
-    .where(eq(legacyMeetResults.vpfId, vpfId))
-
-  // Combine and transform results
-  const allRawResults: (ResultRaw | LegacyResultRaw)[] = [
-    ...modernResults,
-    ...legacyResults,
-  ]
-
-  return addMetadataToMeetResults(allRawResults)
-}
 
 /**
  * Computes personal best summary (best squat, bench, deadlift, total) from results.

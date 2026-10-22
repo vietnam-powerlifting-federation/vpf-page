@@ -27,20 +27,13 @@ RUN npm i --ignore-scripts
 
 COPY . .
 
-# nuxt build prerenders the @nuxt/content dump and the competition pages, which
-# load the Nitro bundle and with it lib/config/config.ts — that throws at import
-# when these are unset. Prerendering never reaches R2 or SMTP, so placeholders
-# satisfy the check without putting real secrets in the build. They stay in this
-# stage; the runner reads the real values from the environment at startup.
-ENV JWT_SECRET=build-time-placeholder \
-    EMAIL_VERIFICATION_SKIP=true \
-    CLOUDFLARE_R2_ACCOUNT_ID=build-time-placeholder \
-    CLOUDFLARE_R2_ACCESS_KEY_ID=build-time-placeholder \
-    CLOUDFLARE_R2_SECRET_ACCESS_KEY=build-time-placeholder \
-    CLOUDFLARE_R2_VIP_BUCKET=build-time-placeholder \
-    CLOUDFLARE_R2_VIP_PUBLIC_URL_BASE=https://build-time-placeholder.invalid
-
 RUN npm rebuild
+
+# No build-time secrets. lib/config/config.ts reads every secret through a lazy
+# getter, so loading the Nitro bundle to prerender does not require a JWT secret
+# or R2 credentials that prerendering never uses. This used to need six
+# `build-time-placeholder` values, which made the build prove nothing about the
+# real configuration; the runner supplies the real values at startup.
 
 # DATABASE_URL is mounted as a build secret (not an ENV/ARG) so it never lands in
 # an image layer. The prerender hook uses it to enumerate competition slugs; when

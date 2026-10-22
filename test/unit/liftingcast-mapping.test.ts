@@ -9,7 +9,7 @@ import {
   parseDivision,
   parseSex,
   parseWeightClass,
-} from "~/lib/utils/liftingcast-mapping"
+} from "~/lib/domain/liftingcast-mapping"
 
 describe("LiftingCast enum mapping", () => {
   describe("round trip", () => {

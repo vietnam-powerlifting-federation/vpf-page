@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue"
-import { formatWeight, formatGL } from "~/lib/utils/client"
+import { formatWeight, formatGL } from "~/lib/domain/patch-payload"
 import type { PersonalBestSummary, Result } from "~/types/results"
 
 const props = defineProps<{

@@ -158,8 +158,8 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onBeforeUnmount } from "vue"
-import { buildPatchPayload } from "~/lib/utils/client"
-import { isVipActive } from "~/lib/utils/vip"
+import { buildPatchPayload } from "~/lib/domain/patch-payload"
+import { isVipActive } from "~/lib/domain/vip"
 import type { ApiResponse } from "~/types/api"
 import type { VipBenefits, VipSettingsFormState } from "~/types/vip"
 import { CHECKOUT_STORAGE_KEY } from "~/types/checkout"

@@ -103,7 +103,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue"
-import { computeVoucherTotals, type LineItems } from "~/lib/utils/vouchers"
+import { computeVoucherTotals, type LineItems } from "~/lib/domain/vouchers"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseCreated } from "~/types/purchases"
 import type { CheckoutItem } from "~/types/checkout"

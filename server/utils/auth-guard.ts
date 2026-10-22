@@ -1,5 +1,5 @@
 import type { H3Event } from "h3"
-import type { JwtPayload } from "~/lib/utils/jwt"
+import type { JwtPayload } from "~/lib/external/jwt"
 import { fail, type I18nMessage } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
 import type { ApiResponse } from "~/types/api"

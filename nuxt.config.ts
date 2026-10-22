@@ -120,7 +120,7 @@ export default defineNuxtConfig({
         // so degrade gracefully: skip competition prerendering and let these
         // routes fall back to on-demand SSR + swr caching at runtime.
         try {
-          const { getVisibleMeetSlugs } = await import("./lib/utils/queries/meet-slugs")
+          const { getVisibleMeetSlugs } = await import("./server/repository/meet-slugs")
           const slugs = await getVisibleMeetSlugs()
           routes.add("/openvpf/competitions")
           for (const slug of slugs) {

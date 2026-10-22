@@ -105,7 +105,9 @@ describe("API: athletes", () => {
       expect((res.data?.athlete as { email?: string })?.email).toBeUndefined()
     })
 
-    it("returns 200 with athlete, personalBest summary and compHistory", async () => {
+    // The record endpoint is read on nearly every page load, so it deliberately
+    // does not join the competition history — that lives on /profile.
+    it("returns the record and its vip settings, without any competition history", async () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
         params: { id: fixtureUsers[0].vpfId },
@@ -114,17 +116,10 @@ describe("API: athletes", () => {
       const res = await handler(event)
       expect(res.success).toBe(true)
       expect(res.data?.athlete?.vpfId).toBe(fixtureUsers[0].vpfId)
-      expect(res.data?.personalBest).toBeDefined()
-      expect(res.data?.personalBest).toHaveProperty("squat")
-      expect(res.data?.personalBest).toHaveProperty("bench")
-      expect(res.data?.personalBest).toHaveProperty("deadlift")
-      expect(res.data?.personalBest).toHaveProperty("total")
-      for (const key of ["squat", "bench", "deadlift", "total"]) {
-        const v = (res.data?.personalBest as Record<string, unknown>)?.[key]
-        expect(v === null || typeof v === "number").toBe(true)
-      }
-      expect(Array.isArray(res.data?.compHistory)).toBe(true)
-      expect(Array.isArray(res.data?.meets)).toBe(true)
+      expect(res.data).toHaveProperty("vipSettings")
+      expect(res.data).not.toHaveProperty("compHistory")
+      expect(res.data).not.toHaveProperty("personalBest")
+      expect(res.data).not.toHaveProperty("meets")
     })
 
     it("returns 200 for id=me when authenticated (caller's own data)", async () => {
@@ -136,8 +131,6 @@ describe("API: athletes", () => {
       const res = await handler(event)
       expect(res.success).toBe(true)
       expect(res.data?.athlete?.vpfId).toBe(fixtureUsers[0].vpfId)
-      expect(Array.isArray(res.data?.compHistory)).toBe(true)
-      expect(Array.isArray(res.data?.meets)).toBe(true)
     })
 
     it("returns 401 for id=me when not authenticated", async () => {
@@ -150,33 +143,32 @@ describe("API: athletes", () => {
       expect(res.success).toBe(false)
     })
 
-    it("returns 200 with records array when includeRecords is true", async () => {
+    /**
+     * `scope` is the discriminant that lets a caller tell which column set it
+     * got, instead of probing for fields that may or may not be there.
+     */
+    it("labels the caller's own record as private and someone else's as public", async () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
-      const event = createMockH3Event({
-        params: { id: fixtureUsers[0].vpfId },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
-        query: { includeRecords: "true" },
-      })
-      const res = await handler(event)
-      expect(res.success).toBe(true)
-      expect(Array.isArray((res.data as { records?: unknown }).records)).toBe(true)
-    })
-
-    it("returns 200 with vipSettings when includeVipSettings is true and athlete has active VIP", async () => {
-      const handler = (await import("~/server/api/athletes/[id]/index")).default
-      const event = createMockH3Event({
+      const own = await handler(createMockH3Event({
         params: { id: "me" },
         context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
-        query: { includeVipSettings: "true" },
-      })
-      const res = await handler(event)
-      expect(res.success).toBe(true)
-      expect(res.data?.athlete).toBeDefined()
-      expect(res.data?.personalBest).toBeDefined()
-      if ((res.data as { vipSettings?: unknown })?.vipSettings) {
-        const vip = (res.data as { vipSettings: { vpfId: string } }).vipSettings
-        expect(vip).toHaveProperty("vpfId")
-      }
+      }))
+      const other = await handler(createMockH3Event({
+        params: { id: fixtureUsers[2].vpfId },
+        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+      }))
+      expect(own.data?.scope).toBe("private")
+      expect(other.data?.scope).toBe("public")
+    })
+
+    it("labels an admin's read of another athlete as private", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/index")).default
+      const res = await handler(createMockH3Event({
+        params: { id: fixtureUsers[2].vpfId },
+        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "admin" } },
+      }))
+      expect(res.data?.scope).toBe("private")
+      expect((res.data?.athlete as { email?: string })?.email).toBeDefined()
     })
 
     it("returns 200 when fetching athlete by slug", async () => {
@@ -200,16 +192,66 @@ describe("API: athletes", () => {
       expect(res.success).toBe(false)
     })
 
-    it("returns 200 without vipSettings when athlete has no active VIP and request is from public viewer", async () => {
+    it("returns vipSettings as null rather than omitting it when VIP is not active", async () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
         params: { id: fixtureUsers[2].vpfId },
         context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
-        query: { includeVipSettings: "true" },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
-      expect((res.data as { vipSettings?: unknown }).vipSettings).toBeUndefined()
+      expect((res.data as { vipSettings?: unknown }).vipSettings).toBeNull()
+    })
+  })
+
+  describe("GET /api/athletes/[id]/profile", () => {
+    it("returns the aggregate with every field present and no flags required", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/profile.get")).default
+      const event = createMockH3Event({ params: { id: fixtureUsers[0].vpfId } })
+      const res = await handler(event)
+      expect(res.success).toBe(true)
+      expect(res.data?.athlete?.vpfId).toBe(fixtureUsers[0].vpfId)
+      expect(res.data?.personalBest).toHaveProperty("squat")
+      expect(res.data?.personalBest).toHaveProperty("bench")
+      expect(res.data?.personalBest).toHaveProperty("deadlift")
+      expect(res.data?.personalBest).toHaveProperty("total")
+      expect(Array.isArray(res.data?.compHistory)).toBe(true)
+      expect(Array.isArray(res.data?.meets)).toBe(true)
+      // Previously gated behind includeRecords; now always returned.
+      expect(Array.isArray(res.data?.records)).toBe(true)
+      expect(res.data).toHaveProperty("vipSettings")
+    })
+
+    it("accepts a slug and 'me' as the identifier, like every other athlete route", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/profile.get")).default
+      const bySlug = await handler(createMockH3Event({ params: { id: fixtureUsers[0].slug } }))
+      const byMe = await handler(createMockH3Event({
+        params: { id: "me" },
+        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+      }))
+      expect(bySlug.data?.athlete?.vpfId).toBe(fixtureUsers[0].vpfId)
+      expect(byMe.data?.athlete?.vpfId).toBe(fixtureUsers[0].vpfId)
+    })
+
+    /**
+     * A hidden meet is an unpublished draft, so it must not surface through the
+     * profile of an athlete entered in it. This was opt-in via `excludeHidden`,
+     * a flag no caller ever passed.
+     */
+    it("never includes hidden meets", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/profile.get")).default
+      const res = await handler(createMockH3Event({ params: { id: fixtureUsers[0].vpfId } }))
+      expect(res.success).toBe(true)
+      expect(res.data!.meets.every((meet) => !meet.hidden)).toBe(true)
+    })
+
+    it("returns 401 for me without a session and 404 for an unknown slug", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/profile.get")).default
+      const anon = await handler(createMockH3Event({ params: { id: "me" }, context: {} }))
+      const missing = await handler(createMockH3Event({ params: { id: "nonexistent-slug" } }))
+      expect(anon.success).toBe(false)
+      expect(missing.success).toBe(false)
+      expect(missing.message?.en).toMatch(/not found/i)
     })
   })
 })

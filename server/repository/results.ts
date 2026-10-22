@@ -1,4 +1,4 @@
-import { getMeetsAndResultsAndAthletes } from "~/lib/utils/queries/queries"
+import { getMeetsAndResultsAndAthletes } from "~/server/repository/dataset"
 import { cacheKey, redisRemember } from "~/server/utils/redis"
 import type { MeetPublic } from "~/types/meets"
 import type { Result } from "~/types/results"

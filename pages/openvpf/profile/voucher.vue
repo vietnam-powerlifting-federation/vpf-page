@@ -78,7 +78,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue"
-import { formatDateDMY } from "~/lib/utils/date"
+import { formatDateDMY } from "~/lib/domain/date"
 import type { Voucher } from "~/types/vouchers"
 
 definePageMeta({

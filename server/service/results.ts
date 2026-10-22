@@ -1,4 +1,4 @@
-import { applyDistinctFilter, sortResultsByKey, type MeetType, type SortKey } from "~/lib/utils/queries/results"
+import { applyDistinctFilter, sortResultsByKey, type MeetType, type SortKey } from "~/lib/domain/results"
 import { getAllResultsDataset, RESULTS_CACHE_PREFIX } from "~/server/repository/results"
 import { redisDelByPrefix } from "~/server/utils/redis"
 import type { MeetPublic } from "~/types/meets"

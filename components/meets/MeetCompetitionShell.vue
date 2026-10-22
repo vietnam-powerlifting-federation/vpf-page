@@ -31,7 +31,7 @@
 
 <script setup lang="ts">
 import type { MeetType } from "~/types/union-types"
-import { formatMeetDate } from "~/lib/utils/meet-formatters"
+import { formatMeetDate } from "~/lib/domain/meet-formatters"
 import { useMeetPayload } from "~/composables/useMeetData"
 
 const props = defineProps<{

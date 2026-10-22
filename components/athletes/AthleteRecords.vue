@@ -65,8 +65,8 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue"
-import { formatWeightClass, formatDivision, formatWeight } from "~/lib/utils/client"
-import { formatDateDMY } from "~/lib/utils/date"
+import { formatWeightClass, formatDivision, formatWeight } from "~/lib/domain/patch-payload"
+import { formatDateDMY } from "~/lib/domain/date"
 import RecordCertificateDialog, { type CertificateData } from "~/components/athletes/RecordCertificateDialog.vue"
 import type { LiftRecord } from "~/types/records"
 import type { Result } from "~/types/results"

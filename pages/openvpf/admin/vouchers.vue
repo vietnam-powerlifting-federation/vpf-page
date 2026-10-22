@@ -223,7 +223,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed } from "vue"
-import { formatDateDMY } from "~/lib/utils/date"
+import { formatDateDMY } from "~/lib/domain/date"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseType, VoucherDiscountKind } from "~/types/union-types"
 import type { Voucher, VoucherRevoked, VoucherWithUser } from "~/types/vouchers"

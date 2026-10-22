@@ -57,8 +57,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue"
-import { useProfileAthlete } from "~/composables/useProfileData"
-import { formatDateDMY } from "~/lib/utils/date"
+import { useProfileCompetitions } from "~/composables/useProfileData"
+import { formatDateDMY } from "~/lib/domain/date"
 import type { MeetPublic } from "~/types/meets"
 import type { Result } from "~/types/results"
 
@@ -67,7 +67,9 @@ definePageMeta({
   middleware: "auth",
 })
 
-const { data: athleteResponse, pending } = useProfileAthlete()
+// The competition history is the aggregate shape, not the session record, so it
+// comes from the profile endpoint rather than from `useProfileAthlete`.
+const { data: athleteResponse, pending } = useProfileCompetitions()
 
 const rows = computed(() => {
   const data = athleteResponse.value

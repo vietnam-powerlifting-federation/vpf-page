@@ -1,7 +1,7 @@
 import { and, eq, gte, inArray, isNull } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { vouchers } from "~/lib/external/drizzle/migrations/schema"
-import { todayIso, type DiscountRule, type LineItems, type VoucherTotals } from "~/lib/utils/vouchers"
+import { todayIso, type DiscountRule, type LineItems, type VoucherTotals } from "~/lib/domain/vouchers"
 import type { I18nMessage } from "~/server/utils/api-response"
 import type { PurchaseType, VoucherDiscountKind } from "~/types/union-types"
 import type { AppliedVoucher } from "~/types/vouchers"

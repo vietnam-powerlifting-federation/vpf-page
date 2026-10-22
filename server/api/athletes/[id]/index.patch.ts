@@ -1,13 +1,18 @@
 import type { H3Event } from "h3"
-import { and, eq, ne } from "drizzle-orm"
-import { db } from "~/lib/external/drizzle/drizzle"
-import { users } from "~/lib/external/drizzle/migrations/schema"
-import { userPrivateSelect } from "~/lib/utils/queries/users"
+import type { users } from "~/lib/external/drizzle/migrations/schema"
+import {
+  findAthleteAdminSummary,
+  findAthletePrivate,
+  isEmailTakenByOther,
+  isSlugTakenByOther,
+  updateAthlete,
+} from "~/server/repository/athletes"
 import { logger } from "~/lib/logger/logger"
-import { uploadVipImage } from "~/lib/utils/r2-vip-upload"
+import { defineApiHandler } from "~/server/utils/api-handler"
+import { uploadVipImage } from "~/lib/external/r2-vip-upload"
 import { UserSelfPatchSchema, UserRequiredSchema, UserAdminPatchSchema } from "~/lib/zod/schemas/users.schema"
 import type { ApiResponse } from "~/types/api"
-import type { JwtPayload } from "~/lib/utils/jwt"
+import type { JwtPayload } from "~/lib/external/jwt"
 import type { UserPrivate } from "~/types/users"
 import { ok, fail } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
@@ -18,22 +23,17 @@ const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"]
 const PHOTO_FIELD = "competitionPhoto"
 const NUMERIC_KEYS = ["dob", "squatRackPin", "benchRackPin", "benchSafetyPin", "benchFootBlock"]
 
-export default defineEventHandler(async (event): Promise<ApiResponse<UserPrivate>> => {
-  try {
-    const idParam = getRouterParam(event, "id")
-    if (!idParam) return fail(event, 400, MSG.invalidInput)
+export default defineApiHandler(async (event): Promise<ApiResponse<UserPrivate>> => {
+  const idParam = getRouterParam(event, "id")
+  if (!idParam) return fail(event, 400, MSG.invalidInput)
 
-    const auth = requireUser(event)
-    if (!auth.ok) return auth.error
-    const currentUser = auth.user
+  const auth = requireUser(event)
+  if (!auth.ok) return auth.error
+  const currentUser = auth.user
 
-    return idParam === "me"
-      ? await patchSelf(event, currentUser.vpfId)
-      : await patchAsAdmin(event, idParam, currentUser)
-  } catch (error) {
-    logger.error("Error updating athlete profile", { error })
-    return fail(event, 500, MSG.internalError)
-  }
+  return idParam === "me"
+    ? await patchSelf(event, currentUser.vpfId)
+    : await patchAsAdmin(event, idParam, currentUser)
 })
 
 /** The athlete editing their own profile. Also accepts multipart, to replace the competition photo. */
@@ -87,13 +87,7 @@ async function patchSelf(event: H3Event, vpfId: string): Promise<ApiResponse<Use
     patch = validated.data
   }
 
-  const currentUserData = await db
-    .select(userPrivateSelect)
-    .from(users)
-    .where(eq(users.vpfId, vpfId))
-    .limit(1)
-    .then((rows) => rows[0])
-
+  const currentUserData = await findAthletePrivate(vpfId)
   if (!currentUserData) return fail(event, 404, MSG.athleteNotFound)
 
   // Required fields are validated against the merged record, so a patch cannot
@@ -106,15 +100,9 @@ async function patchSelf(event: H3Event, vpfId: string): Promise<ApiResponse<Use
     })
   }
 
-  await db.update(users).set(patch).where(eq(users.vpfId, vpfId))
+  await updateAthlete(vpfId, patch)
 
-  const updatedUser = await db
-    .select(userPrivateSelect)
-    .from(users)
-    .where(eq(users.vpfId, vpfId))
-    .limit(1)
-    .then((rows) => rows[0])
-
+  const updatedUser = await findAthletePrivate(vpfId)
   if (!updatedUser) {
     return fail(event, 404, {
       en: "Athlete not found after update",
@@ -145,19 +133,7 @@ async function patchAsAdmin(
   if (!validated.success) return fail(event, 400, MSG.invalidInput)
   const { drugViolateReason, ...patch } = validated.data
 
-  const target = await db
-    .select({
-      vpfId: users.vpfId,
-      email: users.email,
-      role: users.role,
-      drugViolate: users.drugViolate,
-      fullName: users.fullName,
-    })
-    .from(users)
-    .where(eq(users.vpfId, targetVpfId))
-    .limit(1)
-    .then((rows) => rows[0])
-
+  const target = await findAthleteAdminSummary(targetVpfId)
   if (!target) return fail(event, 404, MSG.athleteNotFound)
 
   // Locking yourself out is not recoverable through the UI.
@@ -178,23 +154,13 @@ async function patchAsAdmin(
   }
 
   if (patch.email !== undefined && patch.email !== target.email) {
-    const taken = await db
-      .select({ vpfId: users.vpfId })
-      .from(users)
-      .where(and(eq(users.email, patch.email!), ne(users.vpfId, targetVpfId)))
-      .limit(1)
-      .then((rows) => rows[0])
-    if (taken) return fail(event, 409, MSG.emailAlreadyExists)
+    if (await isEmailTakenByOther(patch.email!, targetVpfId)) {
+      return fail(event, 409, MSG.emailAlreadyExists)
+    }
   }
 
   if (patch.slug !== undefined && patch.slug !== null) {
-    const taken = await db
-      .select({ vpfId: users.vpfId })
-      .from(users)
-      .where(and(eq(users.slug, patch.slug), ne(users.vpfId, targetVpfId)))
-      .limit(1)
-      .then((rows) => rows[0])
-    if (taken) {
+    if (await isSlugTakenByOther(patch.slug, targetVpfId)) {
       return fail(event, 409, {
         en: "That profile URL is already used by another athlete",
         vi: "Đường dẫn hồ sơ này đã được dùng cho vận động viên khác",
@@ -207,7 +173,7 @@ async function patchAsAdmin(
   // for a mailbox nobody has confirmed.
   if (patch.email !== undefined && patch.email !== target.email) updates.emailVerified = false
 
-  await db.update(users).set(updates).where(eq(users.vpfId, targetVpfId))
+  await updateAthlete(targetVpfId, updates)
 
   if (togglingDoping) {
     logger.warn("Doping ban changed", {
@@ -223,13 +189,7 @@ async function patchAsAdmin(
     fields: Object.keys(updates),
   })
 
-  const updatedUser = await db
-    .select(userPrivateSelect)
-    .from(users)
-    .where(eq(users.vpfId, targetVpfId))
-    .limit(1)
-    .then((rows) => rows[0])
-
+  const updatedUser = await findAthletePrivate(targetVpfId)
   if (!updatedUser) return fail(event, 404, MSG.athleteNotFound)
 
   return ok(updatedUser, { en: "Athlete updated", vi: "Đã cập nhật vận động viên" })

@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue"
-import { formatDateDMY } from "~/lib/utils/date"
+import { formatDateDMY } from "~/lib/domain/date"
 
 /** Warn this far ahead of expiry, so renewals happen before the profile goes dark. */
 const RENEWAL_WINDOW_DAYS = 30

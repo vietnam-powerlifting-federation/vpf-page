@@ -101,7 +101,8 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref } from "vue"
-import { formatDateDMY } from "~/lib/utils/date"
+import { formatDateDMY } from "~/lib/domain/date"
+import { isInForce, outcomeForLevel } from "~/lib/domain/violations"
 import type { ApiResponse } from "~/types/api"
 import type { UserViolationWithUser } from "~/types/violations"
 import type { ViolationOutcome } from "~/types/competitions"
@@ -144,13 +145,19 @@ function outcomeSeverity(outcome: ViolationOutcome) {
 /**
  * The athlete's level is the count of rows still in force, so recording another
  * one moves them up a step. Say what that step means before it is taken.
+ *
+ * `isInForce` and `outcomeForLevel` come from the shared domain module rather
+ * than being restated here — this preview and the registration endpoint that
+ * enforces the ban have to agree, and they cannot if each keeps its own copy.
  */
 const impact = computed(() => {
   const vpfId = form.vpfId.trim()
   if (!vpfId) return null
-  const current = rows.value.filter((row) => row.vpfId === vpfId && isInForce(row)).length
+  const current = rows.value.filter(
+    (row) => row.vpfId === vpfId && isInForce(row.expireYear, currentYear),
+  ).length
   const projected = current + 1
-  if (projected >= 2) {
+  if (outcomeForLevel(projected) === "blocked") {
     return {
       severity: "error" as const,
       text: t("admin.violations.impactBlocked", { level: projected, year: form.expireYear ?? currentYear }),
@@ -158,10 +165,6 @@ const impact = computed(() => {
   }
   return { severity: "warn" as const, text: t("admin.violations.impactPledge") }
 })
-
-function isInForce(row: UserViolationWithUser) {
-  return row.expireYear === null || row.expireYear >= currentYear
-}
 
 const canRecord = computed(() =>
   Boolean(form.vpfId.trim()) && Boolean(form.note.trim()) && (form.expireYear !== null || form.confirmPermanent))

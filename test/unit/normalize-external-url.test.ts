@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { normalizeExternalUrl } from "~/lib/utils/client"
+import { normalizeExternalUrl } from "~/lib/domain/patch-payload"
 
 describe("normalizeExternalUrl", () => {
   it("keeps an absolute http(s) url untouched", () => {

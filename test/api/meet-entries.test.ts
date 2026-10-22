@@ -8,9 +8,9 @@ import {
   purchases,
   vouchers,
 } from "~/lib/external/drizzle/migrations/schema"
-import { ENTRY_EXPORT_COLUMNS } from "~/lib/utils/liftingcast-export"
-import { parseCsvText } from "~/lib/utils/liftingcast-csv"
-import { parseDivision, parseSex, parseWeightClass } from "~/lib/utils/liftingcast-mapping"
+import { ENTRY_EXPORT_COLUMNS } from "~/lib/domain/liftingcast-export"
+import { parseCsvText } from "~/lib/domain/liftingcast-csv"
+import { parseDivision, parseSex, parseWeightClass } from "~/lib/domain/liftingcast-mapping"
 import { createMockH3Event } from "../utils/h3-event"
 import { fixtureUsers } from "../fixtures/data"
 

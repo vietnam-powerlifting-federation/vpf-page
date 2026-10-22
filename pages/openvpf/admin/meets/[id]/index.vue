@@ -230,7 +230,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref } from "vue"
-import { slugifyMeetName } from "~/lib/utils/meet-formatters"
+import { slugifyMeetName } from "~/lib/domain/meet-formatters"
 import type { ApiResponse } from "~/types/api"
 import type { MeetPublic } from "~/types/meets"
 import type { MeetType } from "~/types/union-types"

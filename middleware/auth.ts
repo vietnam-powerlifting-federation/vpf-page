@@ -1,14 +1,11 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  // Auth token is stored as HttpOnly cookie (not readable client-side),
-  // so we verify authentication via server session endpoint.
-  // eslint-disable-next-line nuxt/prefer-import-meta
-  const headers = process.server ? useRequestHeaders(["cookie"]) : undefined
-  const res = await $fetch("/api/auth/session", {
-    ignoreResponseError: true,
-    credentials: "include",
-    headers,
-  }) as { success?: boolean } | null
-  if (!res || res.success !== true) {
+  // Reads the shared session rather than fetching its own. The auth token is an
+  // HttpOnly cookie so the check still goes through the server, but
+  // `ensureLoaded` makes that one request per page load instead of one per guard.
+  const { ensureLoaded, isLoggedIn } = useAuthSession()
+  await ensureLoaded()
+
+  if (!isLoggedIn.value) {
     return navigateTo({ path: "/login", query: { to: to.fullPath } })
   }
 })

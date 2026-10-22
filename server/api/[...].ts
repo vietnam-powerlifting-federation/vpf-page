@@ -1,8 +1,9 @@
 import { logger } from "~/lib/logger/logger"
+import { defineApiHandler } from "~/server/utils/api-handler"
 import { fail } from "~/server/utils/api-response"
 import type { ApiResponse } from "~/types/api"
 
-export default defineEventHandler(async (event): Promise<ApiResponse<null>> => {
+export default defineApiHandler(async (event): Promise<ApiResponse<null>> => {
   const url = getRequestURL(event)
   const method = event.method
   const path = url.pathname

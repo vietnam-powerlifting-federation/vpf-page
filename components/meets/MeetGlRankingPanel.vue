@@ -74,7 +74,7 @@
 
 <script setup lang="ts">
 import { DISQUALIFIED } from "~/lib/constants/constants"
-import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL, nameGradientStyle } from "@/lib/utils/client"
+import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL, nameGradientStyle } from "@/lib/domain/patch-payload"
 
 const { slug } = defineProps<{ slug: string }>()
 const { resultsWithAthletes } = useMeetData(slug)

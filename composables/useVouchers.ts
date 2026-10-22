@@ -1,4 +1,4 @@
-import { formatDiscount } from "~/lib/utils/vouchers"
+import { formatDiscount } from "~/lib/domain/vouchers"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseType } from "~/types/union-types"
 import type { Voucher, VoucherStatus } from "~/types/vouchers"
