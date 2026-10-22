@@ -43,7 +43,7 @@ const { t } = useI18n()
 
 const { meet } = useMeetPayload(props.slug)
 
-const registerPath = computed(() => localePath(`/openvpf/competitions/${props.slug}/register`))
+const registerPath = computed(() => localePath(`/competitions/${props.slug}/register`))
 
 const formatMeetType = (type: MeetType | null): string => {
   if (!type) return "-"

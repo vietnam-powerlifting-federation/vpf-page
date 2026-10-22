@@ -1,25 +1,10 @@
 <template>
-  <div class="layout-wrapper">
-    <AppHeader />
-    <main class="main-content">
+  <div class="flex min-h-dvh flex-col">
+    <SkipLink />
+    <SiteHeader />
+    <main id="main" tabindex="-1" class="flex-1 focus:outline-none">
       <slot />
     </main>
-    <Toast />
+    <SiteFooter />
   </div>
 </template>
-
-<script setup>
-import Toast from "primevue/toast"
-</script>
-
-<style scoped>
-.layout-wrapper {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.main-content {
-  flex: 1;
-}
-</style>

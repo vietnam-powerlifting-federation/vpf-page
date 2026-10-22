@@ -225,7 +225,7 @@ useHead({
 })
 
 definePageMeta({
-  layout: "with-footer",
+  layout: "auth",
   pageTransition: {
     name: "page",
     mode: "out-in"

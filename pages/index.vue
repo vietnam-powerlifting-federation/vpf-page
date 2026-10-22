@@ -1,126 +1,240 @@
 <template>
-  <div class="min-h-screen">
-    <!-- Hero Section -->
-    <section class="text-white py-20 md:py-24 relative">
-      <div 
-        class="absolute inset-0 bg-cover bg-center bg-no-repeat grayscale-25"
-        :style="{ backgroundImage: `url(${heroBg})` }"
-      />
-      <div class="absolute inset-0 bg-gradient-to-br from-surface-400/0 to-surface-800/50" />
-      <div class="container mx-auto px-4 relative z-10">
-        <div class="text-center max-w-3xl mx-auto">
-          <h1 class="text-4xl md:text-6xl font-bold mb-4 text-white text-shadow-lg text-surface-800">{{ $t("home.title") }}</h1>
-          <p class="text-xl md:text-2xl mb-8 text-white/90 text-shadow-lg">{{ $t("home.subtitle") }}</p>
-          <div class="flex flex-col md:flex-row gap-4 justify-center">
-            <Button :label="$t('membership.joinNow')" @click="navigateTo('/membership')" />
-            <Button severity="secondary" :label="$t('home.viewAll')" @click="navigateTo('/news')" />
-          </div>
-        </div>
-      </div>
-    </section>
+  <div class="min-h-full dark-bg">
+    <div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl md:text-4xl font-bold mb-8 text-center text-primary">{{ $t("ranking.title") }}</h1>
+    
+    <!-- Filters -->
+    <AthletesRankingFilter
+      v-model:search="searchValue"
+      v-model:sort="sortValue"
+      v-model:sex="sexValue"
+      v-model:division="divisionValue"
+      v-model:weight-class="weightClassValue"
+      v-model:meet-type="meetTypeValue"
+      class="mb-6"
+    />
 
-    <!-- Welcome Section -->
-    <section class="py-12 md:py-16">
-      <div class="container mx-auto px-4">
-        <div class="text-center max-w-3xl mx-auto">
-          <h2 class="text-3xl md:text-4xl font-bold mb-4 text-surface-800">{{ $t("home.welcome") }}</h2>
-          <p class="text-lg md:text-xl text-surface-600 mb-12">{{ $t("home.description") }}</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Latest News Section -->
-    <section class="py-12 md:py-16 bg-light-bg">
-      <div class="container mx-auto px-4">
-        <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center text-surface-800">{{ $t("home.latestNews") }}</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
-          <Card v-for="(newsItem, index) in newsItems" :key="index" class="custom-card">
-            <template #header>
-              <div class="h-48 bg-surface-300 flex items-center justify-center text-surface-500">
-                <span>{{ $t("home.newsImage") }}</span>
-              </div>
+    <!-- Data Table -->
+    <div class="overflow-hidden">
+        <DataTable
+          :value="finalRankedResults"
+          :paginator="true"
+          :rows="50"
+          :rows-per-page-options="[25, 50, 100]"
+          striped-rows
+          class="w-full border border-surface-200 dark:border-surface-700"
+        >
+          <Column field="rank" header="#" :sortable="false" style="width: 5rem" align="right">
+            <template #body="{ data }">
+              {{ data.rank }}
             </template>
-            <template #title>
-              {{ newsItem.title }}
+          </Column>
+          
+          <Column field="athleteName" :header="$t('general.name')" :sortable="false" style="min-width: 200px" frozen>
+            <template #body="{ data }">
+              <NuxtLinkLocale
+                v-if="data.athlete"
+                :to="`/athletes/${data.athlete.slug || data.athlete.vpfId}`"
+                class="hover:underline"
+                :style="nameGradientStyle(data.athlete.decorator1, data.athlete.decorator2)"
+              >
+                {{ data.athlete.fullName }}
+              </NuxtLinkLocale>
+              <span v-else class="text-surface-400">-</span>
             </template>
-            <template #content>
-              <p>{{ newsItem.excerpt }}</p>
+          </Column>
+          
+          <Column field="weightClass" :header="$t('general.weightClass')" :sortable="false" align="right" style="width: 8rem">
+            <template #body="{ data }">
+              {{ formatWeightClass(data.weightClass, data.sex) }}
             </template>
-            <template #footer>
-              <a class="bold-link">{{ $t('home.readMore') }} >></a>
+          </Column>
+          
+          <Column field="sex" :header="$t('general.sportGender')" :sortable="false" align="right" style="width: 10rem">
+            <template #body="{ data }">
+              {{ formatSex(data.sex) }}
             </template>
-          </Card>
-        </div>
-        <div class="text-center mt-8">
-          <Button :label="$t('home.viewAll')" @click="navigateTo('/news')" />
-        </div>
-      </div>
-    </section>
-
-    <!-- Upcoming Events Section -->
-    <section class="py-12 md:py-16">
-      <div class="container mx-auto px-4">
-        <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center text-surface-800">{{ $t("home.upcomingEvents") }}</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
-          <Card v-for="(event, index) in events" :key="index" class="custom-card">
-            <template #title>
-              {{ event.title }}
+          </Column>
+          
+          <Column field="division" :header="$t('general.division')" :sortable="false" align="right" style="width: 10rem">
+            <template #body="{ data }">
+              {{ formatDivision(data.division) }}
             </template>
-            <template #content>
-              <p><strong>{{ $t("championships.title") }}:</strong> {{ event.date }}</p>
-              <p><strong>{{ $t("contact.address") }}:</strong> {{ event.location }}</p>
+          </Column>
+          
+          <Column field="bestSquat" :header="$t('general.squat')" :sortable="false" align="right" style="width: 8rem">
+            <template #body="{ data }">
+              {{ formatWeight(data.bestSquat) }}
             </template>
-            <template #footer>
-              <Button :label="$t('championships.register')" class="p-button-primary" />
+          </Column>
+          
+          <Column field="bestBench" :header="$t('general.bench')" :sortable="false" align="right" style="width: 8rem">
+            <template #body="{ data }">
+              {{ formatWeight(data.bestBench) }}
             </template>
-          </Card>
-        </div>
-      </div>
-    </section>
+          </Column>
+          
+          <Column field="bestDeadlift" :header="$t('general.deadlift')" :sortable="false" align="right" style="width: 8rem">
+            <template #body="{ data }">
+              {{ formatWeight(data.bestDeadlift) }}
+            </template>
+          </Column>
+          
+          <Column field="total" :header="$t('general.total')" :sortable="false" align="right" style="width: 8rem">
+            <template #body="{ data }">
+              {{ formatWeight(data.total) }}
+            </template>
+          </Column>
+          
+          <Column field="gl" :header="$t('general.gl')" :sortable="false" align="right" style="width: 8rem">
+            <template #body="{ data }">
+              {{ formatGL(data.gl) }}
+            </template>
+          </Column>
+        </DataTable>
+    </div>
+    </div>
   </div>
 </template>
 
-<script setup>
-import heroBg from "~/assets/img/hero-bg.jpg"
+<script setup lang="ts">
+import AthletesRankingFilter from "@/components/AthletesRankingFilter.vue"
+import { useRankingFilters } from "@/composables/useRankingFilters"
+import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL, nameGradientStyle } from "@/lib/domain/patch-payload"
+import type { ResultRanked } from "~/types/results"
+import type { UserPublicWithDecorators } from "~/types/users"
+import type { ApiResponse } from "~/types/api"
+import type { Sex, Division, MeetType } from "~/types/union-types"
+import type { MeetPublic } from "~/types/meets"
 
 definePageMeta({
-  layout: "with-footer",
+  layout: "default",
   pageTransition: {
     name: "page",
     mode: "out-in"
   }
 })
 
-const newsItems = [
-  {
-    title: "British Powerlifting Championships 2024",
-    excerpt: "Join us for the biggest powerlifting event of the year. Registration is now open.",
-  },
-  {
-    title: "New Training Facilities Open",
-    excerpt: "We're excited to announce the opening of new state-of-the-art training facilities.",
-  },
-  {
-    title: "Athlete Spotlight: Rising Stars",
-    excerpt: "Meet the promising athletes making waves in British Powerlifting.",
-  },
-]
+useSeoMeta({
+  title: "VPF Athlete Rankings",
+  ogType: "website",
+  ogTitle: "VPF Athlete Rankings",
+  ogDescription: "Powerlifting athlete rankings for VPF (Vietnamese Powerlifting Federation)."
+})
 
-const events = [
-  {
-    title: "Regional Championships",
-    date: "March 15, 2024",
-    location: "London, UK",
-  },
-  {
-    title: "National Championships",
-    date: "June 20, 2024",
-    location: "Manchester, UK",
-  },
-  {
-    title: "Junior Championships",
-    date: "September 10, 2024",
-    location: "Birmingham, UK",
-  },
-]
+const filters = useRankingFilters()
+const loading = ref(true)
+const { fetchDecorators, applyDecorators } = useNameDecorators()
+onMounted(fetchDecorators)
+// Computed properties for v-model bindings
+const searchValue = computed({
+  get: () => filters.search.value,
+  set: (val: string) => { filters.search.value = val }
+})
+
+const sortValue = computed({
+  get: () => filters.sort.value,
+  set: (val: string) => { filters.sort.value = val }
+})
+
+const sexValue = computed({
+  get: () => filters.sex.value,
+  set: (val: Sex | null) => { filters.sex.value = val }
+})
+
+const divisionValue = computed({
+  get: () => filters.division.value,
+  set: (val: Division | null) => { filters.division.value = val }
+})
+
+const weightClassValue = computed({
+  get: () => filters.weightClass.value,
+  set: (val: { weight: number | null; sex: Sex | null } | null) => { filters.weightClass.value = val || { weight: null, sex: null } }
+})
+
+const meetTypeValue = computed({
+  get: () => filters.meetType.value,
+  set: (val: MeetType | null) => { filters.meetType.value = val }
+})
+
+// Reactive query parameters for useFetch
+const queryParams = computed(() => {
+  const params: Record<string, string> = {
+    distinct: "true"
+  }
+  
+  if (filters.sort.value) {
+    params.sort = filters.sort.value
+  }
+  
+  if (filters.sex.value) {
+    params.sex = filters.sex.value
+  }
+  
+  if (filters.division.value) {
+    params.division = filters.division.value
+  }
+  
+  if (filters.weightClass.value?.weight != null) {
+    params.weightClass = String(filters.weightClass.value.weight)
+  }
+  
+  if (filters.meetType.value) {
+    params.meetType = filters.meetType.value
+  }
+  
+  return params
+})
+
+// Fetch results using useFetch with reactive query parameters
+const { data: response, pending } = useFetch<ApiResponse<{
+  results: ResultRanked[]
+  meets: MeetPublic[]
+  athletes: UserPublicWithDecorators[]
+}>>("/api/results", {
+  query: queryParams
+})
+
+// Update loading state
+watch(pending, (isPending) => {
+  loading.value = isPending
+}, { immediate: true })
+
+// Process response data
+const results = computed(() => {
+  if (response.value?.success && response.value.data) {
+    return response.value.data.results
+  }
+  return []
+})
+
+const athletes = computed(() => {
+  const raw = response.value?.success ? (response.value.data?.athletes ?? []) : []
+  return applyDecorators(raw)
+})
+
+// Results with athlete data
+const resultsWithAthletes = computed(() => {
+  return results.value.map(result => ({
+    ...result,
+    athlete: athletes.value.find(athlete => athlete.vpfId === result.vpfId)
+  }))
+})
+
+// Final ranked results with search filtering
+const finalRankedResults = computed(() => {
+  let filtered = resultsWithAthletes.value
+  
+  if (filters.search.value) {
+    const searchLower = filters.search.value.toLowerCase()
+    filtered = filtered.filter(result => {
+      const athlete = result.athlete
+      if (!athlete) return false
+      return athlete.fullName?.toLowerCase().includes(searchLower) ||
+             athlete.vpfId?.toLowerCase().includes(searchLower)
+    })
+  }
+  
+  return filtered.sort((a, b) => a.rank - b.rank)
+})
 </script>

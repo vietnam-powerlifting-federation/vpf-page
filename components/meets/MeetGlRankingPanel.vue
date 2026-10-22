@@ -19,7 +19,7 @@
           <template #body="{ data }">
             <NuxtLinkLocale
               v-if="data.athlete"
-              :to="`/openvpf/athletes/${data.athlete.slug || data.athlete.vpfId}`"
+              :to="`/athletes/${data.athlete.slug || data.athlete.vpfId}`"
               class="hover:underline"
               :style="nameGradientStyle(data.athlete.decorator1, data.athlete.decorator2)"
             >

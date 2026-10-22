@@ -10,6 +10,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   if (!isAdmin.value) {
-    return navigateTo("/openvpf")
+    return navigateTo("/")
   }
 })

@@ -167,7 +167,7 @@ const handleRegister = async () => {
 useHead({ title: () => t("register.title") })
 
 definePageMeta({
-  layout: "with-footer",
+  layout: "auth",
   pageTransition: { name: "page", mode: "out-in" },
 })
 </script>

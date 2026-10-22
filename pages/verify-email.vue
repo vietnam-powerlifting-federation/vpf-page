@@ -118,7 +118,7 @@ const handleResend = async () => {
 useHead({ title: () => t("verifyEmail.title") })
 
 definePageMeta({
-  layout: "with-footer",
+  layout: "auth",
   middleware: "auth",
 })
 </script>

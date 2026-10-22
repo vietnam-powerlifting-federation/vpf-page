@@ -33,7 +33,7 @@
                     </span>
                     <NuxtLinkLocale
                       v-if="record.athlete"
-                      :to="`/openvpf/athletes/${record.athlete.slug || record.athlete.vpfId}`"
+                      :to="`/athletes/${record.athlete.slug || record.athlete.vpfId}`"
                       class="font-semibold text-primary hover:underline"
                       :style="nameGradientStyle(record.athlete.decorator1, record.athlete.decorator2)"
                     >

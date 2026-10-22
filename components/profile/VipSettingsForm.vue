@@ -51,7 +51,7 @@
     </div>
 
     <!-- Name colour -->
-    <ProfileVipNameDecorator
+    <VipNameDecorator
       :disabled="false"
       :decorator1="form.decorator1 ?? null"
       :decorator2="form.decorator2 ?? null"

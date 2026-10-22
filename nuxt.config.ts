@@ -1,59 +1,6 @@
 import { defineNuxtConfig } from "nuxt/config"
 import tailwindcss from "@tailwindcss/vite"
-import Nora from "@primeuix/themes/nora"
-import { definePreset } from "@primeuix/themes"
-
-const MyPreset = definePreset(Nora, {
-  semantic: {
-    primary: {
-      50: "{rose.50}",
-      100: "{rose.100}",
-      200: "{rose.200}",
-      300: "{rose.300}",
-      400: "{rose.400}",
-      500: "{rose.500}",
-      600: "{rose.600}",
-      700: "{rose.700}",
-      800: "{rose.800}",
-      900: "{rose.900}",
-      950: "{rose.950}"
-    },
-    colorScheme: {
-      light: {
-        surface: {
-          0: "#ffffff",
-          50: "{zinc.50}",
-          100: "{zinc.100}",
-          200: "{zinc.200}",
-          300: "{zinc.300}",
-          400: "{zinc.400}",
-          500: "{zinc.500}",
-          600: "{zinc.600}",
-          700: "{zinc.700}",
-          800: "{zinc.800}",
-          900: "{zinc.900}",
-          950: "{zinc.950}"
-        }
-      },
-      dark: {
-        surface: {
-          0: "#ffffff",
-          50: "{neutral.50}",
-          100: "{neutral.100}",
-          200: "{neutral.200}",
-          300: "{neutral.300}",
-          400: "{neutral.400}",
-          500: "{neutral.500}",
-          600: "{neutral.500}",
-          700: "{neutral.600}",
-          800: "{neutral.700}",
-          900: "{neutral.800}",
-          950: "{neutral.900}"
-        }
-      }
-    }
-  }
-})
+import { ScoreboardPreset } from "./theme/preset"
 
 export default defineNuxtConfig({
   compatibilityDate: "2026-01-02",
@@ -61,40 +8,94 @@ export default defineNuxtConfig({
   modules: [
     "@nuxt/test-utils/module",
     "@nuxt/eslint",
-    "@nuxt/content",
     "@pinia/nuxt",
     "@nuxtjs/i18n",
+    "@nuxtjs/color-mode",
+    "@nuxtjs/google-fonts",
+    "@nuxt/icon",
     "@nuxt/image",
-    "nuxt-link-checker",
     "@primevue/nuxt-module",
   ],
 
+  // Feature folders are for organisation only; components are named by file (SiteHeader, not LayoutHeaderSiteHeader).
+  components: [{ path: "~/components", pathPrefix: false }],
+
   i18n: {
+    // Canonical origin for hreflang links. Override with NUXT_PUBLIC_I18N_BASE_URL.
+    baseUrl: "https://openvpf.vn",
     locales: [
       { code: "en", language: "en-US", file: "en.json" },
       { code: "vi", language: "vi-VN", file: "vi.json" },
     ],
     defaultLocale: "en",
+    // Vietnamese browsers get /vi on their first visit; the choice is then kept in a cookie.
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: "vpf_locale",
+      redirectOn: "root",
+      alwaysRedirect: false,
+      fallbackLocale: "en",
+    },
   },
 
-  css: ["~/assets/styles/main.css", "~/assets/styles/vpf-components.css", "primeicons/primeicons.css"],
+  colorMode: {
+    preference: "system",
+    fallback: "light",
+    classSuffix: "",
+    storageKey: "vpf-color-mode",
+  },
+
+  // Self-hosted at build time: no request to Google at runtime.
+  googleFonts: {
+    families: {
+      "Barlow": [400, 500, 600],
+      "Barlow Condensed": [600, 700, 800],
+    },
+    subsets: ["latin", "latin-ext", "vietnamese"],
+    display: "swap",
+    download: true,
+    inject: true,
+    preload: true,
+  },
+
+  icon: {
+    mode: "svg",
+    // Bundle the icons the app uses instead of fetching them from the Iconify API.
+    serverBundle: { collections: ["lucide"] },
+    clientBundle: { scan: true, sizeLimitKb: 64 },
+    fallbackToApi: false,
+  },
+
+  css: ["~/assets/styles/main.css"],
 
   primevue: {
     options: {
       theme: {
-        preset: MyPreset,
+        preset: ScoreboardPreset,
         options: {
           prefix: "p",
-          darkModeSelector: ".dark",
+          // The preset's colours switch through light-dark() CSS variables,
+          // so PrimeVue's separate dark scheme is not used.
+          darkModeSelector: "none",
           cssLayer: false,
-        }
+        },
       },
-    }
+    },
   },
 
   app: {
-    pageTransition: { name: "page", mode: "out-in" },
+    head: {
+      htmlAttrs: { lang: "en" },
+      meta: [{ name: "theme-color", content: "#0b0d11" }],
+    },
+  },
 
+  routeRules: {
+    // The app used to live under /openvpf. Old links, QR codes and search results still point there.
+    "/openvpf": { redirect: { to: "/", statusCode: 301 } },
+    "/openvpf/**": { redirect: { to: "/**", statusCode: 301 } },
+    "/vi/openvpf": { redirect: { to: "/vi", statusCode: 301 } },
+    "/vi/openvpf/**": { redirect: { to: "/vi/**", statusCode: 301 } },
   },
 
   vite: {
@@ -122,9 +123,9 @@ export default defineNuxtConfig({
         try {
           const { getVisibleMeetSlugs } = await import("./server/repository/meet-slugs")
           const slugs = await getVisibleMeetSlugs()
-          routes.add("/openvpf/competitions")
+          routes.add("/competitions")
           for (const slug of slugs) {
-            routes.add(`/openvpf/competitions/${slug}`)
+            routes.add(`/competitions/${slug}`)
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error)

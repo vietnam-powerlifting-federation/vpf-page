@@ -1,0 +1,273 @@
+<template>
+  <div class="min-h-full">
+    <h1 class="text-2xl font-bold mb-6 text-surface-0 text-center">{{ $t("profile.tabs.personalInfo") }}</h1>
+
+    <!-- Identity verification status -->
+    <div class="mb-6 p-4 rounded-lg border border-surface-700 bg-surface-800/40 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <span class="text-sm font-medium text-surface-200">{{ $t("profile.verification.label") }}</span>
+        <Tag :value="verifyStatusText" :severity="verifyStatusSeverity" />
+      </div>
+      <Button
+        v-if="!isVerified"
+        size="small"
+        :label="verifyButtonLabel"
+        class="bg-primary text-primary-contrast"
+        @click="goVerify"
+      />
+    </div>
+
+    <div v-if="pending" class="flex justify-center py-12">
+      <ProgressSpinner />
+    </div>
+    <div v-else-if="error" class="text-error">{{ $t("general.error") }}</div>
+    <div v-else-if="userData" class="space-y-6">
+      <div>
+        <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.vpfId") }}</label>
+        <InputText :model-value="userData.vpfId" class="w-full" disabled />
+      </div>
+      <div>
+        <label for="email" class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.email") }} <span class="text-primary">*</span></label>
+        <InputText
+          id="email"
+          v-model="formData.email"
+          type="email"
+          :placeholder="$t('profile.enterEmail')"
+          class="w-full"
+        />
+      </div>
+      <div>
+        <label for="phoneNumber" class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.phoneNumber") }} <span class="text-primary">*</span></label>
+        <InputText
+          id="phoneNumber"
+          v-model="formData.phoneNumber"
+          :placeholder="$t('profile.enterPhoneNumber')"
+          class="w-full"
+        />
+      </div>
+      <div>
+        <label for="nationality" class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.nationality") }} <span class="text-primary">*</span></label>
+        <InputText
+          id="nationality"
+          v-model="formData.nationality"
+          :placeholder="$t('profile.enterNationality')"
+          class="w-full"
+        />
+      </div>
+      <div>
+        <label for="dob" class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.dob") }} <span class="text-primary">*</span></label>
+        <InputNumber
+          id="dob"
+          v-model="formData.dob"
+          :placeholder="$t('profile.enterDob')"
+          class="w-full"
+          :min="1900"
+          :max="new Date().getFullYear()"
+        />
+      </div>
+      <div>
+        <label for="address" class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.address") }} <span class="text-primary">*</span></label>
+        <Textarea
+          id="address"
+          v-model="formData.address"
+          :placeholder="$t('profile.enterAddress')"
+          class="w-full"
+          rows="3"
+        />
+      </div>
+      <div class="space-y-4">
+        <div class="flex items-center gap-3">
+          <span class="text-sm font-semibold text-surface-300 whitespace-nowrap">{{ $t("profile.tabs.competitionSettings") }}</span>
+          <div class="flex-1 border-t border-surface-700" />
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label for="squatRackPin" class="block mb-2 text-sm font-medium text-surface-300">
+              {{ $t("profile.squatRackPin") }}
+            </label>
+            <InputNumber id="squatRackPin" v-model="formData.squatRackPin"
+              :placeholder="$t('profile.enterSquatRackPin')" class="w-full" :min="0" />
+          </div>
+
+          <div>
+            <label for="benchRackPin" class="block mb-2 text-sm font-medium text-surface-300">
+              {{ $t("profile.benchRackPin") }}
+            </label>
+            <InputNumber id="benchRackPin" v-model="formData.benchRackPin"
+              :placeholder="$t('profile.enterBenchRackPin')" class="w-full" :min="0" />
+          </div>
+
+          <div>
+            <label for="benchSafetyPin" class="block mb-2 text-sm font-medium text-surface-300">
+              {{ $t("profile.benchSafetyPin") }}
+            </label>
+            <InputNumber id="benchSafetyPin" v-model="formData.benchSafetyPin"
+              :placeholder="$t('profile.enterBenchSafetyPin')" class="w-full" :min="0" />
+          </div>
+
+          <div>
+            <label for="benchFootBlock" class="block mb-2 text-sm font-medium text-surface-300">
+              {{ $t("profile.benchFootBlock") }}
+            </label>
+            <InputNumber id="benchFootBlock" v-model="formData.benchFootBlock"
+              :placeholder="$t('profile.enterBenchFootBlock')" class="w-full" :min="0" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t("competitionRegistration.photo") }}</label>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            class="block w-full text-sm text-surface-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-primary file:text-primary-contrast file:cursor-pointer"
+            @change="onPhotoChange"
+          >
+          <p class="text-surface-500 text-xs mt-1">
+            {{ userData.competitionPhotoUrl ? $t("competitionRegistration.photoCurrent") : $t("competitionRegistration.photoHint") }}
+          </p>
+        </div>
+      </div>
+      <div class="pt-4 flex justify-end">
+        <Button :label="$t('profile.save')" :loading="isSubmitting" :disabled="isSubmitting" class="bg-primary text-primary-contrast" @click="handleSubmit" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, watch, computed } from "vue"
+import { useProfileAthlete } from "~/composables/useProfileData"
+import { buildPatchPayload } from "~/lib/domain/patch-payload"
+import type { ApiResponse } from "~/types/api"
+import type { UserPrivate } from "~/types/users"
+import type { IdentityVerification } from "~/types/verifications"
+import type { UserSelfPatchSchema } from "~/lib/zod/schemas/users.schema"
+import type { z } from "zod"
+
+definePageMeta({
+  layout: "account",
+  middleware: "auth",
+})
+
+const toast = useToast()
+const { t } = useI18n()
+const apiMessage = useApiMessage()
+const { data: profileResponse, pending, error, refresh } = useProfileAthlete()
+const userData = computed(() => profileResponse.value?.athlete ?? null)
+
+// Identity verification status, surfaced on the profile with a link back to the verification page.
+type SelfVerification = { emailVerified: boolean; identityVerified: boolean; verification: IdentityVerification | null }
+const { data: verifyResponse } = useFetch<ApiResponse<SelfVerification>>("/api/athletes/me/verification", {
+  credentials: "include",
+  ignoreResponseError: true,
+})
+const verifyStatus = computed<IdentityVerification["status"] | null>(() =>
+  verifyResponse.value?.success ? verifyResponse.value.data.verification?.status ?? null : null,
+)
+const isVerified = computed(() => verifyStatus.value === "approved")
+const verifyStatusText = computed(() => {
+  if (verifyStatus.value === "approved") return t("profile.verification.verified")
+  if (verifyStatus.value === "pending") return t("profile.verification.pending")
+  if (verifyStatus.value === "rejected") return t("profile.verification.rejected")
+  return t("profile.verification.notVerified")
+})
+const verifyStatusSeverity = computed(() => {
+  if (verifyStatus.value === "approved") return "success"
+  if (verifyStatus.value === "pending") return "warn"
+  if (verifyStatus.value === "rejected") return "danger"
+  return "secondary"
+})
+const verifyButtonLabel = computed(() =>
+  verifyStatus.value === "rejected" ? t("profile.verification.reverifyButton") : t("profile.verification.verifyButton"),
+)
+const goVerify = () => navigateTo("/verification")
+
+type FormData = Required<z.infer<typeof UserSelfPatchSchema>>
+const formData = ref<FormData>({
+  email: null,
+  nationality: null,
+  dob: null,
+  address: null,
+  phoneNumber: null,
+  squatRackPin: null,
+  benchRackPin: null,
+  benchSafetyPin: null,
+  benchFootBlock: null,
+})
+
+watch(
+  userData,
+  (val) => {
+    if (val) {
+      formData.value = {
+        email: val.email,
+        nationality: val.nationality,
+        dob: val.dob,
+        address: val.address,
+        phoneNumber: val.phoneNumber,
+        squatRackPin: val.squatRackPin,
+        benchRackPin: val.benchRackPin,
+        benchSafetyPin: val.benchSafetyPin,
+        benchFootBlock: val.benchFootBlock,
+      }
+    }
+  },
+  { immediate: true }
+)
+
+const photoFile = ref<File | null>(null)
+function onPhotoChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  photoFile.value = input.files?.[0] ?? null
+}
+
+const isSubmitting = ref(false)
+async function handleSubmit() {
+  if (!userData.value) return
+  const payload = buildPatchPayload<FormData>(formData.value, userData.value)
+  if (Object.keys(payload).length === 0 && !photoFile.value) return
+  isSubmitting.value = true
+  try {
+    let body: globalThis.FormData | Record<string, unknown> = payload
+    if (photoFile.value) {
+      const fd = new globalThis.FormData()
+      for (const [key, value] of Object.entries(payload)) fd.append(key, String(value))
+      fd.append("competitionPhoto", photoFile.value)
+      body = fd
+    }
+    const response = (await $fetch("/api/athletes/me", {
+      method: "PATCH",
+      body,
+    })) as ApiResponse<UserPrivate>
+    if (response.success) {
+      photoFile.value = null
+      await refresh()
+      toast.add({
+        severity: "success",
+        summary: t("general.success"),
+        detail: apiMessage(response),
+        life: 3000,
+      })
+    } else {
+      toast.add({
+        severity: "error",
+        summary: t("general.updateError"),
+        detail: apiMessage(response),
+        life: 5000,
+      })
+    }
+  } catch {
+    toast.add({
+      severity: "error",
+      summary: t("general.updateError"),
+      detail: t("general.validationError"),
+      life: 5000,
+    })
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+useHead({ title: () => t("profile.tabs.personalInfo") })
+</script>

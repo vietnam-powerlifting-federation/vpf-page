@@ -1,228 +1,195 @@
 @import "tailwindcss";
-@plugin "@tailwindcss/typography";
 @import "tailwindcss-primeui";
 
-@custom-variant dark (&:where(.dark, .dark *)); /* fuck */
+/* Dark mode follows the class @nuxtjs/color-mode puts on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
 
-/* SVN-CenturyGothic Font Face Declarations */
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-Regular.otf") format("opentype");
-  font-weight: 100;
-  font-style: normal;
-  font-display: swap;
+/*
+ * Scoreboard design tokens (specs/frontend-redesign.md §3).
+ *
+ * Theme-dependent colours use light-dark(), so they follow `color-scheme`.
+ * That is `light dark` by default and is forced by the .light / .dark class.
+ * The board colours are constant: the board stays dark in both themes.
+ * The PrimeVue preset (theme/preset.ts) maps its surface and primary palettes
+ * onto these same variables.
+ */
+:root {
+  color-scheme: light dark;
+
+  --vpf-paper: light-dark(oklch(96.5% 0.004 90), oklch(13.5% 0.008 260));
+  --vpf-surface: light-dark(oklch(100% 0 0), oklch(18% 0.01 260));
+  --vpf-raised: light-dark(oklch(93.5% 0.006 90), oklch(23% 0.012 260));
+  --vpf-line: light-dark(oklch(88% 0.008 90), oklch(28% 0.012 260));
+  --vpf-line-strong: light-dark(oklch(74% 0.01 90), oklch(42% 0.014 260));
+  --vpf-ink: light-dark(oklch(16% 0.01 260), oklch(96% 0.005 90));
+  --vpf-ink-2: light-dark(oklch(42% 0.012 260), oklch(75% 0.012 260));
+  --vpf-accent: light-dark(oklch(50% 0.12 70), oklch(84% 0.16 85));
+  --vpf-accent-fill: oklch(84% 0.16 85);
+  --vpf-accent-fill-hover: oklch(88% 0.15 88);
+  --vpf-on-accent: oklch(16% 0.01 260);
+  --vpf-accent-soft: light-dark(oklch(93% 0.06 90), oklch(30% 0.06 85));
+  --vpf-sorted: light-dark(oklch(97% 0.03 90), oklch(21% 0.025 85));
+  --vpf-focus: light-dark(oklch(55% 0.18 255), oklch(72% 0.14 255));
+  --vpf-gold: oklch(84% 0.16 85);
+  --vpf-silver: oklch(86% 0.01 260);
+  --vpf-bronze: oklch(72% 0.1 55);
+  --vpf-on-medal: oklch(18% 0.02 60);
+
+  /* Status colours for messages, tags and validation (text ≥ 4.5:1 on surface). */
+  --vpf-success: light-dark(oklch(45% 0.12 150), oklch(78% 0.14 150));
+  --vpf-success-soft: light-dark(oklch(95% 0.04 150), oklch(26% 0.05 150));
+  --vpf-danger: light-dark(oklch(50% 0.19 27), oklch(74% 0.15 25));
+  --vpf-danger-soft: light-dark(oklch(95% 0.03 27), oklch(26% 0.06 25));
+  --vpf-warn: light-dark(oklch(48% 0.11 65), oklch(82% 0.13 80));
+  --vpf-warn-soft: light-dark(oklch(95% 0.05 85), oklch(27% 0.05 80));
+  --vpf-info: light-dark(oklch(48% 0.13 250), oklch(76% 0.11 250));
+  --vpf-info-soft: light-dark(oklch(95% 0.03 250), oklch(26% 0.05 255));
+
+  /* Steps between line-strong, ink-2 and ink, for PrimeVue's surface 400–900. */
+  --vpf-mid-1: color-mix(in oklch, var(--vpf-line-strong) 60%, var(--vpf-ink-2));
+  --vpf-mid-2: color-mix(in oklch, var(--vpf-line-strong) 25%, var(--vpf-ink-2));
+  --vpf-mid-3: color-mix(in oklch, var(--vpf-ink-2) 66%, var(--vpf-ink));
+  --vpf-mid-4: color-mix(in oklch, var(--vpf-ink-2) 33%, var(--vpf-ink));
+  --vpf-mid-5: color-mix(in oklch, var(--vpf-ink-2) 12%, var(--vpf-ink));
+
+  --vpf-board: oklch(14% 0.01 260);
+  --vpf-board-2: oklch(19% 0.012 260);
+  --vpf-board-line: oklch(30% 0.014 260);
+  --vpf-board-ink: oklch(96% 0.005 90);
+  --vpf-board-ink-2: oklch(76% 0.012 260);
+  --vpf-board-deep: oklch(8% 0.005 260);
+  --vpf-light: oklch(98% 0 0);
+  --vpf-shadow: oklch(0% 0 0 / 0.35);
+  --vpf-scrim: oklch(0% 0 0 / 0.45);
+  --vpf-dots: radial-gradient(oklch(100% 0 0 / 0.045) 1px, transparent 1.2px);
+
+  --header-h: 64px;
+  --col-rank: 3.5rem;
 }
 
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-RegularItalic.otf") format("opentype");
-  font-weight: 100;
-  font-style: italic;
-  font-display: swap;
+:root.light {
+  color-scheme: light;
 }
 
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-Regular.otf") format("opentype");
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
+:root.dark {
+  color-scheme: dark;
 }
 
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-RegularItalic.otf") format("opentype");
-  font-weight: 300;
-  font-style: italic;
-  font-display: swap;
+/*
+ * Tailwind names for the tokens PrimeVue has no semantic class for.
+ * Surfaces, lines and text use PrimeVue's classes instead:
+ * bg-surface-0 (surface), bg-surface-50 (paper), bg-surface-100 (raised),
+ * border-surface-200 (line), border-surface-300 (line-strong),
+ * text-color (ink), text-muted-color (ink-2).
+ */
+@theme inline {
+  --color-paper: var(--vpf-paper);
+  --color-raised: var(--vpf-raised);
+  --color-line: var(--vpf-line);
+  --color-line-strong: var(--vpf-line-strong);
+  --color-ink: var(--vpf-ink);
+  --color-ink-2: var(--vpf-ink-2);
+  --color-accent: var(--vpf-accent);
+  --color-accent-fill: var(--vpf-accent-fill);
+  --color-accent-fill-hover: var(--vpf-accent-fill-hover);
+  --color-on-accent: var(--vpf-on-accent);
+  --color-accent-soft: var(--vpf-accent-soft);
+  --color-sorted: var(--vpf-sorted);
+  --color-focus: var(--vpf-focus);
+  --color-gold: var(--vpf-gold);
+  --color-silver: var(--vpf-silver);
+  --color-bronze: var(--vpf-bronze);
+  --color-on-medal: var(--vpf-on-medal);
+  --color-success: var(--vpf-success);
+  --color-success-soft: var(--vpf-success-soft);
+  --color-danger: var(--vpf-danger);
+  --color-danger-soft: var(--vpf-danger-soft);
+  --color-warn: var(--vpf-warn);
+  --color-warn-soft: var(--vpf-warn-soft);
+  --color-info: var(--vpf-info);
+  --color-info-soft: var(--vpf-info-soft);
+  --color-board: var(--vpf-board);
+  --color-board-2: var(--vpf-board-2);
+  --color-board-line: var(--vpf-board-line);
+  --color-board-ink: var(--vpf-board-ink);
+  --color-board-ink-2: var(--vpf-board-ink-2);
+  --color-board-deep: var(--vpf-board-deep);
+  --color-light: var(--vpf-light);
+  --color-shadow: var(--vpf-shadow);
+  --color-scrim: var(--vpf-scrim);
+
+  --background-image-dots: var(--vpf-dots);
 }
 
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-SemiBold.otf") format("opentype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
+@theme {
+  --font-sans: "Barlow", system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+
+  --breakpoint-nav: 56.25rem;
+  --breakpoint-wm: 68.75rem;
+
+  --container-page: 1240px;
+  --container-prose: 62ch;
+
+  --ease-snap: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --shadow-pin: 6px 0 8px -6px var(--vpf-shadow);
+  --shadow-accent-top: inset 0 3px 0 var(--vpf-accent-fill);
+  --shadow-accent-under: inset 0 -3px 0 var(--vpf-accent-fill);
+  --shadow-accent-left: inset 3px 0 0 var(--vpf-accent-fill);
+  --shadow-light: 0 0 6px oklch(98% 0 0 / 0.7);
+  --shadow-glow: 0 0 8px currentColor;
 }
 
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-SemiBoldItalic.otf") format("opentype");
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-SemiBold.otf") format("opentype");
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-SemiBoldItalic.otf") format("opentype");
-  font-weight: 600;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-Bold.otf") format("opentype");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-BoldItalic.otf") format("opentype");
-  font-weight: 700;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-ExtraBold.otf") format("opentype");
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-ExtraBoldItalic.otf") format("opentype");
-  font-weight: 800;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-Black.otf") format("opentype");
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "SVN-CenturyGothic";
-  src: url("../fonts/svn-century-gothic/SVN-CenturyGothic-BlackItalic.otf") format("opentype");
-  font-weight: 900;
-  font-style: italic;
-  font-display: swap;
-}
-
-body {
-  font-family: "SVN-CenturyGothic", "Century Gothic", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-
-/* Custom Card Styles */
-.custom-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.custom-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-/* Navigation Styles */
-.nav-link {
-  color: var(--text-color);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.3s ease;
-}
-
-.nav-link:hover {
-  color: var(--secondary-color);
-}
-
-/* Hero Section */
-.hero-section {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--p-surface-800) 100%);
-  color: white;
-  padding: 80px 0;
-}
-
-/* Section Spacing */
-.section {
-  padding: 60px 0;
-}
-
-.section-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-}
-
-.section-subtitle {
-  font-size: 1.25rem;
-  color: var(--p-surface-600);
-  margin-bottom: 3rem;
-}
-
-/* Footer */
-.footer {
-  background-color: var(--bg-bg);
-  color: white;
-  padding: 40px 0 20px;
-}
-
-.footer-link {
-  color: white;
-  opacity: 0.8;
-  text-decoration: none;
-  transition: opacity 0.3s ease;
-}
-
-.footer-link:hover {
-  opacity: 1;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .section-title {
-    font-size: 2rem;
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    overflow-x: clip;
   }
 
-  .hero-section {
-    padding: 60px 0;
+  body {
+    min-height: 100dvh;
+    overflow-x: clip;
+    background: var(--vpf-paper);
+    color: var(--vpf-ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
   }
-}
 
-.bold-link {
-  color: var(--primary);
-  font-weight: 600;
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-style: normal;
+  }
 
-.bold-link:hover {
-  color: var(--color-text);
-}
+  :focus-visible {
+    outline: 2px solid var(--vpf-focus);
+    outline-offset: 2px;
+  }
 
-/* Page Transition Styles */
-.page-enter-active,
-.page-leave-active {
-  transition: transform 0.1s ease;
-}
+  summary {
+    list-style: none;
+  }
 
-.page-enter-from {
-  transform: translateX(100%);
-}
+  summary::-webkit-details-marker {
+    display: none;
+  }
 
-.page-leave-to {
-  transform: translateX(-100%);
-}
+  input[type="search"]::-webkit-search-cancel-button {
+    display: none;
+  }
 
-.dark-bg {
-  background-color: var(--p-surface-950);
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 1ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }

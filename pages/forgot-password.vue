@@ -230,6 +230,6 @@ const handleResetPassword = async () => {
 useHead({ title: () => t("forgotPassword.title") })
 
 definePageMeta({
-  layout: "with-footer",
+  layout: "auth",
 })
 </script>

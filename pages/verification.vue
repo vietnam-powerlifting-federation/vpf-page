@@ -41,12 +41,12 @@ const { t } = useI18n()
 const status = ref<IdentityVerification["status"] | null>(null)
 const isLocked = computed(() => status.value === "approved")
 
-const skip = () => navigateTo("/openvpf/profile")
+const skip = () => navigateTo("/profile")
 
 useHead({ title: () => t("verification.title") })
 
 definePageMeta({
-  layout: "with-footer",
+  layout: "auth",
   middleware: "auth",
 })
 </script>

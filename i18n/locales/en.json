@@ -1,26 +1,31 @@
 {
-  "openvpf": {
-    "headerNav": {
-      "rankings": "RANKINGS",
-      "records": "RECORDS",
-      "competitions": "COMPETITIONS",
-      "contact": "CONTACT",
-      "viewProfile": "View OpenVPF Profile",
-      "profileSettings": "Profile Settings",
-      "signOut": "Sign Out",
-      "openNavigation": "Open navigation",
-      "openUserMenu": "Open account menu",
-      "admin": "Admin console"
-    }
+  "site": {
+    "federation": "Vietnam Powerlifting Federation",
+    "short": "VPF",
+    "home": "VPF home",
+    "skip": "Skip to main content",
+    "footNote": "Results are official once a competition is closed.",
+    "language": "Language",
+    "appearance": "Appearance",
+    "dark": "Dark",
+    "light": "Light",
+    "toDark": "Switch to dark theme",
+    "toLight": "Switch to light theme"
   },
   "nav": {
-    "home": "Home",
-    "about": "About",
-    "membership": "Membership",
-    "championships": "Championships",
+    "rankings": "Rankings",
     "records": "Records",
-    "news": "News",
-    "contact": "Contact"
+    "competitions": "Competitions",
+    "main": "Main",
+    "menu": "Menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "viewProfile": "My athlete page",
+    "profileSettings": "Account settings",
+    "signOut": "Sign out",
+    "openUserMenu": "Open account menu",
+    "admin": "Admin console",
+    "login": "Log in"
   },
   "general": {
     "loading": "Loading...",
@@ -60,78 +65,6 @@
     "divisionMaster3": "Master III",
     "divisionMaster4": "Master IV",
     "divisionGuest": "Guest"
-  },
-  "home": {
-    "title": "Vietnam Powerlifting Federation",
-    "subtitle": "The National Governing Body for Powerlifting in Vietnam",
-    "welcome": "Welcome to Vietnam Powerlifting Federation",
-    "description": "Vietnam Powerlifting Federation is the National Governing Body for the sport of Powerlifting in Vietnam. We are responsible for the development, promotion, and regulation of Powerlifting throughout Vietnam.",
-    "latestNews": "Latest News",
-    "upcomingEvents": "Upcoming Events",
-    "readMore": "Read More",
-    "viewAll": "View All",
-    "newsImage": "News Image"
-  },
-  "about": {
-    "title": "About Vietnam Powerlifting Federation",
-    "mission": "Our Mission",
-    "missionText": "To promote and develop the sport of Powerlifting throughout Vietnam, ensuring fair competition and supporting athletes at all levels.",
-    "vision": "Our Vision",
-    "visionText": "To be the leading Powerlifting organization in Vietnam, recognized for excellence, integrity, and athlete development.",
-    "values": "Our Values",
-    "integrity": "Integrity",
-    "integrityText": "We maintain the highest standards of fairness and ethical conduct.",
-    "excellence": "Excellence",
-    "excellenceText": "We strive for excellence in all aspects of our organization.",
-    "inclusivity": "Inclusivity",
-    "inclusivityText": "We welcome athletes of all backgrounds and abilities."
-  },
-  "membership": {
-    "title": "Membership",
-    "description": "Join British Powerlifting and become part of our growing community of athletes, coaches, and supporters.",
-    "benefits": "Membership Benefits",
-    "benefit1": "Access to sanctioned competitions",
-    "benefit2": "Official rankings and records",
-    "benefit3": "Insurance coverage",
-    "benefit4": "Training resources and support",
-    "benefit5": "Community events and networking",
-    "joinNow": "Join Now"
-  },
-  "championships": {
-    "title": "Championships",
-    "description": "British Powerlifting hosts a variety of championships throughout the year for athletes of all levels.",
-    "upcoming": "Upcoming Championships",
-    "past": "Past Championships",
-    "register": "Register Now"
-  },
-  "news": {
-    "title": "News & Updates",
-    "description": "Stay up to date with the latest news, announcements, and updates from British Powerlifting.",
-    "readMore": "Read More",
-    "noNews": "No news articles available at this time."
-  },
-  "contact": {
-    "title": "Contact Us",
-    "description": "Get in touch with Vietnam Powerlifting Federation. We're here to help with any questions or inquiries.",
-    "name": "Name",
-    "email": "Email",
-    "message": "Message",
-    "send": "Send Message",
-    "address": "Address",
-    "phone": "Phone",
-    "emailLabel": "Email"
-  },
-  "footer": {
-    "copyright": "© {year} Vietnam Powerlifting Federation. All rights reserved.",
-    "links": "Quick Links",
-    "social": "Follow Us"
-  },
-  "aboutVpf": {
-    "notFound": "Content is being updated."
-  },
-  "language": {
-    "english": "English",
-    "vietnamese": "Tiếng Việt"
   },
   "ranking": {
     "title": "Athlete Rankings",
@@ -184,11 +117,6 @@
   },
   "recordsHistory": {
     "lot": "Lot"
-  },
-  "test": {
-    "show": "Show",
-    "info": "Info",
-    "messageContent": "Message Content"
   },
   "athlete": {
     "notFound": "Athlete not found",
@@ -732,7 +660,9 @@
       "violations": "Violations",
       "money": "Money",
       "purchases": "Purchases",
-      "vouchers": "Vouchers"
+      "vouchers": "Vouchers",
+      "sections": "Admin sections",
+      "openMenu": "Admin menu"
     },
     "common": {
       "cancel": "Cancel",
@@ -998,5 +928,18 @@
       "outcomePledge": "Level 1 — may compete after a pledge and a fine.",
       "outcomeOk": "No violations in force."
     }
+  },
+  "account": {
+    "kicker": "My account",
+    "title": "My account",
+    "sections": "Account sections"
+  },
+  "error": {
+    "kicker": "Error {code}",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "The page you asked for does not exist, or it has moved.",
+    "genericTitle": "Something went wrong",
+    "genericBody": "Please try again in a moment.",
+    "home": "Go to the rankings"
   }
 }

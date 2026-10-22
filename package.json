@@ -14,8 +14,10 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1004.0",
+    "@iconify-json/lucide": "^1.2.147",
     "@nuxt/content": "^3.7.1",
     "@nuxt/eslint": "^1.4.1",
+    "@nuxt/icon": "^1.15.0",
     "@nuxt/image": "^2.0.0",
     "@nuxtjs/color-mode": "^4.0.0",
     "@nuxtjs/google-fonts": "^3.2.0",

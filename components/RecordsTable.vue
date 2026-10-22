@@ -10,7 +10,7 @@
         <template #body="{ data }">
           <template v-if="data.athlete">
             <NuxtLinkLocale
-              :to="`/openvpf/athletes/${data.athlete.slug || data.athlete.vpfId}`"
+              :to="`/athletes/${data.athlete.slug || data.athlete.vpfId}`"
               class="text-primary hover:underline"
               :style="nameGradientStyle(data.athlete.decorator1, data.athlete.decorator2)"
             >
