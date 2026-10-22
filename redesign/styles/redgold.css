@@ -1,0 +1,99 @@
+/* Hallmark · direction D "Red & Gold" · genre: editorial-poster · tone: national pride, ceremonial
+ * paper light oklch(98% 0.006 85) / dark oklch(16.5% 0.012 25) · accent oklch(53% 0.21 27) flag red + oklch(86% 0.17 92) star gold
+ * display: Anton · body: Be Vietnam Pro · nav: N1b on red · footer: Ft2
+ * signature: full-bleed flag-red band, gold star mark, condensed headline, gold card for 1st place.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Anton&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap");
+
+:root {
+  --font-display: "Anton", Impact, sans-serif;
+  --font-body: "Be Vietnam Pro", system-ui, sans-serif;
+  --font-num: "Be Vietnam Pro", system-ui, sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+
+  --flag-red: oklch(51% 0.2 27);
+  --flag-red-deep: oklch(42% 0.17 27);
+  --flag-red-ink: oklch(99% 0.004 85);
+  --flag-red-ink-2: oklch(90% 0.03 60);
+  --star-gold: oklch(86% 0.17 92);
+  --star-ink: oklch(24% 0.05 27);
+
+  --color-paper: light-dark(oklch(98% 0.006 85), oklch(16.5% 0.012 25));
+  --color-surface: light-dark(oklch(100% 0 0), oklch(21% 0.016 25));
+  --color-raised: light-dark(oklch(96% 0.014 80), oklch(25.5% 0.02 25));
+  --color-line: light-dark(oklch(90% 0.014 60), oklch(31% 0.02 25));
+  --color-line-strong: light-dark(oklch(78% 0.018 50), oklch(43% 0.025 25));
+  --color-ink: light-dark(oklch(20% 0.02 25), oklch(96% 0.008 85));
+  --color-ink-2: light-dark(oklch(44% 0.025 25), oklch(77% 0.02 60));
+  --color-accent: light-dark(oklch(49% 0.2 27), oklch(86% 0.15 92));
+  --color-accent-fill: light-dark(var(--flag-red), var(--star-gold));
+  --color-accent-fill-hover: light-dark(oklch(46% 0.19 27), oklch(90% 0.15 92));
+  --color-on-accent: light-dark(oklch(99% 0 0), var(--star-ink));
+  --color-accent-soft: light-dark(oklch(94% 0.035 27), oklch(30% 0.06 27));
+  --color-focus: light-dark(oklch(52% 0.17 255), oklch(74% 0.13 255));
+  --color-gold: var(--star-gold);
+  --color-silver: oklch(86% 0.01 80);
+  --color-bronze: oklch(72% 0.1 55);
+  --color-on-medal: var(--star-ink);
+  --color-header: var(--flag-red);
+  --color-thead: light-dark(oklch(95% 0.03 27), oklch(26% 0.04 27));
+}
+
+/* ---------- Header on red ---------- */
+.site-header { color: var(--flag-red-ink); border-bottom: 0; }
+.mark { width: 34px; height: 34px; background: var(--star-gold); clip-path: polygon(50% 0%, 61.8% 35.3%, 100% 35.3%, 69.1% 57.1%, 80.9% 92.4%, 50% 70.6%, 19.1% 92.4%, 30.9% 57.1%, 0% 35.3%, 38.2% 35.3%); }
+.wordmark-text strong { font-size: 1.625rem; letter-spacing: 0.04em; font-weight: 400; }
+.wm-sub { color: var(--flag-red-ink-2); }
+.main-nav a { color: var(--flag-red-ink-2); font-weight: 600; }
+.main-nav a:hover { color: var(--flag-red-ink); background: var(--flag-red-deep); }
+.main-nav a[aria-current="page"] { color: var(--star-ink); background: var(--star-gold); }
+.site-header .btn-ghost { color: var(--flag-red-ink); }
+.site-header .btn-ghost:hover { background: var(--flag-red-deep); }
+.site-header .lang-switch { border-color: oklch(100% 0 0 / 0.35); }
+.site-header .lang-switch button { color: var(--flag-red-ink-2); }
+.site-header .lang-switch button + button { border-color: oklch(100% 0 0 / 0.35); }
+.site-header .lang-switch button[aria-pressed="true"] { background: var(--flag-red-deep); color: var(--flag-red-ink); }
+.site-header .btn-primary { background: var(--star-gold); color: var(--star-ink); }
+.site-header .btn-primary:hover { background: oklch(90% 0.15 92); }
+
+/* ---------- The red band ---------- */
+.layout { padding-top: 0; row-gap: var(--space-lg); }
+.layout::before {
+  content: ""; grid-row: 1 / 3; grid-column: 1 / -1; z-index: -1; margin-inline: calc(50% - 50vw);
+  background:
+    var(--flag-red);
+  border-bottom: 6px solid var(--star-gold);
+}
+body { isolation: isolate; }
+.page-head { position: relative; padding-top: var(--space-2xl); color: var(--flag-red-ink); }
+.kicker { display: block; margin: 0 0 var(--space-xs); color: var(--star-gold); font-weight: 700; font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 4px; }
+.page-head h1 { position: relative; font-weight: 400; text-transform: uppercase; font-size: clamp(2.25rem, 1.2rem + 4vw, 4rem); line-height: 1.1; letter-spacing: 0.01em; padding-top: 0.06em; max-width: 16ch; }
+.page-head .lede { color: var(--flag-red-ink-2); font-size: var(--text-lg); }
+.explain summary { color: var(--star-gold); }
+.explain-body { background: var(--flag-red-deep); border-color: oklch(100% 0 0 / 0.2); color: var(--flag-red-ink); }
+
+.podium { padding-bottom: var(--space-2xl); }
+.podium-title { color: var(--star-gold); font-family: var(--font-body); font-size: 0.875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
+.podium-item { background: var(--flag-red-deep); border: 1px solid oklch(100% 0 0 / 0.18); color: var(--flag-red-ink); }
+.podium-item.p1 { background: var(--star-gold); color: var(--star-ink); border-color: transparent; }
+.podium-rank { display: inline-grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--flag-red-ink); color: var(--flag-red); font-family: var(--font-display); font-size: 1.25rem; font-weight: 400; }
+.p1 .podium-rank { background: var(--flag-red); color: var(--star-gold); }
+.podium-meta { color: inherit; opacity: 0.85; }
+.podium-score { font-family: var(--font-display); font-weight: 400; font-size: 2.25rem; letter-spacing: 0.01em; }
+.podium-score small { color: inherit; opacity: 0.85; }
+@media (min-width: 640px) { .podium-rank { margin-bottom: var(--space-xs); } }
+
+/* ---------- Filters & table ---------- */
+.filters { box-shadow: 0 10px 30px -18px oklch(30% 0.1 27 / 0.45); }
+.field > label, .field > legend { font-weight: 600; }
+.segmented input:checked + span { background: var(--color-accent-fill); color: var(--color-on-accent); box-shadow: none; }
+.result-count { font-weight: 700; font-size: 1.0625rem; }
+.ranking thead th { color: var(--color-ink); text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.75rem; font-weight: 700; }
+.ranking td.is-sorted { font-weight: 700; }
+.gl { font-weight: 700; }
+.athlete-name { font-weight: 700; }
+.table-panel { border-top: 4px solid var(--color-accent-fill); }
+.site-footer { background: var(--flag-red); border-top: 4px solid var(--star-gold); }
+.site-footer .container { color: var(--flag-red-ink-2); }
+.site-footer strong { color: var(--flag-red-ink); }

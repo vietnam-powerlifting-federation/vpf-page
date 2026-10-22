@@ -1,0 +1,110 @@
+/* Hallmark · direction C "Plates" · genre: modern-sport · tone: confident, clean, competition floor
+ * paper light oklch(94.5% 0.008 95) chalk / dark oklch(19% 0.006 250) · accent oklch(48% 0.17 258) plate blue
+ * display: Archivo semi-expanded 800 · body: Archivo · nav: N1b · footer: Ft2
+ * signature: calibrated-plate colours (red 25 · blue 20 · yellow 15 · green 10) as a thin brand stripe;
+ * the heaviest plate marks 1st place on a stepped podium.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap");
+
+:root {
+  --font-display: "Archivo", system-ui, sans-serif;
+  --font-body: "Archivo", system-ui, sans-serif;
+  --font-num: "Archivo", system-ui, sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+
+  --plate-red: oklch(54% 0.21 27);
+  --plate-blue: oklch(48% 0.17 258);
+  --plate-yellow: oklch(85% 0.16 92);
+  --plate-green: oklch(56% 0.15 150);
+  --plate-ink: oklch(18% 0.012 250);
+
+  --color-paper: light-dark(oklch(94.5% 0.008 95), oklch(19% 0.006 250));
+  --color-surface: light-dark(oklch(99.3% 0.004 95), oklch(24% 0.008 250));
+  --color-raised: light-dark(oklch(91% 0.012 95), oklch(29% 0.01 250));
+  --color-line: light-dark(oklch(86% 0.01 95), oklch(34% 0.01 250));
+  --color-edge: light-dark(oklch(76% 0.012 250), oklch(42% 0.012 250));
+  --color-line-strong: var(--color-edge);
+  --color-ink: light-dark(oklch(18% 0.012 250), oklch(95% 0.006 95));
+  --color-ink-2: light-dark(oklch(40% 0.015 250), oklch(76% 0.01 95));
+  --color-accent: light-dark(oklch(46% 0.17 258), oklch(77% 0.12 255));
+  --color-accent-fill: var(--plate-blue);
+  --color-accent-fill-hover: oklch(43% 0.16 258);
+  --color-on-accent: oklch(99% 0 0);
+  --color-accent-soft: light-dark(oklch(91% 0.045 255), oklch(32% 0.06 258));
+  --color-focus: light-dark(oklch(55% 0.18 255), oklch(75% 0.13 255));
+  --color-gold: var(--plate-red);
+  --color-silver: var(--plate-blue);
+  --color-bronze: var(--plate-yellow);
+  --color-on-medal: oklch(99% 0 0);
+  --color-header: var(--color-surface);
+  --color-thead: light-dark(oklch(18% 0.012 250), oklch(14% 0.01 250));
+  --thead-ink: oklch(96% 0.006 95);
+  --color-seg-on: var(--color-ink);
+  --color-seg-on-ink: var(--color-paper);
+  --color-input: var(--color-surface);
+  --plate-stripe: linear-gradient(90deg, var(--plate-red) 0 25%, var(--plate-blue) 25% 50%, var(--plate-yellow) 50% 75%, var(--plate-green) 75% 100%);
+  --shadow-block: 0 1px 2px oklch(20% 0.02 250 / 0.06), 0 8px 24px -16px oklch(20% 0.02 250 / 0.25);
+}
+
+/* ---------- Header ---------- */
+.site-header { border-bottom: 1px solid var(--color-line); }
+.site-header::after { content: ""; display: block; height: 4px; background: var(--plate-stripe); }
+.mark {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: radial-gradient(circle, var(--color-surface) 0 16%, var(--plate-red) 16% 100%);
+  box-shadow: inset 0 0 0 3px oklch(44% 0.19 27);
+}
+.wordmark-text strong { font-weight: 800; font-stretch: 112%; font-size: 1.375rem; letter-spacing: -0.01em; }
+.main-nav a { font-weight: 600; }
+.main-nav a[aria-current="page"] { color: var(--color-ink); box-shadow: inset 0 -3px 0 var(--plate-red); border-radius: 0; }
+.btn { font-weight: 700; }
+
+/* ---------- Title ---------- */
+.page-head h1 { font-weight: 800; font-stretch: 112%; font-size: clamp(2rem, 1.2rem + 3vw, 3.25rem); letter-spacing: -0.025em; line-height: 1.05; }
+.page-head .lede { font-size: var(--text-lg); }
+.explain summary { color: var(--color-accent); font-weight: 600; }
+@media (min-width: 1024px) {
+  .layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); grid-template-areas: "head podium" "filters filters" "results results"; column-gap: var(--space-2xl); align-items: end; }
+}
+
+/* ---------- Stepped podium: steps are the 25 / 20 / 15 kg plates ---------- */
+.podium-title { font-weight: 700; font-size: var(--text-md); color: var(--color-ink-2); }
+.podium-item { box-shadow: var(--shadow-block); }
+.podium-rank { display: grid; place-items: center; color: oklch(99% 0 0); font-weight: 800; font-stretch: 112%; }
+.p1 .podium-rank { background: var(--plate-red); }
+.p2 .podium-rank { background: var(--plate-blue); }
+.p3 .podium-rank { background: var(--plate-yellow); color: var(--plate-ink); }
+.podium-name { font-weight: 800; }
+.podium-score { font-weight: 800; font-stretch: 87.5%; }
+@media (max-width: 639.98px) {
+  .podium-item { padding-left: calc(3rem + var(--space-sm)); overflow: hidden; grid-template-columns: minmax(0, 1fr) auto; }
+  .podium-name, .podium-meta { grid-column: 1; }
+  .podium-score { grid-column: 2; }
+  .podium-rank { position: absolute; inset: 0 auto 0 0; width: 3rem; font-size: 1.5rem; }
+}
+@media (min-width: 640px) {
+  .podium-list { align-items: end; column-gap: var(--space-sm); }
+  .podium-item { text-align: center; padding: var(--space-md) var(--space-md) calc(var(--step) + var(--space-md)); overflow: hidden; }
+  .p1 { --step: 72px; order: 2; }
+  .p2 { --step: 52px; order: 1; }
+  .p3 { --step: 36px; order: 3; }
+  .podium-rank { position: absolute; inset: auto 0 0 0; height: var(--step); font-size: 1.5rem; }
+  .podium-score { font-size: 1.5rem; }
+}
+
+/* ---------- Filters & table ---------- */
+.filters, .table-panel { box-shadow: var(--shadow-block); }
+.field > label, .field > legend { font-weight: 600; }
+.segmented input:checked + span { box-shadow: none; }
+.result-count { font-weight: 700; font-stretch: 112%; font-size: 1.0625rem; }
+.ranking thead th { color: var(--thead-ink); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; border-bottom: 0; }
+.ranking thead th .sort-btn:hover { color: var(--thead-ink); opacity: 0.85; }
+th[aria-sort] .sort-btn { color: var(--plate-yellow); }
+.ranking td.num { font-stretch: 87.5%; font-weight: 600; font-size: 1rem; }
+.ranking td.is-sorted { font-weight: 800; }
+.rank { font-weight: 700; }
+.rank.r3 { color: var(--plate-ink); }
+.athlete-name { font-weight: 700; }
+.site-footer { border-top: 0; }
+.site-footer::before { content: ""; display: block; height: 4px; background: var(--plate-stripe); }

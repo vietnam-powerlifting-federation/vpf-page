@@ -1,0 +1,33 @@
+[
+  {
+    "date": "2026-10-23",
+    "macrostructure": "app view (rankings)",
+    "theme": "custom (Supabase-inspired)",
+    "theme_axes": "dark-first / grotesk-sans + mono / emerald",
+    "nav": "N1b",
+    "footer": "Ft2",
+    "enrichment": "none",
+    "brief": "VPF rankings \u2014 direction E, Supabase-like"
+  },
+  {
+    "date": "2026-10-22",
+    "macrostructure": "app view (rankings) \u00b7 4 directions",
+    "theme": "custom \u00d74: scoreboard / gazette / plates / redgold",
+    "theme_axes": "dark-band/condensed/amber \u00b7 light/serif/vermilion \u00b7 light/expanded-sans/plate-blue \u00b7 red-band/display-heavy/red-gold",
+    "nav": "N1b / N6 / N1b / N1b",
+    "footer": "Ft2",
+    "enrichment": "none",
+    "brief": "VPF rankings \u2014 style directions for user to choose; professional tone"
+  },
+  {
+    "date": "2026-10-22",
+    "macrostructure": "app view (rankings table)",
+    "theme": "custom",
+    "theme_axes": "light+dark / display-condensed / warm",
+    "vibe": "federation scoreboard, calm, readable, red-and-zinc",
+    "nav": "N1b",
+    "footer": "Ft2",
+    "enrichment": "none",
+    "brief": "VPF rankings index \u2014 redesign preview"
+  }
+]

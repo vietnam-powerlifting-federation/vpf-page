@@ -16,6 +16,7 @@ Rule of thumb: if the document would be obsoleted by deleting one feature, it is
 | [Competition registration flow](competition-registration-flow.md) | Registration wizard: identity gate, ban-list checks, member vs guest, entry details, add-ons, combined payment | Built — doc still says otherwise, see below |
 | [Voucher system](voucher-system.md) | Per-athlete single-use discount vouchers: per-type line items, fixed/percent math, redemption and release | Built |
 | [Admin tools](admin-tools.md) | The federation-side console: meet CRUD, the LiftingCast CSV round trip (entries out, results in), athlete admin, violations and bans, finance | Built — except scoped roles (§1.3), the audit log (§1.4), account merging (§4.3) and finance reporting (§7.3), all deliberately deferred |
+| [Frontend redesign: Scoreboard](frontend-redesign.md) | One-app frontend rebuild: routes without `/openvpf`, Scoreboard design tokens and type, results-table and filter patterns, a11y/perf budgets, Tachi-style source layout | Approved, not built |
 
 ## Stale: competition registration says it is unbuilt
 

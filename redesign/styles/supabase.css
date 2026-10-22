@@ -1,0 +1,130 @@
+/* Hallmark · direction E "Console" (Supabase-inspired) · genre: modern-minimal (dev-console) · tone: precise, calm, technical
+ * paper light oklch(98.8% 0 0) / dark oklch(17.5% 0 0) · accent oklch(76% 0.15 162) emerald
+ * display/body: Inter · labels & numbers: Source Code Pro · nav: N1b · footer: Ft2
+ * signature: faint grid backdrop behind the title, mono uppercase labels with a live-green dot,
+ * stat-card leaders with a green-lit 1st card, table-editor style results table.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Code+Pro:wght@400;500;600&display=swap");
+
+:root {
+  --font-display: "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "Source Code Pro", ui-monospace, monospace;
+  --font-num: var(--font-mono);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+
+  --green: oklch(76% 0.15 162);
+  --green-hover: oklch(80% 0.14 162);
+  --green-deep: oklch(60% 0.13 162);
+
+  --color-paper: light-dark(oklch(98.8% 0 0), oklch(17.5% 0 0));
+  --color-surface: light-dark(oklch(100% 0 0), oklch(20% 0 0));
+  --color-raised: light-dark(oklch(96.5% 0 0), oklch(23.5% 0 0));
+  --color-line: light-dark(oklch(90.5% 0 0), oklch(28.5% 0 0));
+  --color-line-strong: light-dark(oklch(84% 0 0), oklch(36% 0 0));
+  --color-ink: light-dark(oklch(21% 0 0), oklch(94% 0 0));
+  --color-ink-2: light-dark(oklch(46% 0 0), oklch(72% 0 0));
+  --color-accent: light-dark(oklch(50% 0.12 160), var(--green));
+  --color-accent-fill: var(--green);
+  --color-accent-fill-hover: var(--green-hover);
+  --color-on-accent: oklch(18% 0.02 162);
+  --color-accent-soft: light-dark(oklch(95% 0.04 162), oklch(27% 0.05 162));
+  --color-focus: light-dark(oklch(55% 0.13 162), var(--green));
+  --color-gold: oklch(84% 0.14 88);
+  --color-silver: oklch(86% 0.005 260);
+  --color-bronze: oklch(74% 0.09 55);
+  --color-on-medal: oklch(20% 0.01 60);
+  --color-header: light-dark(oklch(98.8% 0 0 / 0.85), oklch(17.5% 0 0 / 0.85));
+  --color-thead: var(--color-raised);
+  --color-input: light-dark(oklch(100% 0 0), oklch(15.5% 0 0));
+  --color-row-hover: light-dark(oklch(97.5% 0 0), oklch(22.5% 0 0));
+  --grid-line: light-dark(oklch(21% 0 0 / 0.06), oklch(100% 0 0 / 0.05));
+}
+
+.mono-label, .kicker, .podium-title, .field > label, .field > legend, .ranking thead th, .result-count, .pager-status {
+  font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em;
+}
+
+/* ---------- Header ---------- */
+.site-header { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.mark {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: linear-gradient(135deg, var(--green) 0%, var(--green-deep) 100%);
+  box-shadow: inset 0 0 0 1px oklch(100% 0 0 / 0.2);
+}
+.mark .mark-text { display: block; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; color: var(--color-on-accent); letter-spacing: -0.02em; }
+.wordmark-text strong { font-family: var(--font-body); font-size: 1rem; font-weight: 600; letter-spacing: -0.01em; }
+.main-nav a { font-weight: 400; color: var(--color-ink-2); }
+.main-nav a:hover { background: transparent; color: var(--color-ink); }
+.main-nav a[aria-current="page"] { color: var(--color-ink); font-weight: 500; }
+.btn { font-weight: 500; font-size: var(--text-sm); }
+.btn-primary { border: 1px solid var(--green-deep); }
+.btn-outline { border-color: var(--color-line-strong); }
+
+/* ---------- Head over a faint grid ---------- */
+.layout { padding-top: 0; }
+.layout::before {
+  content: ""; grid-row: 1 / 3; grid-column: 1 / -1; z-index: -1; margin-inline: calc(50% - 50vw);
+  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 48px 48px; background-position: center top;
+  mask-image: radial-gradient(ellipse 70% 90% at 50% 0%, #000 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 90% at 50% 0%, #000 30%, transparent 75%);
+  border-bottom: 1px solid var(--color-line);
+}
+body { isolation: isolate; }
+.page-head { padding-top: var(--space-2xl); }
+.podium { padding-bottom: var(--space-lg); }
+.kicker { display: inline-flex; align-items: center; gap: var(--space-xs); margin: 0 0 var(--space-sm); padding: 0.2rem 0.6rem; font-size: 0.75rem; color: var(--color-ink-2); border: 1px solid var(--color-line-strong); border-radius: 999px; background: var(--color-surface); }
+.kicker::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px light-dark(oklch(76% 0.15 162 / 0.25), oklch(76% 0.15 162 / 0.2)); }
+.page-head h1 { font-weight: 500; font-size: clamp(2rem, 1.3rem + 2.8vw, 3.25rem); letter-spacing: -0.03em; line-height: 1.08; }
+.page-head .lede { font-size: var(--text-lg); }
+.explain summary { color: var(--color-accent); }
+.explain-body { background: var(--color-surface); }
+
+/* ---------- Leaders as stat cards ---------- */
+.podium-title { font-size: 0.75rem; font-weight: 500; color: var(--color-ink-2); }
+.podium-item { background: var(--color-surface); }
+.podium-item.p1 {
+  border-color: light-dark(oklch(76% 0.15 162 / 0.6), oklch(76% 0.15 162 / 0.45));
+  background: linear-gradient(180deg, light-dark(oklch(96% 0.04 162), oklch(24% 0.04 162)) 0%, var(--color-surface) 70%);
+}
+.podium-rank { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.06em; }
+.podium-rank::before { content: "#0"; }
+.podium-rank .visually-hidden { display: none; }
+.p1 .podium-rank { color: var(--color-accent); }
+.podium-name { font-weight: 500; }
+.podium-score { font-family: var(--font-mono); font-weight: 500; font-size: 1.75rem; letter-spacing: -0.02em; }
+.podium-score small { font-family: var(--font-mono); }
+@media (max-width: 639.98px) {
+  .podium-rank::before { content: "#"; }
+  .podium-score { font-size: 1.25rem; }
+}
+
+/* ---------- Filters as a toolbar, table as a table editor ---------- */
+.filters { background: var(--color-surface); }
+.field > label, .field > legend { font-size: 0.6875rem; font-weight: 500; color: var(--color-ink-2); }
+.input, .select { font-size: var(--text-sm); min-height: 40px; }
+.search-wrap .input { min-height: 42px; }
+.segmented { padding: 2px; }
+.segmented span { min-height: 34px; font-weight: 400; }
+.segmented input:checked + span { background: var(--color-raised); box-shadow: 0 0 0 1px var(--color-line-strong); font-weight: 500; }
+.result-count { font-size: 0.75rem; font-weight: 500; color: var(--color-ink-2); }
+.chip { border-radius: var(--radius-sm); border: 1px solid var(--color-line-strong); background: var(--color-surface); font-family: var(--font-mono); font-size: 0.75rem; }
+.chip:hover { border-color: var(--color-accent); }
+.table-panel { background: var(--color-surface); }
+.ranking th, .ranking td { padding: 0.55rem var(--space-sm); }
+.ranking th + th, .ranking td + td { border-left: 1px solid var(--color-line); }
+.ranking thead th { font-size: 0.6875rem; font-weight: 500; }
+th[aria-sort] .sort-btn { color: var(--color-accent); }
+.ranking td { font-size: var(--text-sm); }
+.ranking td.num { font-family: var(--font-mono); font-size: 0.875rem; }
+.ranking td.is-sorted { background: light-dark(oklch(97.5% 0.02 162), oklch(22% 0.025 162)); color: var(--color-ink); font-weight: 600; }
+.ranking tbody tr:hover td.is-sorted { background: var(--color-accent-soft); }
+.rank { font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 500; min-width: 1.75rem; height: 1.75rem; border-radius: var(--radius-sm); }
+.rank:not(.r1):not(.r2):not(.r3) { color: var(--color-ink-2); }
+.athlete-name { font-weight: 500; }
+.athlete-meta { font-size: 0.75rem; }
+.gl { font-family: var(--font-mono); font-weight: 600; }
+.pager-status { font-size: 0.75rem; }
+.site-footer { font-size: var(--text-sm); }
