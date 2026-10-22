@@ -64,20 +64,42 @@
     "divisionMaster2": "Master II",
     "divisionMaster3": "Master III",
     "divisionMaster4": "Master IV",
-    "divisionGuest": "Guest"
+    "divisionGuest": "Guest",
+    "men": "Men",
+    "women": "Women",
+    "all": "All",
+    "kg": "kg"
   },
   "ranking": {
     "title": "Athlete Rankings",
     "loading": "Loading rankings...",
     "pleaseWait": "Please wait while we load the data",
-    "searchAthlete": "Search Athlete",
-    "searchPlaceholder": "Search by name or VPF ID...",
-    "sortBy": "Sort By",
+    "searchAthlete": "Search athlete",
+    "searchPlaceholder": "Name or VPF ID",
+    "sortBy": "Rank by",
     "sortPlaceholder": "Sort by...",
     "competitionType": "Competition Type",
     "filterAll": "All",
     "sortGlPoint": "GL Point",
-    "weightClassAll": "All"
+    "weightClassAll": "All",
+    "kicker": "Official standings",
+    "lede": "The best result of every VPF athlete, ranked from strongest to weakest.",
+    "glQuestion": "What are GL points?",
+    "glAnswer1": "GL points (IPF GL) compare lifters of different body weights fairly. A light lifter and a heavy lifter with the same GL score are equally strong for their size.",
+    "glAnswer2": "Total is the sum of the best squat, bench press and deadlift. All weights are in kilograms.",
+    "leaders": "Leading the table",
+    "filterLabel": "Filter rankings",
+    "searchHint": "Accents are optional: “nguyen van an” finds “Nguyễn Văn An”.",
+    "category": "Category",
+    "allMeetTypes": "All competitions",
+    "athlete": "Athlete",
+    "glPoints": "GL points",
+    "withUnit": "{label} (kg)",
+    "count": "No athletes | 1 athlete | {n} athletes",
+    "caption": "Athlete rankings, sorted by {sort}",
+    "emptyTitle": "No athletes match",
+    "emptyBody": "Try a different name, or remove a filter to see more athletes.",
+    "searchChip": "“{q}”"
   },
   "meets": {
     "register": "Register",
@@ -941,5 +963,25 @@
     "genericTitle": "Something went wrong",
     "genericBody": "Please try again in a moment.",
     "home": "Go to the rankings"
+  },
+  "tables": {
+    "scrollHint": "Swipe the table sideways to see every lift.",
+    "rank": "Rank",
+    "pages": "Pages",
+    "perPage": "Rows per page",
+    "prev": "Previous page",
+    "next": "Next page",
+    "status": "{from}–{to} of {total}",
+    "noLift": "no lift",
+    "goodLift": "good lift",
+    "notAttempted": "not attempted",
+    "loading": "Loading results…"
+  },
+  "filters": {
+    "remove": "Remove filter",
+    "reset": "Reset filters",
+    "toggle": "Filters",
+    "clearSearch": "Clear search",
+    "divisionHint": "Division = age group"
   }
 }

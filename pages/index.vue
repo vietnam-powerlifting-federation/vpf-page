@@ -1,240 +1,346 @@
 <template>
-  <div class="min-h-full dark-bg">
-    <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl md:text-4xl font-bold mb-8 text-center text-primary">{{ $t("ranking.title") }}</h1>
-    
-    <!-- Filters -->
-    <AthletesRankingFilter
-      v-model:search="searchValue"
-      v-model:sort="sortValue"
-      v-model:sex="sexValue"
-      v-model:division="divisionValue"
-      v-model:weight-class="weightClassValue"
-      v-model:meet-type="meetTypeValue"
-      class="mb-6"
-    />
+  <div>
+    <PageHeader
+      :kicker="$t('ranking.kicker')"
+      :title="$t('ranking.title')"
+      :lede="$t('ranking.lede')"
+      :help-label="$t('ranking.glQuestion')"
+    >
+      <template #help>
+        <p>{{ $t("ranking.glAnswer1") }}</p>
+        <p>{{ $t("ranking.glAnswer2") }}</p>
+      </template>
+      <template #aside>
+        <RankingLeaders :rows="ranked" :sort="apiSort" :meta="meta" :decorators="decoratorMap" />
+      </template>
+    </PageHeader>
 
-    <!-- Data Table -->
-    <div class="overflow-hidden">
-        <DataTable
-          :value="finalRankedResults"
-          :paginator="true"
-          :rows="50"
-          :rows-per-page-options="[25, 50, 100]"
-          striped-rows
-          class="w-full border border-surface-200 dark:border-surface-700"
+    <PageSection class="grid gap-6">
+      <form
+        role="search"
+        :aria-label="$t('ranking.filterLabel')"
+        class="grid min-w-0 content-start gap-4 rounded-md border border-t-[3px] border-surface-200 border-t-ink bg-surface-0 p-4 md:p-6"
+        @submit.prevent
+      >
+        <SearchField
+          ref="search"
+          :model-value="query.state.value.q"
+          :label="$t('ranking.searchAthlete')"
+          :placeholder="$t('ranking.searchPlaceholder')"
+          :hint="$t('ranking.searchHint')"
+          :clear-label="$t('filters.clearSearch')"
+          @update:model-value="setFilter({ q: $event }, true)"
+        />
+
+        <button
+          type="button"
+          class="flex min-h-11 cursor-pointer items-center justify-between rounded border border-surface-300 px-3 text-sm font-medium md:hidden"
+          :aria-expanded="filtersOpen"
+          :aria-controls="filterGridId"
+          @click="filtersOpen = !filtersOpen"
         >
-          <Column field="rank" header="#" :sortable="false" style="width: 5rem" align="right">
-            <template #body="{ data }">
-              {{ data.rank }}
-            </template>
-          </Column>
-          
-          <Column field="athleteName" :header="$t('general.name')" :sortable="false" style="min-width: 200px" frozen>
-            <template #body="{ data }">
-              <NuxtLinkLocale
-                v-if="data.athlete"
-                :to="`/athletes/${data.athlete.slug || data.athlete.vpfId}`"
-                class="hover:underline"
-                :style="nameGradientStyle(data.athlete.decorator1, data.athlete.decorator2)"
-              >
-                {{ data.athlete.fullName }}
-              </NuxtLinkLocale>
-              <span v-else class="text-surface-400">-</span>
-            </template>
-          </Column>
-          
-          <Column field="weightClass" :header="$t('general.weightClass')" :sortable="false" align="right" style="width: 8rem">
-            <template #body="{ data }">
-              {{ formatWeightClass(data.weightClass, data.sex) }}
-            </template>
-          </Column>
-          
-          <Column field="sex" :header="$t('general.sportGender')" :sortable="false" align="right" style="width: 10rem">
-            <template #body="{ data }">
-              {{ formatSex(data.sex) }}
-            </template>
-          </Column>
-          
-          <Column field="division" :header="$t('general.division')" :sortable="false" align="right" style="width: 10rem">
-            <template #body="{ data }">
-              {{ formatDivision(data.division) }}
-            </template>
-          </Column>
-          
-          <Column field="bestSquat" :header="$t('general.squat')" :sortable="false" align="right" style="width: 8rem">
-            <template #body="{ data }">
-              {{ formatWeight(data.bestSquat) }}
-            </template>
-          </Column>
-          
-          <Column field="bestBench" :header="$t('general.bench')" :sortable="false" align="right" style="width: 8rem">
-            <template #body="{ data }">
-              {{ formatWeight(data.bestBench) }}
-            </template>
-          </Column>
-          
-          <Column field="bestDeadlift" :header="$t('general.deadlift')" :sortable="false" align="right" style="width: 8rem">
-            <template #body="{ data }">
-              {{ formatWeight(data.bestDeadlift) }}
-            </template>
-          </Column>
-          
-          <Column field="total" :header="$t('general.total')" :sortable="false" align="right" style="width: 8rem">
-            <template #body="{ data }">
-              {{ formatWeight(data.total) }}
-            </template>
-          </Column>
-          
-          <Column field="gl" :header="$t('general.gl')" :sortable="false" align="right" style="width: 8rem">
-            <template #body="{ data }">
-              {{ formatGL(data.gl) }}
-            </template>
-          </Column>
-        </DataTable>
-    </div>
-    </div>
+          <span class="inline-flex items-center gap-2">
+            <AppIcon name="lucide:sliders-horizontal" class="size-5" />
+            {{ $t("filters.toggle") }}
+            <span v-if="activeCount" class="inline-grid h-6 min-w-6 place-items-center rounded-full bg-accent-fill px-1.5 text-xs font-semibold text-on-accent">{{ activeCount }}</span>
+          </span>
+          <AppIcon name="lucide:chevron-down" class="size-5 transition-transform duration-200 ease-snap" :class="filtersOpen && 'rotate-180'" />
+        </button>
+
+        <div
+          :id="filterGridId"
+          class="gap-4 sm:grid-cols-2 md:grid lg:grid-cols-[1.2fr_repeat(4,minmax(0,1fr))]"
+          :class="filtersOpen ? 'grid' : 'hidden'"
+        >
+          <SegmentedControl
+            :model-value="query.state.value.sex"
+            :legend="$t('ranking.category')"
+            :options="sexOptions"
+            @update:model-value="setSex"
+          />
+          <FilterSelect
+            :model-value="query.state.value.cls"
+            :label="$t('general.weightClass')"
+            :options="weightClassOptions"
+            :grouped="!query.state.value.sex"
+            :placeholder="$t('general.all')"
+            @update:model-value="setFilter({ cls: $event })"
+          />
+          <FilterSelect
+            :model-value="query.state.value.div"
+            :label="$t('general.division')"
+            :hint="$t('filters.divisionHint')"
+            :options="divisionOptions"
+            :placeholder="$t('general.all')"
+            @update:model-value="setFilter({ div: $event })"
+          />
+          <FilterSelect
+            :model-value="query.state.value.meet"
+            :label="$t('ranking.competitionType')"
+            :options="meetOptions"
+            @update:model-value="setFilter({ meet: $event })"
+          />
+          <FilterSelect
+            :model-value="query.state.value.sort"
+            :label="$t('ranking.sortBy')"
+            :options="sortOptions"
+            @update:model-value="setFilter({ sort: $event })"
+          />
+        </div>
+      </form>
+
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-2 pb-3 text-sm">
+          <span role="status" aria-live="polite" class="mr-1 font-display text-lg font-bold tracking-[0.04em] uppercase">
+            {{ loaded ? $t("ranking.count", visible.length) : $t("tables.loading") }}
+          </span>
+          <FilterChips :chips="chips" @remove="removeChip" @reset="resetAll" />
+        </div>
+
+        <div ref="panel" tabindex="-1" class="scroll-mt-20 overflow-clip rounded-md border border-surface-200 bg-surface-0 focus:outline-none">
+          <TableSkeleton v-if="!loaded" :columns="5" />
+          <template v-else-if="visible.length">
+            <ResultsTable
+              :columns="columns"
+              :rows="pageRows"
+              :caption="$t('ranking.caption', { sort: sortLabel })"
+              :sort-key="query.state.value.sort"
+              :row-key="(row) => row.vpfId"
+              :busy="pending"
+              @sort="setFilter({ sort: $event })"
+            >
+              <template #cell-rank="{ row }">
+                <RankCell :rank="row.rank" />
+              </template>
+              <template #cell-athlete="{ row }">
+                <AthleteCell
+                  :name="row.name"
+                  :to="`/athletes/${row.slug || row.vpfId}`"
+                  :meta="meta(row)"
+                  :decorator1="decoratorMap.get(row.vpfId)?.decorator1"
+                  :decorator2="decoratorMap.get(row.vpfId)?.decorator2"
+                />
+              </template>
+              <template #cell-gl="{ row }">
+                <GlCell :value="row.gl" />
+              </template>
+              <template #cell-total="{ row }">
+                <LiftCell :value="row.total" />
+              </template>
+              <template #cell-squat="{ row }">
+                <LiftCell :value="row.bestSquat" />
+              </template>
+              <template #cell-bench="{ row }">
+                <LiftCell :value="row.bestBench" />
+              </template>
+              <template #cell-deadlift="{ row }">
+                <LiftCell :value="row.bestDeadlift" />
+              </template>
+            </ResultsTable>
+            <TablePager
+              :page="page"
+              :page-size="query.state.value.size"
+              :total="visible.length"
+              @update:page="goToPage"
+              @update:page-size="setFilter({ size: $event })"
+            />
+          </template>
+          <TableEmpty v-else :title="$t('ranking.emptyTitle')" :body="$t('ranking.emptyBody')">
+            <Button severity="secondary" @click="resetAll">{{ $t("filters.reset") }}</Button>
+          </TableEmpty>
+        </div>
+      </div>
+    </PageSection>
   </div>
 </template>
 
 <script setup lang="ts">
-import AthletesRankingFilter from "@/components/AthletesRankingFilter.vue"
-import { useRankingFilters } from "@/composables/useRankingFilters"
-import { formatWeightClass, formatSex, formatDivision, formatWeight, formatGL, nameGradientStyle } from "@/lib/domain/patch-payload"
-import type { ResultRanked } from "~/types/results"
-import type { UserPublicWithDecorators } from "~/types/users"
-import type { ApiResponse } from "~/types/api"
-import type { Sex, Division, MeetType } from "~/types/union-types"
-import type { MeetPublic } from "~/types/meets"
+import { WEIGHT_CLASS_FEMALE, WEIGHT_CLASS_MALE, RANKED_DIVISION } from "~/lib/constants/constants"
+import { DIVISION_LABEL_KEY, MEET_TYPE_LABEL_KEY, SEX_LABEL_KEY, foldForSearch, formatWeightClass } from "~/lib/domain/format"
+import type { SortKey } from "~/lib/domain/results"
+import type { TableColumn } from "~/types/tables"
+import type { RankingRow } from "~/types/results"
+import type { Division, MeetType, Sex } from "~/types/union-types"
 
-definePageMeta({
-  layout: "default",
-  pageTransition: {
-    name: "page",
-    mode: "out-in"
+definePageMeta({ layout: "default" })
+
+const { t } = useI18n()
+
+/** URL sort names are short; the API uses the result column names. */
+const SORTS = { gl: "gl", total: "total", squat: "bestSquat", bench: "bestBench", deadlift: "bestDeadlift" } as const satisfies Record<string, SortKey>
+type SortName = keyof typeof SORTS
+
+const query = useQueryState({
+  q: "",
+  sex: "",
+  /** "male-74": a weight class belongs to one category. */
+  cls: "",
+  div: "",
+  /** Rankings open on national championships, as before; "all" lifts the filter. */
+  meet: "national",
+  sort: "gl",
+  page: 1,
+  size: 25,
+})
+
+const sortName = computed<SortName>(() => (query.state.value.sort in SORTS ? query.state.value.sort as SortName : "gl"))
+const apiSort = computed(() => SORTS[sortName.value])
+
+const filters = computed(() => {
+  const s = query.state.value
+  const [clsSex, clsWeight] = s.cls.split("-")
+  return {
+    sort: apiSort.value,
+    sex: (s.sex || clsSex || undefined) as Sex | undefined,
+    division: (s.div || undefined) as Division | undefined,
+    weightClass: clsWeight ? Number(clsWeight) : undefined,
+    meetType: (s.meet === "all" ? undefined : s.meet) as MeetType | undefined,
   }
 })
+
+const { rows: ranked, loaded, pending } = useRankings(filters)
+
+// VIP name colours, fetched once in the browser and shared across pages.
+const { fetchDecorators, decoratorMap } = useNameDecorators()
+onMounted(fetchDecorators)
+
+/** Search narrows the list but keeps each athlete's rank within the filter set. */
+const visible = computed(() => {
+  const q = foldForSearch(query.state.value.q.trim())
+  if (!q) return ranked.value
+  return ranked.value.filter((row) => foldForSearch(row.name).includes(q) || row.vpfId.toLowerCase().includes(q))
+})
+
+const pageCount = computed(() => Math.max(1, Math.ceil(visible.value.length / query.state.value.size)))
+const page = computed(() => Math.min(Math.max(1, query.state.value.page), pageCount.value))
+const pageRows = computed(() => {
+  const start = (page.value - 1) * query.state.value.size
+  return visible.value.slice(start, start + query.state.value.size)
+})
+
+/** Any filter change goes back to page 1. Typing replaces the history entry instead of adding one per key. */
+function setFilter(patch: Partial<typeof query.defaults>, replace = false) {
+  return query.update({ ...patch, page: 1 }, { replace })
+}
+
+function setSex(sex: string) {
+  const cls = query.state.value.cls
+  setFilter({ sex, cls: cls && sex && !cls.startsWith(`${sex}-`) ? "" : cls })
+}
+
+const panel = ref<HTMLElement | null>(null)
+async function goToPage(next: number) {
+  await query.update({ page: next })
+  panel.value?.focus({ preventScroll: true })
+  panel.value?.scrollIntoView({ block: "start" })
+}
+
+const search = ref<{ focus: () => void } | null>(null)
+async function resetAll() {
+  await query.reset()
+  search.value?.focus()
+}
+
+function removeChip(key: string) {
+  const s = query.defaults
+  if (key === "q") setFilter({ q: s.q })
+  else if (key === "sex") setSex("")
+  else setFilter({ [key]: s[key as keyof typeof s] })
+}
+
+const filtersOpen = ref(false)
+const filterGridId = useId()
+onMounted(() => {
+  // Open the disclosure on phones when the URL already carries filters.
+  if (activeCount.value) filtersOpen.value = true
+})
+
+// --- Labels -----------------------------------------------------------------
+
+function weightClassLabel(cls: string) {
+  const [sex, weight] = cls.split("-")
+  return formatWeightClass(Number(weight), sex)
+}
+
+function meta(row: RankingRow) {
+  return [
+    t(SEX_LABEL_KEY[row.sex]),
+    formatWeightClass(row.weightClass, row.sex),
+    row.division ? t(DIVISION_LABEL_KEY[row.division]) : null,
+  ].filter(Boolean).join(" · ")
+}
+
+const sortLabels = computed<Record<SortName, string>>(() => ({
+  gl: t("ranking.glPoints"),
+  total: t("general.total"),
+  squat: t("general.squat"),
+  bench: t("general.bench"),
+  deadlift: t("general.deadlift"),
+}))
+const sortLabel = computed(() => sortLabels.value[sortName.value])
+
+const columns = computed<TableColumn[]>(() => [
+  { key: "rank", label: "#", srLabel: t("tables.rank"), pin: "rank" },
+  { key: "athlete", label: t("ranking.athlete"), pin: "name", rowHeader: true },
+  { key: "gl", label: sortLabels.value.gl, numeric: true, sortable: true },
+  ...(["total", "squat", "bench", "deadlift"] as const).map((key) => ({
+    key,
+    label: t("ranking.withUnit", { label: sortLabels.value[key] }),
+    numeric: true,
+    sortable: true,
+  })),
+])
+
+const sexOptions = computed(() => [
+  { value: "", label: t("general.all") },
+  { value: "male", label: t("general.men") },
+  { value: "female", label: t("general.women") },
+])
+
+const weightClassOptions = computed(() => {
+  const all = { value: "", label: t("general.all") }
+  const classes = (sex: Sex) => (sex === "male" ? WEIGHT_CLASS_MALE : WEIGHT_CLASS_FEMALE)
+    .map((w) => ({ value: `${sex}-${w}`, label: formatWeightClass(w, sex) }))
+  const sex = query.state.value.sex as Sex | ""
+  if (sex) return [all, ...classes(sex)]
+  return [
+    { label: t("general.all"), items: [all] },
+    { label: t("general.men"), items: classes("male") },
+    { label: t("general.women"), items: classes("female") },
+  ]
+})
+
+const divisionOptions = computed(() => [
+  { value: "", label: t("general.all") },
+  ...RANKED_DIVISION.map((d) => ({ value: d, label: t(DIVISION_LABEL_KEY[d as Division]) })),
+])
+
+const meetOptions = computed(() => [
+  { value: "all", label: t("ranking.allMeetTypes") },
+  ...(["national", "national_qualifier", "amateur"] as const).map((m) => ({ value: m, label: t(MEET_TYPE_LABEL_KEY[m]) })),
+])
+
+const sortOptions = computed(() => (Object.keys(SORTS) as SortName[]).map((value) => ({ value, label: sortLabels.value[value] })))
+
+const chips = computed(() => {
+  const s = query.state.value
+  const out: { key: string; label: string }[] = []
+  if (s.q) out.push({ key: "q", label: t("ranking.searchChip", { q: s.q }) })
+  if (s.sex) out.push({ key: "sex", label: t(SEX_LABEL_KEY[s.sex as Sex]) })
+  if (s.cls) out.push({ key: "cls", label: weightClassLabel(s.cls) })
+  if (s.div) out.push({ key: "div", label: t(DIVISION_LABEL_KEY[s.div as Division]) })
+  if (s.meet !== query.defaults.meet) out.push({ key: "meet", label: meetOptions.value.find((o) => o.value === s.meet)?.label ?? s.meet })
+  return out
+})
+
+/** Filters hidden behind the phone disclosure that differ from the default, plus a non-default sort. */
+const activeCount = computed(() => query.countActive(["q", "page", "size"]))
 
 useSeoMeta({
-  title: "VPF Athlete Rankings",
+  title: () => t("ranking.title"),
+  description: () => t("ranking.lede"),
+  ogTitle: () => t("ranking.title"),
+  ogDescription: () => t("ranking.lede"),
   ogType: "website",
-  ogTitle: "VPF Athlete Rankings",
-  ogDescription: "Powerlifting athlete rankings for VPF (Vietnamese Powerlifting Federation)."
-})
-
-const filters = useRankingFilters()
-const loading = ref(true)
-const { fetchDecorators, applyDecorators } = useNameDecorators()
-onMounted(fetchDecorators)
-// Computed properties for v-model bindings
-const searchValue = computed({
-  get: () => filters.search.value,
-  set: (val: string) => { filters.search.value = val }
-})
-
-const sortValue = computed({
-  get: () => filters.sort.value,
-  set: (val: string) => { filters.sort.value = val }
-})
-
-const sexValue = computed({
-  get: () => filters.sex.value,
-  set: (val: Sex | null) => { filters.sex.value = val }
-})
-
-const divisionValue = computed({
-  get: () => filters.division.value,
-  set: (val: Division | null) => { filters.division.value = val }
-})
-
-const weightClassValue = computed({
-  get: () => filters.weightClass.value,
-  set: (val: { weight: number | null; sex: Sex | null } | null) => { filters.weightClass.value = val || { weight: null, sex: null } }
-})
-
-const meetTypeValue = computed({
-  get: () => filters.meetType.value,
-  set: (val: MeetType | null) => { filters.meetType.value = val }
-})
-
-// Reactive query parameters for useFetch
-const queryParams = computed(() => {
-  const params: Record<string, string> = {
-    distinct: "true"
-  }
-  
-  if (filters.sort.value) {
-    params.sort = filters.sort.value
-  }
-  
-  if (filters.sex.value) {
-    params.sex = filters.sex.value
-  }
-  
-  if (filters.division.value) {
-    params.division = filters.division.value
-  }
-  
-  if (filters.weightClass.value?.weight != null) {
-    params.weightClass = String(filters.weightClass.value.weight)
-  }
-  
-  if (filters.meetType.value) {
-    params.meetType = filters.meetType.value
-  }
-  
-  return params
-})
-
-// Fetch results using useFetch with reactive query parameters
-const { data: response, pending } = useFetch<ApiResponse<{
-  results: ResultRanked[]
-  meets: MeetPublic[]
-  athletes: UserPublicWithDecorators[]
-}>>("/api/results", {
-  query: queryParams
-})
-
-// Update loading state
-watch(pending, (isPending) => {
-  loading.value = isPending
-}, { immediate: true })
-
-// Process response data
-const results = computed(() => {
-  if (response.value?.success && response.value.data) {
-    return response.value.data.results
-  }
-  return []
-})
-
-const athletes = computed(() => {
-  const raw = response.value?.success ? (response.value.data?.athletes ?? []) : []
-  return applyDecorators(raw)
-})
-
-// Results with athlete data
-const resultsWithAthletes = computed(() => {
-  return results.value.map(result => ({
-    ...result,
-    athlete: athletes.value.find(athlete => athlete.vpfId === result.vpfId)
-  }))
-})
-
-// Final ranked results with search filtering
-const finalRankedResults = computed(() => {
-  let filtered = resultsWithAthletes.value
-  
-  if (filters.search.value) {
-    const searchLower = filters.search.value.toLowerCase()
-    filtered = filtered.filter(result => {
-      const athlete = result.athlete
-      if (!athlete) return false
-      return athlete.fullName?.toLowerCase().includes(searchLower) ||
-             athlete.vpfId?.toLowerCase().includes(searchLower)
-    })
-  }
-  
-  return filtered.sort((a, b) => a.rank - b.rank)
 })
 </script>

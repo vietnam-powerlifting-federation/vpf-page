@@ -22,11 +22,11 @@
       </template>
       <template #item="{ item, props }">
         <NuxtLinkLocale v-if="item.to" :to="item.to" v-bind="props.action" class="flex min-h-11 items-center gap-2.5 px-3 no-underline">
-          <AppIcon :name="item.icon" class="size-4 text-muted-color" />
+          <AppIcon :name="String(item.icon)" class="size-4 text-muted-color" />
           <span>{{ item.label }}</span>
         </NuxtLinkLocale>
         <a v-else v-bind="props.action" class="flex min-h-11 cursor-pointer items-center gap-2.5 px-3">
-          <AppIcon :name="item.icon" class="size-4 text-muted-color" />
+          <AppIcon :name="String(item.icon)" class="size-4 text-muted-color" />
           <span>{{ item.label }}</span>
         </a>
       </template>

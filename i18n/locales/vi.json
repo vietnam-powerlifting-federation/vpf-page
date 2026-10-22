@@ -42,7 +42,7 @@
     "weightClass": "Hạng cân",
     "bodyWeight": "Cân nặng",
     "attempt": "Lần thử",
-    "division": "Hạng",
+    "division": "Hạng tuổi",
     "sportGender": "Giới tính",
     "name": "Tên",
     "date": "Ngày",
@@ -64,20 +64,42 @@
     "divisionMaster2": "Master II",
     "divisionMaster3": "Master III",
     "divisionMaster4": "Master IV",
-    "divisionGuest": "Guest"
+    "divisionGuest": "Guest",
+    "men": "Nam",
+    "women": "Nữ",
+    "all": "Tất cả",
+    "kg": "kg"
   },
   "ranking": {
     "title": "Bảng xếp hạng vận động viên",
     "loading": "Đang tải bảng xếp hạng...",
     "pleaseWait": "Vui lòng đợi trong khi chúng tôi tải dữ liệu",
     "searchAthlete": "Tìm vận động viên",
-    "searchPlaceholder": "Tìm theo tên hoặc VPF ID...",
-    "sortBy": "Sắp xếp theo",
+    "searchPlaceholder": "Tên hoặc VPF ID",
+    "sortBy": "Xếp hạng theo",
     "sortPlaceholder": "Sắp xếp theo...",
     "competitionType": "Loại giải đấu",
     "filterAll": "Tất cả",
     "sortGlPoint": "Điểm GL",
-    "weightClassAll": "Tất cả"
+    "weightClassAll": "Tất cả",
+    "kicker": "Bảng xếp hạng chính thức",
+    "lede": "Thành tích tốt nhất của mỗi vận động viên VPF, xếp từ mạnh nhất đến yếu nhất.",
+    "glQuestion": "Điểm GL là gì?",
+    "glAnswer1": "Điểm GL (IPF GL) giúp so sánh công bằng giữa các vận động viên có cân nặng khác nhau. Hai người có cùng điểm GL thì mạnh như nhau so với cân nặng của mình.",
+    "glAnswer2": "Tổng là tổng của mức squat, bench press và deadlift tốt nhất. Tất cả khối lượng tính bằng kilôgam.",
+    "leaders": "Dẫn đầu bảng xếp hạng",
+    "filterLabel": "Lọc bảng xếp hạng",
+    "searchHint": "Không cần gõ dấu: “nguyen van an” sẽ tìm thấy “Nguyễn Văn An”.",
+    "category": "Nội dung",
+    "allMeetTypes": "Tất cả giải đấu",
+    "athlete": "Vận động viên",
+    "glPoints": "Điểm GL",
+    "withUnit": "{label} (kg)",
+    "count": "Không có vận động viên | 1 vận động viên | {n} vận động viên",
+    "caption": "Bảng xếp hạng vận động viên, sắp xếp theo {sort}",
+    "emptyTitle": "Không có vận động viên phù hợp",
+    "emptyBody": "Hãy thử tên khác, hoặc bỏ bớt bộ lọc để xem thêm vận động viên.",
+    "searchChip": "“{q}”"
   },
   "meets": {
     "register": "Đăng ký",
@@ -941,5 +963,25 @@
     "genericTitle": "Đã có lỗi xảy ra",
     "genericBody": "Vui lòng thử lại sau ít phút.",
     "home": "Về bảng xếp hạng"
+  },
+  "tables": {
+    "scrollHint": "Vuốt ngang bảng để xem tất cả các mức tạ.",
+    "rank": "Hạng",
+    "pages": "Trang",
+    "perPage": "Số dòng mỗi trang",
+    "prev": "Trang trước",
+    "next": "Trang sau",
+    "status": "{from}–{to} trên {total}",
+    "noLift": "không hợp lệ",
+    "goodLift": "hợp lệ",
+    "notAttempted": "không thực hiện",
+    "loading": "Đang tải kết quả…"
+  },
+  "filters": {
+    "remove": "Bỏ bộ lọc",
+    "reset": "Xoá bộ lọc",
+    "toggle": "Bộ lọc",
+    "clearSearch": "Xoá tìm kiếm",
+    "divisionHint": "Hạng tuổi = nhóm tuổi thi đấu"
   }
 }
