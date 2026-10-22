@@ -6,13 +6,13 @@
     <!-- Not wired to the API yet, so every control stays disabled. -->
     <form class="grid max-w-md gap-5" @submit.prevent>
       <AppField v-slot="f" :label="$t('profile.changePassword.currentPassword')">
-        <Password v-model="currentPassword" :input-id="f.id" autocomplete="current-password" :feedback="false" toggle-mask disabled class="w-full" input-class="w-full" />
+        <Password :input-props="{ 'aria-expanded': undefined }" v-model="currentPassword" :input-id="f.id" autocomplete="current-password" :feedback="false" toggle-mask disabled class="w-full" input-class="w-full" />
       </AppField>
       <AppField v-slot="f" :label="$t('profile.changePassword.newPassword')">
-        <Password v-model="newPassword" :input-id="f.id" autocomplete="new-password" :feedback="false" toggle-mask disabled class="w-full" input-class="w-full" />
+        <Password :input-props="{ 'aria-expanded': undefined }" v-model="newPassword" :input-id="f.id" autocomplete="new-password" :feedback="false" toggle-mask disabled class="w-full" input-class="w-full" />
       </AppField>
       <AppField v-slot="f" :label="$t('profile.changePassword.confirmPassword')">
-        <Password v-model="confirmPassword" :input-id="f.id" autocomplete="new-password" :feedback="false" toggle-mask disabled class="w-full" input-class="w-full" />
+        <Password :input-props="{ 'aria-expanded': undefined }" v-model="confirmPassword" :input-id="f.id" autocomplete="new-password" :feedback="false" toggle-mask disabled class="w-full" input-class="w-full" />
       </AppField>
       <Button type="submit" :label="$t('profile.changePassword.submit')" disabled class="justify-self-start" />
     </form>

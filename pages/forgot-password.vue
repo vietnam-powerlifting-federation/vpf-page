@@ -25,10 +25,10 @@
         />
       </AppField>
       <AppField v-slot="f" :label="$t('forgotPassword.newPassword')" :hint="$t('register.passwordHint')" :error="errors.newPassword">
-        <Password v-model="newPassword" :input-id="f.id" :invalid="f.invalid" :aria-describedby="f.describedBy" :feedback="false" toggle-mask autocomplete="new-password" class="w-full" input-class="w-full" />
+        <Password :input-props="{ 'aria-expanded': undefined }" v-model="newPassword" :input-id="f.id" :invalid="f.invalid" :aria-describedby="f.describedBy" :feedback="false" toggle-mask autocomplete="new-password" class="w-full" input-class="w-full" />
       </AppField>
       <AppField v-slot="f" :label="$t('forgotPassword.confirmPassword')" :error="errors.confirmPassword">
-        <Password v-model="confirmPassword" :input-id="f.id" :invalid="f.invalid" :aria-describedby="f.describedBy" :feedback="false" toggle-mask autocomplete="new-password" class="w-full" input-class="w-full" />
+        <Password :input-props="{ 'aria-expanded': undefined }" v-model="confirmPassword" :input-id="f.id" :invalid="f.invalid" :aria-describedby="f.describedBy" :feedback="false" toggle-mask autocomplete="new-password" class="w-full" input-class="w-full" />
       </AppField>
       <Button type="submit" :label="$t('forgotPassword.resetButton')" class="w-full" :loading="isLoading" />
       <p class="text-center text-sm text-muted-color">

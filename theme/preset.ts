@@ -1,4 +1,29 @@
-import Aura from "@primeuix/themes/aura"
+import AuraBase from "@primeuix/themes/aura/base"
+import Button from "@primeuix/themes/aura/button"
+import Checkbox from "@primeuix/themes/aura/checkbox"
+import Colorpicker from "@primeuix/themes/aura/colorpicker"
+import Datatable from "@primeuix/themes/aura/datatable"
+import Datepicker from "@primeuix/themes/aura/datepicker"
+import Dialog from "@primeuix/themes/aura/dialog"
+import Drawer from "@primeuix/themes/aura/drawer"
+import Iconfield from "@primeuix/themes/aura/iconfield"
+import Inputnumber from "@primeuix/themes/aura/inputnumber"
+import Inputtext from "@primeuix/themes/aura/inputtext"
+import Menu from "@primeuix/themes/aura/menu"
+import Message from "@primeuix/themes/aura/message"
+import Multiselect from "@primeuix/themes/aura/multiselect"
+import Paginator from "@primeuix/themes/aura/paginator"
+import Password from "@primeuix/themes/aura/password"
+import Progressspinner from "@primeuix/themes/aura/progressspinner"
+import Radiobutton from "@primeuix/themes/aura/radiobutton"
+import Select from "@primeuix/themes/aura/select"
+import Selectbutton from "@primeuix/themes/aura/selectbutton"
+import Tabs from "@primeuix/themes/aura/tabs"
+import Tag from "@primeuix/themes/aura/tag"
+import Textarea from "@primeuix/themes/aura/textarea"
+import Toast from "@primeuix/themes/aura/toast"
+import Togglebutton from "@primeuix/themes/aura/togglebutton"
+import Toggleswitch from "@primeuix/themes/aura/toggleswitch"
 import { definePreset } from "@primeuix/themes"
 
 /**
@@ -10,7 +35,42 @@ import { definePreset } from "@primeuix/themes"
  * colour, surface.50 the page). Because of that, PrimeVue's own dark scheme is
  * switched off (`darkModeSelector: "none"` in nuxt.config.ts) and the light
  * scheme below is the only one.
+ *
+ * Built from Aura's base and only the components the app uses, instead of the
+ * whole Aura preset, which carries tokens for ~90 components into every page's
+ * entry bundle. A newly used PrimeVue component needs its import added here.
  */
+
+const Aura = {
+  ...AuraBase,
+  components: {
+    button: Button,
+    checkbox: Checkbox,
+    colorpicker: Colorpicker,
+    datatable: Datatable,
+    datepicker: Datepicker,
+    dialog: Dialog,
+    drawer: Drawer,
+    iconfield: Iconfield,
+    inputnumber: Inputnumber,
+    inputtext: Inputtext,
+    menu: Menu,
+    message: Message,
+    multiselect: Multiselect,
+    paginator: Paginator,
+    password: Password,
+    progressspinner: Progressspinner,
+    radiobutton: Radiobutton,
+    select: Select,
+    selectbutton: Selectbutton,
+    tabs: Tabs,
+    tag: Tag,
+    textarea: Textarea,
+    toast: Toast,
+    togglebutton: Togglebutton,
+    toggleswitch: Toggleswitch,
+  },
+}
 
 const surface = {
   0: "var(--vpf-surface)",

@@ -1,5 +1,5 @@
 <template>
-  <AuthCard :title="$t('login.title')" :subtitle="$t('login.subtitle')">
+  <AuthCard :title="$t('login.title')" :subtitle="$t('login.subtitle')" :image="loginBg">
     <form ref="formEl" class="grid gap-5" novalidate @submit.prevent="handleLogin">
       <AppField v-slot="f" :label="$t('login.emailLabel')" :error="errors.vpfIdOrEmail">
         <InputText
@@ -17,7 +17,8 @@
 
       <AppField v-slot="f" :label="$t('login.password')" :error="errors.password">
         <Password
-          v-model="password"
+v-model="password"
+          :input-props="{ 'aria-expanded': undefined }"
           :input-id="f.id"
           :invalid="f.invalid"
           :aria-describedby="f.describedBy"
@@ -56,6 +57,7 @@
 
 <script setup lang="ts">
 import type { ApiResponse, LoginResponse } from "~/types/api"
+import loginBg from "~/assets/img/login-bg.png"
 
 const { t } = useI18n()
 const apiMessage = useApiMessage()
@@ -158,5 +160,5 @@ useHead({
   title: t("login.title"),
 })
 
-definePageMeta({ layout: "auth" })
+definePageMeta({ layout: "auth", wide: "split" })
 </script>

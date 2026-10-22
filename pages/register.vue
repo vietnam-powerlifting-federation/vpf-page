@@ -15,7 +15,7 @@
       </AppField>
 
       <AppField v-slot="f" :label="$t('register.password')" :hint="$t('register.passwordHint')" :error="errors.password">
-        <Password
+        <Password :input-props="{ 'aria-expanded': undefined }"
           v-model="password"
           :input-id="f.id"
           :invalid="f.invalid"
@@ -29,7 +29,7 @@
       </AppField>
 
       <AppField v-slot="f" :label="$t('register.confirmPassword')" :error="errors.confirmPassword">
-        <Password
+        <Password :input-props="{ 'aria-expanded': undefined }"
           v-model="confirmPassword"
           :input-id="f.id"
           :invalid="f.invalid"

@@ -54,12 +54,14 @@
             <ColorPicker
               :model-value="stripHash(decorator1)"
               format="hex"
+              :pt="{ preview: { 'aria-label': mode === 'solid' ? $t('profile.vipBenefits.colorSolid') : $t('profile.vipBenefits.colorStart') } }"
               :disabled="disabled"
               @update:model-value="(v: string) => onPick(0, v)"
             />
             <InputText
               v-model="text1"
               class="w-28"
+              :aria-label="`${mode === 'solid' ? $t('profile.vipBenefits.colorSolid') : $t('profile.vipBenefits.colorStart')} (hex)`"
               :disabled="disabled"
               placeholder="#FFCC00"
               @update:model-value="onType(0)"
@@ -73,12 +75,14 @@
             <ColorPicker
               :model-value="stripHash(decorator2)"
               format="hex"
+              :pt="{ preview: { 'aria-label': $t('profile.vipBenefits.colorEnd') } }"
               :disabled="disabled"
               @update:model-value="(v: string) => onPick(1, v)"
             />
             <InputText
               v-model="text2"
               class="w-28"
+              :aria-label="`${$t('profile.vipBenefits.colorEnd')} (hex)`"
               :disabled="disabled"
               placeholder="#FF5E62"
               @update:model-value="onType(1)"
