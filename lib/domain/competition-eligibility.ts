@@ -34,3 +34,23 @@ export function getEligibleDivisions(age: number): RankedDivision[] {
 export function getEligibleWeightClasses(sex: Sex): number[] {
   return sex === "male" ? [...WEIGHT_CLASS_MALE] : [...WEIGHT_CLASS_FEMALE]
 }
+
+export type RegistrationState = "open" | "upcoming" | "closed"
+
+/**
+ * Where a meet's registration window stands today, for the public pages.
+ *
+ * Stricter than the server's `isRegistrationOpen`, which reads a missing bound
+ * as open: a meet is only advertised as open when both dates are set, so old
+ * meets created without a window are not offered for registration.
+ */
+export function getRegistrationState(
+  meet: { startRegistration: string | null; closeRegistration: string | null },
+  today = new Date(),
+): RegistrationState {
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+  if (!meet.startRegistration || !meet.closeRegistration) return "closed"
+  if (todayStr < meet.startRegistration) return "upcoming"
+  if (todayStr > meet.closeRegistration) return "closed"
+  return "open"
+}

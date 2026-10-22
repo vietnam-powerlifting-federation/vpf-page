@@ -9,8 +9,11 @@ export type TableColumn = {
   numeric?: boolean
   /** Header becomes a sort button; the table emits `sort` with this key. */
   sortable?: boolean
-  /** Stays on screen while the rest scrolls sideways: the rank column, then the athlete column. */
-  pin?: "rank" | "name"
+  /**
+   * Stays on screen while the rest scrolls sideways: the rank column, then the
+   * athlete column. "lead" pins a single first column (a records matrix's weight class).
+   */
+  pin?: "rank" | "name" | "lead"
   /** Cells are row headers (`<th scope="row">`), normally the athlete column. */
   rowHeader?: boolean
 }

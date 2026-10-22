@@ -114,7 +114,7 @@ export function nameDecoratorStyle(
   const [from, to = from] = colors.map(readable)
   return {
     backgroundImage: `linear-gradient(to right, ${from}, ${to})`,
-    WebkitBackgroundClip: "text",
+    "-webkit-background-clip": "text",
     backgroundClip: "text",
     color: "transparent",
   }

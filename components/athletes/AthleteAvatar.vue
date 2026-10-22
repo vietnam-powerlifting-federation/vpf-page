@@ -1,26 +1,25 @@
 <template>
-  <div
-    class="rounded-full p-1 flex-shrink-0"
-    :style="borderStyle"
-  >
-    <div class="rounded-full overflow-hidden bg-surface-900 w-full h-full">
-      <img :src="src" class="w-full h-full object-cover" alt="Avatar" />
-    </div>
+  <!-- The ring takes the athlete's VIP colours; amber when they chose none. -->
+  <div class="shrink-0 rounded-full p-1" :class="!hasColours && 'bg-accent-fill'" :style="ringStyle">
+    <img :src="src" :alt="alt" :width="size" :height="size" class="aspect-square size-full rounded-full bg-board-2 object-cover">
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue"
-
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   src: string
+  alt?: string
   decorator1?: string | null
   decorator2?: string | null
-}>()
+  /** Intrinsic size for the img element, so the layout is reserved before it loads. */
+  size?: number
+}>(), { alt: "", decorator1: null, decorator2: null, size: 160 })
 
-const borderStyle = computed(() => {
-  const c1 = props.decorator1 || "var(--p-primary-color)"
-  const c2 = props.decorator2 || "var(--p-primary-color)"
-  return { background: `linear-gradient(to bottom right, ${c1}, ${c2})` }
+const hasColours = computed(() => !!(props.decorator1 || props.decorator2))
+const ringStyle = computed(() => {
+  if (!hasColours.value) return {}
+  const from = props.decorator1 || props.decorator2
+  const to = props.decorator2 || props.decorator1
+  return { backgroundImage: `linear-gradient(to bottom right, ${from}, ${to})` }
 })
 </script>

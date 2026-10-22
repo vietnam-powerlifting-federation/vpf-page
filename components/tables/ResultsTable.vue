@@ -48,8 +48,17 @@
             </th>
           </tr>
         </thead>
-        <tbody>
-          <tr v-for="(row, index) in rows" :key="rowKey(row, index)" class="group">
+        <tbody v-for="section in sections" :key="section.key">
+          <tr v-if="section.label">
+            <th
+              :colspan="columns.length"
+              scope="rowgroup"
+              class="border-b border-surface-200 bg-surface-100 px-3 py-2 text-left font-display text-base font-bold tracking-[0.06em] uppercase"
+            >
+              <span class="sticky left-3">{{ section.label }}</span>
+            </th>
+          </tr>
+          <tr v-for="(row, index) in section.rows" :key="rowKey(row, index)" class="group">
             <component
               :is="col.rowHeader ? 'th' : 'td'"
               v-for="col in columns"
@@ -85,7 +94,9 @@ import type { TableColumn } from "~/types/tables"
  */
 const props = defineProps<{
   columns: TableColumn[]
-  rows: T[]
+  rows?: T[]
+  /** Rows split into labelled row groups (one <tbody> each), e.g. by weight class. Used instead of `rows`. */
+  groups?: { key: string; label: string; rows: T[] }[]
   /** Describes the content and current sort for screen readers. */
   caption: string
   sortKey?: string
@@ -96,6 +107,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{ sort: [key: string] }>()
 
+const sections = computed(() => props.groups ?? [{ key: "all", label: "", rows: props.rows ?? [] }])
+
 const captionId = useId()
 const scroller = ref<HTMLElement | null>(null)
 const overflows = ref(false)
@@ -103,6 +116,7 @@ const scrolled = ref(false)
 
 function pinClass(col: TableColumn) {
   if (col.pin === "rank") return "sticky left-0 z-[1] w-[var(--col-rank)] min-w-[var(--col-rank)] !px-2 !text-center"
+  if (col.pin === "lead") return "sticky left-0 z-[1] min-w-[6rem] in-data-scrolled:shadow-pin"
   if (col.pin === "name") return "sticky left-[var(--col-rank)] z-[1] min-w-[10.5rem] !whitespace-normal in-data-scrolled:shadow-pin"
   return ""
 }
@@ -129,5 +143,5 @@ onMounted(() => {
   }
 })
 onBeforeUnmount(() => observer?.disconnect())
-watch(() => [props.rows, props.columns], () => nextTick(measure))
+watch(() => [props.rows, props.groups, props.columns], () => nextTick(measure))
 </script>

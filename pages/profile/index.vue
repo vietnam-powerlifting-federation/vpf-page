@@ -86,7 +86,8 @@
             <label for="squatRackPin" class="block mb-2 text-sm font-medium text-surface-300">
               {{ $t("profile.squatRackPin") }}
             </label>
-            <InputNumber id="squatRackPin" v-model="formData.squatRackPin"
+            <InputNumber
+id="squatRackPin" v-model="formData.squatRackPin"
               :placeholder="$t('profile.enterSquatRackPin')" class="w-full" :min="0" />
           </div>
 
@@ -94,7 +95,8 @@
             <label for="benchRackPin" class="block mb-2 text-sm font-medium text-surface-300">
               {{ $t("profile.benchRackPin") }}
             </label>
-            <InputNumber id="benchRackPin" v-model="formData.benchRackPin"
+            <InputNumber
+id="benchRackPin" v-model="formData.benchRackPin"
               :placeholder="$t('profile.enterBenchRackPin')" class="w-full" :min="0" />
           </div>
 
@@ -102,7 +104,8 @@
             <label for="benchSafetyPin" class="block mb-2 text-sm font-medium text-surface-300">
               {{ $t("profile.benchSafetyPin") }}
             </label>
-            <InputNumber id="benchSafetyPin" v-model="formData.benchSafetyPin"
+            <InputNumber
+id="benchSafetyPin" v-model="formData.benchSafetyPin"
               :placeholder="$t('profile.enterBenchSafetyPin')" class="w-full" :min="0" />
           </div>
 
@@ -110,7 +113,8 @@
             <label for="benchFootBlock" class="block mb-2 text-sm font-medium text-surface-300">
               {{ $t("profile.benchFootBlock") }}
             </label>
-            <InputNumber id="benchFootBlock" v-model="formData.benchFootBlock"
+            <InputNumber
+id="benchFootBlock" v-model="formData.benchFootBlock"
               :placeholder="$t('profile.enterBenchFootBlock')" class="w-full" :min="0" />
           </div>
         </div>

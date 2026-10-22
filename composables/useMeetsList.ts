@@ -1,60 +1,36 @@
+import { getRegistrationState } from "~/lib/domain/competition-eligibility"
 import type { ApiResponse } from "~/types/api"
 import type { MeetPublic } from "~/types/meets"
 
+const time = (date: string | null) => (date ? new Date(date).getTime() : 0)
+
 export function useMeetsList() {
-  const { data: response, pending, error } = useFetch<ApiResponse<MeetPublic[]>>("/api/meets")
+  const { data: response, pending, error } = useFetch<ApiResponse<MeetPublic[]>>("/api/meets", { key: "meets-list" })
 
-  const allMeets = computed(() => {
-    if (response.value?.success && response.value.data) {
-      return response.value.data
-    }
-    return []
-  })
+  const allMeets = computed(() => (response.value?.success && response.value.data ? response.value.data : []))
 
+  /** Open for registration now, then those whose registration opens later. */
   const newMeets = computed(() => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    return allMeets.value.filter((meet) => {
-      if (meet.startRegistration && meet.closeRegistration) {
-        const startDate = new Date(meet.startRegistration)
-        const endDate = new Date(meet.closeRegistration)
-        startDate.setHours(0, 0, 0, 0)
-        endDate.setHours(23, 59, 59, 999)
-        return today >= startDate && today <= endDate
-      }
-      return false
-    })
+    const open = allMeets.value.filter((meet) => getRegistrationState(meet) === "open")
+    const upcoming = allMeets.value.filter((meet) => getRegistrationState(meet) === "upcoming")
+    return [
+      ...open.sort((a, b) => time(a.closeRegistration) - time(b.closeRegistration)),
+      ...upcoming.sort((a, b) => time(a.startRegistration) - time(b.startRegistration)),
+    ]
   })
 
+  /** Finished meets, newest first: registration closed, or held already when there was no window. */
   const oldMeets = computed(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     return allMeets.value
       .filter((meet) => {
-        if (meet.startRegistration && meet.closeRegistration) {
-          const endDate = new Date(meet.closeRegistration)
-          endDate.setHours(23, 59, 59, 999)
-          return today > endDate
-        }
-        if (meet.hostDate) {
-          const hostDate = new Date(meet.hostDate)
-          hostDate.setHours(0, 0, 0, 0)
-          return today > hostDate
-        }
+        if (meet.startRegistration && meet.closeRegistration) return getRegistrationState(meet) === "closed"
+        if (meet.hostDate) return today.getTime() > new Date(meet.hostDate).setHours(0, 0, 0, 0)
         return true
       })
-      .sort((a, b) => {
-        const dateA = a.hostDate ? new Date(a.hostDate).getTime() : 0
-        const dateB = b.hostDate ? new Date(b.hostDate).getTime() : 0
-        return dateB - dateA
-      })
+      .sort((a, b) => time(b.hostDate) - time(a.hostDate))
   })
 
-  return {
-    allMeets,
-    newMeets,
-    oldMeets,
-    pending,
-    error,
-  }
+  return { allMeets, newMeets, oldMeets, pending, error }
 }

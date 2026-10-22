@@ -5,6 +5,7 @@
     dismissable-mask
     :show-header="false"
     class="max-w-[95vw]"
+    :pt="{ root: { 'aria-label': $t('athlete.recordCertificate') } }"
   >
     <!-- Scalable wrapper: certificate renders at a fixed size for PDF fidelity, scaled to fit on small screens -->
     <div ref="wrapperRef" class="w-full overflow-hidden bg-surface-0" :style="{ height: `${CERT_HEIGHT * scale}px` }">
@@ -91,37 +92,25 @@
 
     <!-- Footer actions -->
     <div class="flex flex-wrap justify-center gap-3 pt-4">
-      <button
-        v-if="canAttach"
-        type="button"
-        class="px-5 py-2 rounded-md font-semibold text-white bg-surface-400 hover:bg-surface-500 transition-colors"
-        @click="imageInputRef?.click()"
-      >
+      <Button v-if="canAttach" severity="secondary" variant="outlined" @click="imageInputRef?.click()">
+        <AppIcon name="lucide:image-plus" class="size-4" />
         {{ attachedImageUrl ? $t("athlete.certificate.changePhoto") : $t("athlete.certificate.addPhoto") }}
-      </button>
-      <button
-        type="button"
-        :disabled="generating"
-        class="px-5 py-2 rounded-md font-semibold text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-60 transition-colors"
-        @click="downloadPdf"
-      >
+      </Button>
+      <Button :loading="generating" @click="downloadPdf">
+        <AppIcon name="lucide:download" class="size-4" />
         {{ $t("athlete.certificate.downloadPdf") }}
-      </button>
-      <button
-        type="button"
-        class="px-5 py-2 rounded-md font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors"
-        @click="visible = false"
-      >
+      </Button>
+      <Button severity="secondary" variant="outlined" @click="visible = false">
         {{ $t("athlete.certificate.close") }}
-      </button>
+      </Button>
     </div>
   </Dialog>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
-import { useI18n } from "vue-i18n"
-import { formatDivision, formatSex, formatWeightClass } from "~/lib/domain/patch-payload"
+import { DIVISION_LABEL_KEY, SEX_LABEL_KEY, formatWeightClass } from "~/lib/domain/format"
+import type { CertificateData } from "~/types/certificate"
+import type { Division, Sex } from "~/types/union-types"
 import borderUrl from "~/assets/img/record-certificate/border.png"
 import canvaUrl from "~/assets/img/record-certificate/canva.png"
 import signatureUrl from "~/assets/img/record-certificate/signature.png"
@@ -130,17 +119,10 @@ import logo2023 from "~/assets/img/record-certificate/2023.png"
 import logo2024 from "~/assets/img/record-certificate/2024.png"
 import logo2025 from "~/assets/img/record-certificate/2025.png"
 
-export type CertificateData = {
-  fullName: string
-  liftLabel: string
-  weight: number
-  sex: string | null
-  division: string | null
-  weightClass: number | null
-  meetName: string
-  hostDate: string | null | undefined
-}
-
+/*
+ * The certificate is a printed document, so it keeps its own fixed artwork
+ * colours (RED, NAVY, white paper) in both themes instead of the site tokens.
+ */
 const props = defineProps<{
   cert: CertificateData
   canAttach?: boolean
@@ -153,7 +135,7 @@ const CERT_HEIGHT = 650
 const RED = "#C0392B"
 const NAVY = "#3B4A6B"
 
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 
 const LOGO_BY_YEAR: Record<number, string> = {
   2022: logo2022,
@@ -184,8 +166,8 @@ const formattedWeight = computed(() => {
 })
 
 const categoryLabel = computed(() => {
-  const sex = formatSex(props.cert.sex)
-  const division = formatDivision(props.cert.division)
+  const sex = props.cert.sex ? t(SEX_LABEL_KEY[props.cert.sex as Sex]) : ""
+  const division = props.cert.division ? t(DIVISION_LABEL_KEY[props.cert.division as Division]) : ""
   const weightClass = formatWeightClass(props.cert.weightClass, props.cert.sex)
   return `Classic ${sex} ${division} ${weightClass}`
 })

@@ -1,56 +1,42 @@
 <template>
-  <div>
-    <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("athlete.pbs") }}</h2>
-    <DataTable :value="pbRow" class="w-full border border-surface-200 dark:border-surface-700">
-      <Column :header="$t('athlete.squatPb')">
-        <template #body="{ data }">
-          <span class="text-primary font-medium">{{ data.squat !== null ? formatWeight(data.squat) : "-" }}</span>
-        </template>
-      </Column>
-      <Column :header="$t('athlete.benchPb')">
-        <template #body="{ data }">
-          <span class="text-primary font-medium">{{ data.bench !== null ? formatWeight(data.bench) : "-" }}</span>
-        </template>
-      </Column>
-      <Column :header="$t('athlete.deadliftPb')">
-        <template #body="{ data }">
-          <span class="text-primary font-medium">{{ data.deadlift !== null ? formatWeight(data.deadlift) : "-" }}</span>
-        </template>
-      </Column>
-      <Column :header="$t('athlete.totalPb')">
-        <template #body="{ data }">
-          {{ data.total !== null ? formatWeight(data.total) : "-" }}
-        </template>
-      </Column>
-      <Column :header="$t('athlete.glPb')">
-        <template #body="{ data }">
-          {{ data.gl !== null ? formatGL(data.gl) : "-" }}
-        </template>
-      </Column>
-    </DataTable>
-  </div>
+  <section :aria-labelledby="titleId" class="grid gap-3">
+    <h2 :id="titleId" class="font-display text-2xl font-bold uppercase">{{ $t("athlete.pbsTitle") }}</h2>
+    <dl class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div
+        v-for="item in items"
+        :key="item.key"
+        class="rounded-md border border-surface-200 bg-surface-0 p-4"
+        :class="item.key === 'gl' && 'border-t-[3px] border-t-accent-fill'"
+      >
+        <dt class="font-display text-[0.8125rem] font-bold tracking-[0.08em] text-muted-color uppercase">{{ item.label }}</dt>
+        <dd class="mt-1 font-display text-3xl font-bold tabular-nums">
+          {{ item.value }}<small v-if="item.value !== '–'" class="ml-1 font-sans text-sm font-semibold text-accent">{{ item.unit }}</small>
+        </dd>
+      </div>
+    </dl>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue"
-import { formatWeight, formatGL } from "~/lib/domain/patch-payload"
+import { formatGl, formatKg } from "~/lib/domain/format"
 import type { PersonalBestSummary, Result } from "~/types/results"
 
-const props = defineProps<{
-  personalBest: PersonalBestSummary
-  compHistory: Result[]
-}>()
+/** Best squat, bench, deadlift, total and GL across every result. */
+const props = defineProps<{ personalBest: PersonalBestSummary; compHistory: Result[] }>()
+
+const { t, locale } = useI18n()
+const titleId = useId()
 
 const glPb = computed(() => {
   const values = props.compHistory.map((r) => r.gl).filter((v): v is number => v !== null && v !== undefined)
-  return values.length > 0 ? Math.max(...values) : null
+  return values.length ? Math.max(...values) : null
 })
 
-const pbRow = computed(() => [{
-  squat: props.personalBest.squat,
-  bench: props.personalBest.bench,
-  deadlift: props.personalBest.deadlift,
-  total: props.personalBest.total,
-  gl: glPb.value,
-}])
+const items = computed(() => [
+  { key: "squat", label: t("general.squat"), value: formatKg(props.personalBest.squat, locale.value), unit: "kg" },
+  { key: "bench", label: t("general.bench"), value: formatKg(props.personalBest.bench, locale.value), unit: "kg" },
+  { key: "deadlift", label: t("general.deadlift"), value: formatKg(props.personalBest.deadlift, locale.value), unit: "kg" },
+  { key: "total", label: t("general.total"), value: formatKg(props.personalBest.total, locale.value), unit: "kg" },
+  { key: "gl", label: t("ranking.glPoints"), value: formatGl(glPb.value, locale.value), unit: "GL" },
+])
 </script>

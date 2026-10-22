@@ -36,7 +36,7 @@
     <Dialog
       v-model:visible="qrDialogVisible"
       modal
-      dismissableMask
+      dismissable-mask
       :header="$t('profile.paymentHistory.qrDialogTitle')"
       :closable="true"
     >

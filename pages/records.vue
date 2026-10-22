@@ -1,431 +1,206 @@
 <template>
-  <div class="min-h-screen">
-    <section class="py-12 md:py-16">
-      <div class="container mx-auto px-4">
-        <h1 class="text-3xl md:text-4xl font-bold mb-8 text-center text-primary">{{ $t("records.title") }}</h1>
+  <div>
+    <PageHeader
+      :kicker="$t('records.kicker')"
+      :title="$t('records.title')"
+      :lede="$t('records.lede')"
+      :help-label="$t('records.helpLabel')"
+    >
+      <template #help>
+        <p>{{ $t("records.help1") }}</p>
+        <p>{{ $t("records.help2") }}</p>
+      </template>
+    </PageHeader>
 
-        <!-- View Mode Toggle -->
-        <div class="max-w-5xl mx-auto mb-6">
-          <div class="flex gap-4 justify-center">
-            <Button
-              :severity="viewMode === 'current' ? undefined : 'secondary'"
-              @click="viewMode = 'current'"
-            >
-              {{ $t("records.currentRecords") }}
-            </Button>
-            <Button
-              :severity="viewMode === 'history' ? undefined : 'secondary'"
-              @click="viewMode = 'history'"
-            >
-              {{ $t("records.recordHistory") }}
-            </Button>
-          </div>
-          <p v-if="viewMode === 'history'" class="text-sm text-surface-600 dark:text-surface-400 text-center mt-2">
-            {{ $t("records.historyDescription") }}
+    <PageSection class="grid gap-6">
+      <form
+        :aria-label="$t('records.filterLabel')"
+        class="grid min-w-0 gap-4 rounded-md border border-t-[3px] border-surface-200 border-t-ink bg-surface-0 p-4 sm:grid-cols-2 md:p-6 lg:grid-cols-[1fr_1fr_1fr_1.3fr]"
+        @submit.prevent
+      >
+        <SegmentedControl
+          :model-value="sex"
+          :legend="$t('ranking.category')"
+          :options="sexOptions"
+          @update:model-value="query.update({ sex: $event })"
+        />
+        <FilterSelect
+          :model-value="division"
+          :label="$t('general.division')"
+          :hint="$t('filters.divisionHint')"
+          :options="divisionOptions"
+          @update:model-value="query.update({ division: $event })"
+        />
+        <FilterSelect
+          :model-value="query.state.value.year"
+          :label="$t('general.season')"
+          :options="yearOptions"
+          :placeholder="$t('general.latest')"
+          @update:model-value="query.update({ year: $event })"
+        />
+        <SegmentedControl
+          :model-value="mode"
+          :legend="$t('records.view')"
+          :options="modeOptions"
+          @update:model-value="query.update({ mode: $event })"
+        />
+      </form>
+
+      <!-- Current records: weight class × lift. -->
+      <template v-if="mode === 'current'">
+        <div class="overflow-clip rounded-md border border-surface-200 bg-surface-0" :aria-busy="board.pending.value || undefined">
+          <TableSkeleton v-if="!board.loaded.value" :columns="4" :rows="9" />
+          <TableEmpty
+            v-else-if="boardRows.length === 0"
+            :title="$t('records.matrixEmptyTitle')"
+            :body="$t('records.matrixEmptyBody', { category: categoryLabel, division: divisionLabel })"
+          />
+          <RecordsMatrix
+            v-else
+            :rows="boardRows"
+            :sex="sex"
+            :weight-classes="weightClasses"
+            :caption="$t('records.matrixCaption', { category: categoryLabel, division: divisionLabel })"
+            :decorators="decoratorMap"
+            @open="openRecord"
+          />
+        </div>
+      </template>
+
+      <!-- Records broken at one championship, lift by lift. -->
+      <template v-else>
+        <TableSkeleton v-if="!history.loaded.value" :columns="4" />
+        <div v-else-if="!history.meet.value" class="rounded-md border border-surface-200 bg-surface-0">
+          <TableEmpty :title="$t('records.historyEmptyTitle')" :body="$t('records.noMeet')" />
+        </div>
+        <template v-else>
+          <p class="text-lg">
+            <i18n-t keypath="records.brokenAt" tag="span">
+              <template #meet>
+                <NuxtLinkLocale :to="`/competitions/${history.meet.value.meetSlug}`" class="font-semibold decoration-accent decoration-2 underline-offset-3 hover:underline">
+                  {{ history.meet.value.meetName }}
+                </NuxtLinkLocale>
+              </template>
+            </i18n-t>
+            <span class="text-muted-color"> · {{ formatDate(history.meet.value.hostDate, locale, "long") }}</span>
           </p>
-        </div>
-
-        <!-- Filters -->
-        <div class="max-w-5xl mx-auto mb-8">
-          <div class="flex flex-wrap gap-4 items-end">
-            <div class="flex-1 min-w-[200px]">
-              <label class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
-                {{ $t("general.sportGender") }}
-              </label>
-              <Select
-                v-model="selectedSex"
-                :options="sexOptions"
-                option-label="label"
-                option-value="value"
-                :placeholder="$t('records.selectGender')"
-                class="w-full"
-                @update:model-value="handleFilterChange"
+          <div v-if="historyByLift.length === 0" class="rounded-md border border-surface-200 bg-surface-0">
+            <TableEmpty
+              :title="$t('records.historyEmptyTitle')"
+              :body="$t('records.historyEmptyBody', { category: categoryLabel, division: divisionLabel })"
+            />
+          </div>
+          <section v-for="group in historyByLift" :key="group.lift" class="grid gap-3" :aria-labelledby="`lift-${group.lift}`">
+            <h2 :id="`lift-${group.lift}`" class="font-display text-2xl font-bold uppercase">{{ group.label }}</h2>
+            <div class="overflow-clip rounded-md border border-surface-200 bg-surface-0">
+              <RecordHistoryTable
+                :rows="group.rows"
+                :caption="$t('records.historyCaption', { lift: group.label, meet: history.meet.value.meetName })"
+                :decorators="decoratorMap"
               />
             </div>
-            <div class="flex-1 min-w-[200px]">
-              <label class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
-                {{ $t("general.division") }}
-              </label>
-              <Select
-                v-model="selectedDivision"
-                :options="divisionOptions"
-                option-label="label"
-                option-value="value"
-                :placeholder="$t('records.selectDivision')"
-                class="w-full"
-                @update:model-value="handleFilterChange"
-              />
-            </div>
-            <div class="flex-1 min-w-[200px]">
-              <label class="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
-                {{ $t("general.year") }}
-              </label>
-              <Select
-                v-model="selectedYear"
-                :options="yearOptions"
-                option-label="label"
-                option-value="value"
-                :placeholder="$t('records.selectYear')"
-                class="w-full"
-                @update:model-value="handleFilterChange"
-              />
-            </div>
-          </div>
-        </div>
+          </section>
+        </template>
+      </template>
+    </PageSection>
 
-        <!-- Loading State -->
-        <div v-if="displayPending" class="max-w-5xl mx-auto text-center py-12">
-          <ProgressSpinner />
-          <p class="mt-4 text-surface-600">{{ $t("general.loading") }}</p>
-        </div>
-
-        <!-- Error State -->
-        <div v-else-if="displayError" class="max-w-5xl mx-auto text-center py-12">
-          <p class="text-error">{{ $t("general.error") }}</p>
-        </div>
-
-        <!-- Records Tables -->
-        <div v-else-if="displayData" class="max-w-5xl mx-auto">
-          <!-- History Mode: Show meet info if available -->
-          <div v-if="viewMode === 'history' && historyData?.data?.meet" class="mb-8 p-4 bg-surface-100 dark:bg-surface-800 rounded-lg">
-            <h3 class="text-lg font-semibold mb-2">{{ historyData.data.meet.meetName }}</h3>
-            <p v-if="historyData.data.meet.hostDate" class="text-sm text-surface-600 dark:text-surface-400">
-              {{ $t("general.date") }}: {{ formatDateDMY(historyData.data.meet.hostDate) }}
-            </p>
-          </div>
-
-          <!-- No records message for history -->
-          <div v-if="viewMode === 'history' && (!historyData?.data?.records || historyData.data.records.length === 0)" class="text-center py-12">
-            <p class="text-surface-600 dark:text-surface-400">{{ $t("records.noHistoryFound") }}</p>
-          </div>
-
-          <!-- History Mode: Show list view -->
-          <div v-if="viewMode === 'history' && historyData?.data?.records && historyData.data.records.length > 0">
-            <RecordsHistoryList
-              :records="filteredHistoryRecords"
-              :athletes="displayAthletes"
-              :results="historyData?.data?.results ?? []"
-              :previous-records-map="previousRecordsMap"
-            />
-          </div>
-
-          <!-- Current Records Mode: Show table view -->
-          <!-- Squat Records -->
-          <div v-if="viewMode === 'current' && filteredRecords.squat.length > 0" class="mb-12">
-            <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("general.squat") }}</h2>
-            <RecordsTable
-              :records="filteredRecords.squat"
-              :athletes="displayAthletes"
-              :meets="displayMeets"
-              :weight-classes="weightClasses"
-              :sex="selectedSex"
-            />
-          </div>
-
-          <!-- Bench Press Records -->
-          <div v-if="viewMode === 'current' && filteredRecords.bench.length > 0" class="mb-12">
-            <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("general.benchPress") }}</h2>
-            <RecordsTable
-              :records="filteredRecords.bench"
-              :athletes="displayAthletes"
-              :meets="displayMeets"
-              :weight-classes="weightClasses"
-              :sex="selectedSex"
-            />
-          </div>
-
-          <!-- Deadlift Records -->
-          <div v-if="viewMode === 'current' && filteredRecords.deadlift.length > 0" class="mb-12">
-            <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("general.deadlift") }}</h2>
-            <RecordsTable
-              :records="filteredRecords.deadlift"
-              :athletes="displayAthletes"
-              :meets="displayMeets"
-              :weight-classes="weightClasses"
-              :sex="selectedSex"
-            />
-          </div>
-
-          <!-- Total Records -->
-          <div v-if="viewMode === 'current' && filteredRecords.total.length > 0" class="mb-12">
-            <h2 class="text-2xl font-bold mb-4 text-primary">{{ $t("general.total") }}</h2>
-            <RecordsTable
-              :records="filteredRecords.total"
-              :athletes="displayAthletes"
-              :meets="displayMeets"
-              :weight-classes="weightClasses"
-              :sex="selectedSex"
-            />
-          </div>
-        </div>
-      </div>
-    </section>
+    <RecordDetailDrawer v-model:visible="drawerOpen" :record="selected" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue"
-import RecordsTable from "@/components/RecordsTable.vue"
-import RecordsHistoryList from "@/components/RecordsHistoryList.vue"
-import { WEIGHT_CLASS_MALE, WEIGHT_CLASS_FEMALE, RECORD_START_YEAR } from "~/lib/constants/constants"
-import { formatDateDMY } from "~/lib/domain/date"
-import type { LiftRecord } from "~/types/records"
-import type { Result } from "~/types/results"
-import type { UserPublicWithDecorators } from "~/types/users"
-import type { MeetPublic } from "~/types/meets"
-import type { Sex, Division } from "~/types/union-types"
-import type { ApiResponse } from "~/types/api"
+import { RANKED_DIVISION, RECORD_START_YEAR, WEIGHT_CLASS_FEMALE, WEIGHT_CLASS_MALE } from "~/lib/constants/constants"
+import { DIVISION_LABEL_KEY, SEX_LABEL_KEY, formatDate } from "~/lib/domain/format"
+import type { RecordRow } from "~/types/records"
+import type { Division, Sex } from "~/types/union-types"
 
-type RecordsData = {
-  records: LiftRecord[]
-  meet: MeetPublic[]
-  athletes: UserPublicWithDecorators[]
-  results: Result[]
-}
-type HistoryData = Omit<RecordsData, "meet"> & { meet: MeetPublic | null }
+definePageMeta({ layout: "default" })
 
-const route = useRoute()
-const router = useRouter()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
-const { fetchDecorators, applyDecorators } = useNameDecorators()
+const query = useQueryState({ mode: "current", sex: "male", division: "open", year: "" })
+
+const mode = computed(() => (query.state.value.mode === "history" ? "history" : "current"))
+const sex = computed<Sex>(() => (query.state.value.sex === "female" ? "female" : "male"))
+const division = computed<Division>(() =>
+  RANKED_DIVISION.includes(query.state.value.division) ? query.state.value.division as Division : "open")
+const year = computed(() => (query.state.value.year ? Number(query.state.value.year) : null))
+
+const board = useRecords(year, { key: "records-board", immediate: () => mode.value === "current" })
+const history = useRecordHistory(year, () => mode.value === "history")
+
+// The previous season's standing records, for "was … kg" and the improvement column.
+const previousYear = computed(() => (history.meet.value ? history.meet.value.systemYear - 1 : null))
+const previous = useRecords(previousYear, {
+  key: "records-previous",
+  immediate: () => mode.value === "history" && previousYear.value !== null,
+})
+
+const { fetchDecorators, decoratorMap } = useNameDecorators()
 onMounted(fetchDecorators)
 
-// View mode: 'current' or 'history'
-const initialViewMode = (route.query.mode as "current" | "history") || "current"
-const viewMode = ref<"current" | "history">(initialViewMode)
+const weightClasses = computed(() => (sex.value === "female" ? WEIGHT_CLASS_FEMALE : WEIGHT_CLASS_MALE))
 
-// Filter states
-const selectedSex = ref<Sex | null>((route.query.sex as Sex) || "male")
-const selectedDivision = ref<Division | null>((route.query.division as Division) || "open")
-const selectedYear = ref<number | null>(
-  route.query.year ? parseInt(route.query.year as string, 10) : null
-)
+const inCategory = (row: RecordRow) => row.sex === sex.value && row.division === division.value
+const boardRows = computed(() => board.rows.value.filter(inCategory))
 
-// Options
-const sexOptions = computed(() => [
-  { label: t("general.male"), value: "male" },
-  { label: t("general.female"), value: "female" },
-])
+const LIFTS = ["squat", "bench", "deadlift", "total"] as const
+const liftLabel = (lift: RecordRow["lift"]) => t(lift === "bench" ? "general.benchPress" : `general.${lift}`)
 
-const divisionOptions = computed(() => [
-  { label: t("general.divisionSubJunior"), value: "subjr" },
-  { label: t("general.divisionJunior"), value: "jr" },
-  { label: t("general.divisionOpen"), value: "open" },
-  { label: t("general.divisionMaster1"), value: "mas1" },
-  { label: t("general.divisionMaster2"), value: "mas2" },
-  { label: t("general.divisionMaster3"), value: "mas3" },
-  { label: t("general.divisionMaster4"), value: "mas4" },
-])
-
-// Fetch available years from API (we'll get this from meets data)
-const currentYear = new Date().getFullYear()
-const yearOptions = computed(() => {
-  const years: { label: string; value: number | null }[] = [{ label: t("records.allYears"), value: null }]
-  // Generate years from RECORD_START_YEAR to current year + 1
-  for (let year = RECORD_START_YEAR; year <= currentYear + 1; year++) {
-    years.push({ label: year.toString(), value: year })
-  }
-  return years.reverse() // Most recent first
-})
-
-// Weight classes based on selected sex
-const weightClasses = computed(() => {
-  return selectedSex.value === "female" ? WEIGHT_CLASS_FEMALE : WEIGHT_CLASS_MALE
-})
-
-// Fetch current records data
-const { data, pending, error, refresh } = await useFetch<ApiResponse<RecordsData>>("/api/records", {
-  query: computed(() => {
-    const query: Record<string, string | number | undefined> = {}
-    if (selectedYear.value !== null) {
-      query.year = selectedYear.value
-    }
-    return query
-  }),
-  immediate: initialViewMode === "current",
-})
-
-// Fetch history records data
-const { data: historyData, pending: historyPending, error: historyError, refresh: refreshHistory } = await useFetch<ApiResponse<HistoryData>>("/api/records/history", {
-  query: computed(() => {
-    const query: Record<string, string | number | undefined> = {}
-    if (selectedYear.value !== null) {
-      query.year = selectedYear.value
-    }
-    return query
-  }),
-  immediate: initialViewMode === "history",
-})
-
-// Fetch previous year records for history view (to show previous record values)
-const { data: previousYearRecords } = await useFetch<ApiResponse<RecordsData>>("/api/records", {
-  query: computed(() => {
-    const query: Record<string, string | number | undefined> = {}
-    if (selectedYear.value !== null && viewMode.value === "history") {
-      query.year = selectedYear.value - 1
-    }
-    return query
-  }),
-  immediate: initialViewMode === "history" && selectedYear.value !== null,
-})
-
-// Create a map of previous records for history view
-const previousRecordsMap = computed(() => {
-  const map = new Map<string, number>()
-  const prevData = previousYearRecords.value?.data
-  if (prevData?.records && prevData?.results) {
-    const prevResultsById = new Map(prevData.results.map(r => [r.resultId, r]))
-    for (const record of prevData.records) {
-      const result = prevResultsById.get(record.resultId)
-      if (!result) continue
-      const key = `${result.sex}-${record.recordDivision}-${result.weightClass}-${record.lift}`
-      const currentBest = map.get(key) ?? 0
-      if (record.recordWeight > currentBest) {
-        map.set(key, record.recordWeight)
-      }
-    }
-  }
-  return map
-})
-
-// Computed properties for display
-const displayData = computed(() => {
-  if (viewMode.value === "history") {
-    return historyData.value?.data
-  }
-  return data.value?.data
-})
-
-const displayPending = computed(() => {
-  return viewMode.value === "history" ? historyPending.value : pending.value
-})
-
-const displayError = computed(() => {
-  return viewMode.value === "history" ? historyError.value : error.value
-})
-
-const displayAthletes = computed(() => {
-  return applyDecorators(displayData.value?.athletes ?? [])
-})
-
-const displayMeets = computed(() => {
-  if (viewMode.value === "history") {
-    const meet = historyData.value?.data?.meet
-    return meet ? [meet] : []
-  }
-  return data.value?.data?.meet ?? []
-})
-
-// Filter and group records using the API's pre-calculated records
-const filteredRecords = computed(() => {
-  if (!data.value?.data) {
-    return { squat: [], bench: [], deadlift: [], total: [] }
+const historyByLift = computed(() => {
+  const before = new Map<string, number>()
+  for (const row of previous.rows.value) {
+    if (inCategory(row)) before.set(`${row.weightClass}-${row.lift}`, row.weight)
   }
 
-  const { records, results: currentResults } = data.value.data
-  const resultsById = new Map(currentResults.map(r => [r.resultId, r]))
-  const weightClassesList = weightClasses.value
-
-  const meetsMap = new Map<number, MeetPublic>()
-  displayMeets.value.forEach((m) => meetsMap.set(m.meetId, m))
-
-  const athletesMap = new Map<string, UserPublicWithDecorators>()
-  displayAthletes.value.forEach((a) => athletesMap.set(a.vpfId, a))
-
-  const filtered = records.filter((record) => {
-    const result = resultsById.get(record.resultId)
-    return result?.sex == selectedSex.value && record.recordDivision === selectedDivision.value
-  })
-
-  type RecordRow = {
-    weightClass: number
-    weight: number | null
-    athlete?: UserPublicWithDecorators
-    meet?: MeetPublic
-    bodyWeight?: number | null
-    vpfId?: string
-    meetId?: number
-  }
-
-  const grouped: { squat: RecordRow[]; bench: RecordRow[]; deadlift: RecordRow[]; total: RecordRow[] } = {
-    squat: [], bench: [], deadlift: [], total: [],
-  }
-
-  for (const weightClass of weightClassesList) {
-    for (const lift of ["squat", "bench", "deadlift", "total"] as const) {
-      const rec = filtered.find(r => {
-        const result = resultsById.get(r.resultId)
-        return r.lift === lift && result?.weightClass === weightClass
+  return LIFTS.map((lift) => {
+    const rows = history.rows.value
+      .filter((row) => row.lift === lift && inCategory(row))
+      .sort((a, b) => a.weightClass - b.weightClass || a.weight - b.weight)
+      .map((row, i, all) => {
+        const earlier = all[i - 1]
+        const sameClassBefore = earlier && earlier.weightClass === row.weightClass ? earlier.weight : null
+        const previousRecord = sameClassBefore === null ? before.get(`${row.weightClass}-${lift}`) ?? null : null
+        const base = sameClassBefore ?? previousRecord
+        return { ...row, previous: previousRecord, improvement: base !== null ? row.weight - base : null }
       })
-      const result = rec ? resultsById.get(rec.resultId) : undefined
-      grouped[lift].push(
-        rec && result
-          ? {
-            weightClass,
-            weight: rec.recordWeight,
-            athlete: athletesMap.get(result.vpfId),
-            meet: meetsMap.get(result.meetId),
-            bodyWeight: result.bodyWeight,
-            vpfId: result.vpfId,
-            meetId: result.meetId,
-          }
-          : { weightClass, weight: null }
-      )
-    }
-  }
-
-  return grouped
+    return { lift, label: liftLabel(lift), rows }
+  }).filter((group) => group.rows.length > 0)
 })
 
-// Filter history records by sex and division
-const filteredHistoryRecords = computed(() => {
-  const histData = historyData.value?.data
-  if (!histData?.records) return []
-
-  const resultsById = new Map((histData.results ?? []).map(r => [r.resultId, r]))
-
-  return histData.records.filter((record) => {
-    const result = resultsById.get(record.resultId)
-    return result?.sex == selectedSex.value && record.recordDivision === selectedDivision.value
-  })
-})
-
-// Handle filter changes
-const handleFilterChange = () => {
-  // Update URL query params
-  const query: Record<string, string | number> = {}
-  query.mode = viewMode.value
-  if (selectedSex.value) query.sex = selectedSex.value
-  if (selectedDivision.value) query.division = selectedDivision.value
-  if (selectedYear.value) query.year = selectedYear.value
-
-  router.push({ query })
-  
-  if (viewMode.value === "current") {
-    refresh()
-  } else {
-    refreshHistory()
-  }
+const selected = ref<RecordRow | null>(null)
+const drawerOpen = ref(false)
+function openRecord(row: RecordRow) {
+  selected.value = row
+  drawerOpen.value = true
 }
 
-// Watch view mode changes
-watch(viewMode, () => {
-  handleFilterChange()
+const categoryLabel = computed(() => t(SEX_LABEL_KEY[sex.value]))
+const divisionLabel = computed(() => t(DIVISION_LABEL_KEY[division.value]))
+
+const sexOptions = computed(() => [
+  { value: "male", label: t("general.men") },
+  { value: "female", label: t("general.women") },
+])
+
+const divisionOptions = computed(() =>
+  RANKED_DIVISION.map((d) => ({ value: d, label: t(DIVISION_LABEL_KEY[d as Division]) })))
+
+const yearOptions = computed(() => {
+  const years: { value: string; label: string }[] = [{ value: "", label: t("general.latest") }]
+  for (let y = new Date().getFullYear(); y >= RECORD_START_YEAR; y--) years.push({ value: String(y), label: String(y) })
+  return years
 })
 
-// Watch for route changes
-watch(
-  () => route.query,
-  (newQuery) => {
-    if (newQuery.mode) viewMode.value = newQuery.mode as "current" | "history"
-    if (newQuery.sex) selectedSex.value = newQuery.sex as Sex
-    if (newQuery.division) selectedDivision.value = newQuery.division as Division
-    if (newQuery.year) selectedYear.value = parseInt(newQuery.year as string, 10)
-  }
-)
+const modeOptions = computed(() => [
+  { value: "current", label: t("records.currentRecords") },
+  { value: "history", label: t("records.recordHistory") },
+])
 
-definePageMeta({
-  layout: "default",
+useSeoMeta({
+  title: () => t("records.title"),
+  description: () => t("records.lede"),
+  ogTitle: () => t("records.title"),
+  ogDescription: () => t("records.lede"),
 })
 </script>

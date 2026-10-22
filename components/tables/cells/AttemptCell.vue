@@ -11,7 +11,6 @@
   <span v-else class="inline-flex items-center justify-end gap-1" :class="best && 'text-accent'">
     <AppIcon name="lucide:check" class="size-3.5 text-success" />
     {{ formatKg(value, locale) }}
-    <span class="sr-only">{{ $t("tables.goodLift") }}</span>
   </span>
 </template>
 

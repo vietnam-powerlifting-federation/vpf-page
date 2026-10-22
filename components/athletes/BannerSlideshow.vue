@@ -1,71 +1,73 @@
 <template>
-  <div
+  <section
     ref="container"
-    class="relative w-full overflow-hidden bg-surface-900"
-    :style="{ height: slideHeight + 'px' }"
+    class="relative w-full overflow-hidden rounded-md bg-board"
+    :style="{ height: `${slideHeight}px` }"
+    :aria-label="$t('athlete.bannerLabel')"
+    aria-roledescription="carousel"
   >
-    <!-- Track -->
     <div
-      class="flex h-full gap-4 transition-transform duration-300 ease-in-out"
+      class="flex h-full gap-4 motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-snap"
       :style="{ transform: `translateX(${translateX}px)` }"
     >
       <div
         v-for="(banner, i) in loopedBanners"
         :key="i"
-        class="h-full flex-shrink-0"
-        :style="{ width: slideWidth + 'px' }"
+        class="relative h-full shrink-0"
+        :style="{ width: `${slideWidth}px` }"
+        :aria-hidden="i !== current || undefined"
       >
-        <div class="relative w-full h-full">
-          <img
-            :src="banner"
-            class="w-full h-full object-cover"
-          />
-
-          <!-- darken side slides -->
-          <div
-            class="absolute inset-0 transition duration-300"
-            :class="i === current ? 'bg-black/0' : 'bg-black/40'"
-          />
-        </div>
+        <img
+          :src="banner"
+          alt=""
+          :loading="i === current ? 'eager' : 'lazy'"
+          decoding="async"
+          class="size-full object-cover"
+        >
+        <div class="absolute inset-0 transition-opacity duration-300" :class="i === current ? 'opacity-0' : 'bg-scrim'" />
       </div>
     </div>
 
-    <!-- buttons -->
-    <button
-      v-if="banners.length > 1"
-      class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white"
-      @click="prev"
-    >
-      ‹
-    </button>
-
-    <button
-      v-if="banners.length > 1"
-      class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white"
-      @click="next"
-    >
-      ›
-    </button>
-
-    <!-- dots -->
-    <div
-      v-if="banners.length > 1"
-      class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2"
-    >
+    <template v-if="banners.length > 1">
       <button
-        v-for="(_, i) in banners"
-        :key="i"
-        class="w-2.5 h-2.5 rounded-full"
-        :class="realIndex === i ? 'bg-white' : 'bg-white/40'"
-        @click="goTo(i)"
-      />
-    </div>
-  </div>
+        type="button"
+        class="absolute top-1/2 left-3 grid size-11 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-board/70 text-board-ink hover:bg-board"
+        :aria-label="$t('athlete.prevBanner')"
+        @click="prev"
+      >
+        <AppIcon name="lucide:chevron-left" class="size-5" />
+      </button>
+      <button
+        type="button"
+        class="absolute top-1/2 right-3 grid size-11 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-board/70 text-board-ink hover:bg-board"
+        :aria-label="$t('athlete.nextBanner')"
+        @click="next"
+      >
+        <AppIcon name="lucide:chevron-right" class="size-5" />
+      </button>
+      <div class="absolute bottom-1 left-1/2 flex -translate-x-1/2">
+        <button
+          v-for="(_, i) in banners"
+          :key="i"
+          type="button"
+          class="grid size-8 cursor-pointer place-items-center"
+          :aria-label="$t('athlete.showBanner', { n: i + 1 })"
+          :aria-current="realIndex === i || undefined"
+          @click="goTo(i)"
+        >
+          <span class="size-2.5 rounded-full" :class="realIndex === i ? 'bg-light' : 'bg-light/40'" />
+        </button>
+      </div>
+    </template>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from "vue"
-
+/**
+ * A VIP athlete's cover photos. It only moves when asked (buttons or dots),
+ * so there is nothing to pause, and the slide motion is dropped under
+ * prefers-reduced-motion.
+ */
 const props = withDefaults(
   defineProps<{
     banners: string[]
@@ -75,26 +77,19 @@ const props = withDefaults(
   { height: 400 },
 )
 
-/* duplicate slides */
+/* Duplicate the first and last slides so stepping past either end wraps around. */
 const loopedBanners = computed(() => {
   if (props.banners.length <= 1) return props.banners
-  return [
-    props.banners[props.banners.length - 1],
-    ...props.banners,
-    props.banners[0]
-  ]
+  return [props.banners[props.banners.length - 1], ...props.banners, props.banners[0]]
 })
 
-/* state */
-const current = ref(1)
+const current = ref(props.banners.length > 1 ? 1 : 0)
 const container = ref<HTMLElement | null>(null)
 const containerWidth = ref(0)
 
-/* sizes — slides are always 24:9, capped by the height prop and by the container.
-   Without the container cap a 400px-tall slide is 1067px wide, so a phone would only
-   ever see the middle third of the banner. */
+/* Slides are always 24:9, capped by `height` and by the container, so a phone sees the whole banner. */
 const ASPECT = 24 / 9
-const gap = 16
+const GAP = 16
 
 const slideWidth = computed(() => {
   const max = props.height * ASPECT
@@ -103,67 +98,44 @@ const slideWidth = computed(() => {
 })
 const slideHeight = computed(() => slideWidth.value / ASPECT)
 
-/* responsive width — the window listener covers viewport changes, the observer covers
-   container-only changes such as a dialog animating open (where clientWidth reads 0
-   on mount). Either alone leaves a gap. */
 let observer: ResizeObserver | null = null
-
 function updateWidth() {
   if (container.value) containerWidth.value = container.value.clientWidth
 }
-
 onMounted(() => {
   updateWidth()
-  window.addEventListener("resize", updateWidth)
-  if (container.value && typeof ResizeObserver !== "undefined") {
+  if (container.value) {
     observer = new ResizeObserver(updateWidth)
     observer.observe(container.value)
   }
 })
+onBeforeUnmount(() => observer?.disconnect())
 
-onBeforeUnmount(() => {
-  window.removeEventListener("resize", updateWidth)
-  observer?.disconnect()
-  observer = null
-})
+const translateX = computed(() => (containerWidth.value - slideWidth.value) / 2 - current.value * (slideWidth.value + GAP))
 
-/* center active slide correctly */
-const translateX = computed(() => {
-  const total = slideWidth.value + gap
-
-  return (
-    (containerWidth.value - slideWidth.value) / 2 - current.value * total
-  )
-})
-
-/* dots index */
 const realIndex = computed(() => {
-  if (props.banners.length === 0) return 0
+  if (props.banners.length <= 1) return 0
   return (current.value - 1 + props.banners.length) % props.banners.length
 })
 
-/* navigation */
 function next() {
   current.value++
-  handleLoop()
+  wrap()
 }
-
 function prev() {
   current.value--
-  handleLoop()
+  wrap()
 }
-
 function goTo(i: number) {
   current.value = i + 1
 }
 
-/* infinite loop correction */
-function handleLoop() {
-  const max = loopedBanners.value.length - 1
-
+/* After sliding onto a duplicate, jump to the real slide it copies. */
+function wrap() {
+  const last = loopedBanners.value.length - 1
   setTimeout(() => {
-    if (current.value === max) current.value = 1
-    if (current.value === 0) current.value = max - 1
+    if (current.value === last) current.value = 1
+    if (current.value === 0) current.value = last - 1
   }, 300)
 }
 </script>
