@@ -215,7 +215,7 @@ Follow-up (2026-10-23):
 | LCP / CLS measured, CLS fixed | `d898177` | Done |
 | Photo panel on register (§4) | `d765d40` | Done |
 | JS budget | `ab7ae03` | Improved, not met (below) |
-| Registration after identity verification, end to end | — | Blocked: the local R2 credentials are rejected, so the ID-card upload fails and no verification can be submitted |
+| Registration after identity verification, end to end | "test(frontend): registration after identity verification" | Done, except the R2 upload step (below) |
 
 **LCP and CLS** (production build on the local server, cold cache, no throttling; the database has no Redis cache locally, so server time dominates):
 
@@ -246,6 +246,6 @@ What changed: the PrimeVue module registers only the 29 components in use instea
 Still open:
 
 1. **JS budget (120 KB) missed by 13–27 KB.** The shared entry alone is 122 KB: Vue, Nuxt, the router and unhead (~75 KB), vue-i18n with its message compiler (~20 KB), PrimeVue's config and theme engine (~13 KB) and app code (~10 KB). Getting under 120 KB would need two larger changes: install PrimeVue only on the account, checkout, registration and admin routes (replacing `@primevue/nuxt-module` with a lazily installed plugin plus its own SSR style handling), and drop vue-i18n's message compiler (`bundle.dropMessageCompiler` was tried and broke server-side message evaluation with "unhandled node type"). Both were left out as too risky for this pass.
-2. **Registration after identity verification** is still untested end to end. The verification form posts the ID-card photo to Cloudflare R2, and the local `CLOUDFLARE_R2_*` credentials are rejected (`SignatureDoesNotMatch`), so the submission fails with a 500 and nothing is stored. It needs working R2 credentials, or a verification row inserted directly in the test database.
+2. **Identity verification R2 upload is untested.** Submitting the verification form posts the ID-card photo to Cloudflare R2, and the local `CLOUDFLARE_R2_*` values are rejected (`SignatureDoesNotMatch`), so the submit returns a 500 and stores nothing. The rest of the flow was tested end to end on 2026-10-23 as VPF000666: a pending verification row was inserted directly in the database (placeholder `id_card_front_url`), approved from `/admin/verifications`, then the athlete registered for Test Meet through the wizard (member, Men 74 kg Open, no Media Plus, entry fee 0 ₫ + 2026 membership 200,000 ₫), reached the QR step, and the purchase was approved from `/admin/purchases`; the wizard moved to "Registration successful" on its own. One bug fixed on the way: the final step's link said "View in payment history" but went to the competition list, and stretched full width.
 3. **SSR HTML weight:** pages are 47–73 KB gzip, mostly PrimeVue theme and component styles that the module injects into every page.
 4. **Admin athlete editor** shows hydration mismatches: its form is filled on the client after the server rendered it empty. This was already the case before the redesign.

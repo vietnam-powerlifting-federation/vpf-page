@@ -219,9 +219,7 @@
                   ? $t("competitionRegistration.confirmedBody", { meet: eligibility.meet.meetName })
                   : $t("competitionRegistration.pendingBody", { meet: eligibility.meet.meetName }) }}
               </p>
-              <Button v-slot="slotProps" as-child class="justify-self-start">
-                <NuxtLinkLocale to="/profile/competition-info" :class="slotProps.class">{{ $t("competitionRegistration.viewInProfile") }}</NuxtLinkLocale>
-              </Button>
+              <AppButton to="/profile/competition-info" class="justify-self-start">{{ $t("profile.tabs.competitionInfo") }}</AppButton>
             </div>
           </PagePanel>
         </div>
