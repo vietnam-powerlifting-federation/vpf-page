@@ -208,9 +208,44 @@ Audit (2026-10-23):
 - **Keyboard:** the skip link and the mobile-menu focus handling work.
 - **Build:** the production build succeeds.
 
-Open:
+Follow-up (2026-10-23):
 
-1. **JS budget missed.** Each route loads about 185–220 KB gzip against the 120 KB target. 156 KB of that is the shared bundle every page loads: Vue, Nuxt, the router, vue-i18n, PrimeVue core and Toast. Options: load Toast only when needed, and use less PrimeVue on the public pages.
-2. **LCP and CLS not measured yet.**
-3. **Registration after identity verification** hasn't been tested end to end, because that would mean submitting a verification for the test account.
-4. ~~Photo panel on login only.~~ Done: login and register both use the photo panel, now the intended design in §4.
+| Item | Commit | State |
+| --- | --- | --- |
+| LCP / CLS measured, CLS fixed | `d898177` | Done |
+| Photo panel on register (§4) | `d765d40` | Done |
+| JS budget | `ab7ae03` | Improved, not met (below) |
+| Registration after identity verification, end to end | — | Blocked: the local R2 credentials are rejected, so the ID-card upload fails and no verification can be submitted |
+
+**LCP and CLS** (production build on the local server, cold cache, no throttling; the database has no Redis cache locally, so server time dominates):
+
+| Route | Phone 375px LCP / CLS | Desktop 1280px LCP / CLS | Server TTFB |
+| --- | --- | --- | --- |
+| `/` | 3.41 s / 0.040 | 1.92 s / 0.008 | 1.7–3.2 s |
+| `/records` | 0.97 s / 0.001 | 1.12 s / 0.017 | ~0.75 s |
+| `/competitions` (prerendered) | 0.24 s / 0.001 | 0.29 s / 0.028 | ~20 ms |
+| `/competitions/national-2025` (prerendered) | 0.30 s / 0.035 | 0.32 s / 0.004 | ~30 ms |
+| `/athletes/VPF000084` | 1.72 s / 0.011 | 1.58 s / 0.000 | ~1.4 s |
+
+LCP is the time to first byte plus 170–360 ms on every route, so the remaining LCP cost is the server (the results and profile queries without Redis), not the page. CLS is under 0.05 everywhere. Before the fix, prerendered competition pages shifted 0.18–0.24: with payload extraction on, the client hydrated them without data and refetched, which emptied the list for a moment. They now inline their payload. The 0.04 on Rankings at phone width is the title re-wrapping when Barlow Condensed replaces the fallback; the title, nav and body faces are now preloaded.
+
+**JS per public route** (all initial JS, gzip -9):
+
+| Route | Before | After |
+| --- | --- | --- |
+| `/` | 215 KB | 147 KB |
+| `/records` | 213 KB | 145 KB |
+| `/competitions` | 184 KB | 138 KB |
+| `/competitions/national-2025` | 221 KB | 145 KB |
+| `/athletes/VPF000084` | 191 KB | 144 KB |
+| `/login` | 195 KB | 134 KB |
+| `/register` | — | 133 KB |
+
+What changed: the PrimeVue module registers only the 29 components in use instead of ~140, so the entry no longer carries a stub for each and pages no longer get every component's styles injected. Toast mounts after the page is idle. Public and auth pages use small native components (`AppButton`, `NativeSelect`, `SideDrawer`, `AppDialog`, `AppTabs`, `AppTag`, `AppInput`, `PasswordInput`, and a native header drawer and user menu) instead of PrimeVue. Icons are inline SVG from a generated Lucide map (`scripts/gen-icons.mjs`) instead of the `@nuxt/icon` runtime.
+
+Still open:
+
+1. **JS budget (120 KB) missed by 13–27 KB.** The shared entry alone is 122 KB: Vue, Nuxt, the router and unhead (~75 KB), vue-i18n with its message compiler (~20 KB), PrimeVue's config and theme engine (~13 KB) and app code (~10 KB). Getting under 120 KB would need two larger changes: install PrimeVue only on the account, checkout, registration and admin routes (replacing `@primevue/nuxt-module` with a lazily installed plugin plus its own SSR style handling), and drop vue-i18n's message compiler (`bundle.dropMessageCompiler` was tried and broke server-side message evaluation with "unhandled node type"). Both were left out as too risky for this pass.
+2. **Registration after identity verification** is still untested end to end. The verification form posts the ID-card photo to Cloudflare R2, and the local `CLOUDFLARE_R2_*` credentials are rejected (`SignatureDoesNotMatch`), so the submission fails with a 500 and nothing is stored. It needs working R2 credentials, or a verification row inserted directly in the test database.
+3. **SSR HTML weight:** pages are 47–73 KB gzip, mostly PrimeVue theme and component styles that the module injects into every page.
+4. **Admin athlete editor** shows hydration mismatches: its form is filled on the client after the server rendered it empty. This was already the case before the redesign.
