@@ -1,129 +1,57 @@
 <template>
-  <div class="bg-surface-100 dark:bg-surface-900 py-10 md:py-14 px-4 min-h-[70vh]">
-    <div class="container mx-auto max-w-md">
-      <div class="rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-0 dark:bg-surface-950 shadow-sm p-8">
-        <h1 class="text-2xl font-bold text-surface-900 dark:text-surface-0">{{ $t("forgotPassword.title") }}</h1>
-        <p class="mt-2 text-sm text-surface-600 dark:text-surface-300">
-          {{ step === "request" ? $t("forgotPassword.requestSubtitle") : $t("forgotPassword.resetSubtitle", { email }) }}
-        </p>
+  <AuthCard
+    :title="$t('forgotPassword.title')"
+    :subtitle="step === 'request' ? $t('forgotPassword.requestSubtitle') : $t('forgotPassword.resetSubtitle', { email })"
+  >
+    <!-- Step 1: request a reset code -->
+    <form v-if="step === 'request'" class="grid gap-5" novalidate @submit.prevent="handleRequestCode()">
+      <AppField v-slot="f" :label="$t('forgotPassword.emailLabel')">
+        <InputText :id="f.id" v-model="email" type="email" autocomplete="email" class="w-full" />
+      </AppField>
+      <Button type="submit" :label="$t('forgotPassword.sendCodeButton')" class="w-full" :loading="isLoading" />
+    </form>
 
-        <!-- Step 1: request a reset code -->
-        <form v-if="step === 'request'" class="mt-8 space-y-5" @submit.prevent="handleRequestCode">
-          <div>
-            <label for="email" class="block mb-2 text-sm font-medium text-surface-800 dark:text-surface-200">
-              {{ $t("forgotPassword.emailLabel") }}
-            </label>
-            <InputText
-              id="email"
-              v-model="email"
-              type="email"
-              :placeholder="$t('forgotPassword.emailPlaceholder')"
-              class="w-full"
-              autocomplete="email"
-            />
-          </div>
+    <!-- Step 2: enter the code and the new password -->
+    <form v-else ref="formEl" class="grid gap-5" novalidate @submit.prevent="handleResetPassword">
+      <AppField v-slot="f" :label="$t('forgotPassword.codeLabel')" :error="errors.code">
+        <InputText
+          :id="f.id"
+          v-model="code"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          :invalid="f.invalid"
+          :aria-describedby="f.describedBy"
+          class="w-full font-display text-xl tracking-[0.3em]"
+        />
+      </AppField>
+      <AppField v-slot="f" :label="$t('forgotPassword.newPassword')" :hint="$t('register.passwordHint')" :error="errors.newPassword">
+        <Password v-model="newPassword" :input-id="f.id" :invalid="f.invalid" :aria-describedby="f.describedBy" :feedback="false" toggle-mask autocomplete="new-password" class="w-full" input-class="w-full" />
+      </AppField>
+      <AppField v-slot="f" :label="$t('forgotPassword.confirmPassword')" :error="errors.confirmPassword">
+        <Password v-model="confirmPassword" :input-id="f.id" :invalid="f.invalid" :aria-describedby="f.describedBy" :feedback="false" toggle-mask autocomplete="new-password" class="w-full" input-class="w-full" />
+      </AppField>
+      <Button type="submit" :label="$t('forgotPassword.resetButton')" class="w-full" :loading="isLoading" />
+      <p class="text-center text-sm text-muted-color">
+        {{ $t("forgotPassword.noCode") }}
+        <button type="button" class="min-h-11 cursor-pointer font-semibold text-accent underline-offset-3 hover:underline disabled:opacity-50" :disabled="isResending" @click="handleRequestCode(true)">
+          {{ $t("forgotPassword.resend") }}
+        </button>
+      </p>
+    </form>
 
-          <Button
-            type="submit"
-            :label="$t('forgotPassword.sendCodeButton')"
-            class="w-full"
-            :loading="isLoading"
-            :disabled="isLoading"
-          />
-
-          <div class="text-center text-sm">
-            <NuxtLinkLocale to="/login" class="font-semibold text-primary hover:underline">
-              {{ $t("forgotPassword.backToLogin") }}
-            </NuxtLinkLocale>
-          </div>
-        </form>
-
-        <!-- Step 2: enter the code and the new password -->
-        <form v-else class="mt-8 space-y-5" @submit.prevent="handleResetPassword">
-          <div>
-            <label for="code" class="block mb-2 text-sm font-medium text-surface-800 dark:text-surface-200">
-              {{ $t("forgotPassword.codeLabel") }}
-            </label>
-            <InputText
-              id="code"
-              v-model="code"
-              inputmode="numeric"
-              :placeholder="$t('forgotPassword.codePlaceholder')"
-              class="w-full tracking-widest"
-              :class="{ 'p-invalid': !!errors.code }"
-              autocomplete="one-time-code"
-            />
-            <small v-if="errors.code" class="p-error mt-1 block">{{ errors.code }}</small>
-          </div>
-
-          <div>
-            <label for="newPassword" class="block mb-2 text-sm font-medium text-surface-800 dark:text-surface-200">
-              {{ $t("forgotPassword.newPassword") }}
-            </label>
-            <Password
-              id="newPassword"
-              v-model="newPassword"
-              :placeholder="$t('forgotPassword.newPasswordPlaceholder')"
-              class="w-full"
-              input-class="w-full"
-              :class="{ 'p-invalid': errors.newPassword }"
-              :feedback="false"
-              toggle-mask
-              autocomplete="new-password"
-            />
-            <small v-if="errors.newPassword" class="p-error mt-1 block">{{ errors.newPassword }}</small>
-          </div>
-
-          <div>
-            <label for="confirmPassword" class="block mb-2 text-sm font-medium text-surface-800 dark:text-surface-200">
-              {{ $t("forgotPassword.confirmPassword") }}
-            </label>
-            <Password
-              id="confirmPassword"
-              v-model="confirmPassword"
-              :placeholder="$t('forgotPassword.confirmPasswordPlaceholder')"
-              class="w-full"
-              input-class="w-full"
-              :class="{ 'p-invalid': errors.confirmPassword }"
-              :feedback="false"
-              toggle-mask
-              autocomplete="new-password"
-            />
-            <small v-if="errors.confirmPassword" class="p-error mt-1 block">{{ errors.confirmPassword }}</small>
-          </div>
-
-          <Button
-            type="submit"
-            :label="$t('forgotPassword.resetButton')"
-            class="w-full"
-            :loading="isLoading"
-            :disabled="isLoading"
-          />
-
-          <div class="text-center text-sm text-surface-600 dark:text-surface-300">
-            {{ $t("forgotPassword.noCode") }}
-            <button
-              type="button"
-              class="font-semibold text-primary hover:underline disabled:opacity-50"
-              :disabled="isResending"
-              @click="handleRequestCode(true)"
-            >
-              {{ $t("forgotPassword.resend") }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+    <template #footer>
+      <NuxtLinkLocale to="/login" class="font-semibold text-accent underline-offset-3 hover:underline">{{ $t("forgotPassword.backToLogin") }}</NuxtLinkLocale>
+    </template>
+  </AuthCard>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
 import type { ApiResponse } from "~/types/api"
 
 const { t } = useI18n()
 const msg = useApiMessage()
 const toast = useToast()
+const localePath = useLocalePath()
 
 const step = ref<"request" | "reset">("request")
 const email = ref("")
@@ -133,6 +61,8 @@ const confirmPassword = ref("")
 
 const isLoading = ref(false)
 const isResending = ref(false)
+
+const formEl = ref<HTMLFormElement | null>(null)
 
 const errors = ref({
   code: "",
@@ -194,7 +124,11 @@ const validateResetForm = (): boolean => {
 }
 
 const handleResetPassword = async () => {
-  if (!validateResetForm()) return
+  if (!validateResetForm()) {
+    await nextTick()
+    formEl.value?.querySelector<HTMLElement>("[aria-invalid='true']")?.focus()
+    return
+  }
 
   isLoading.value = true
 
@@ -216,7 +150,7 @@ const handleResetPassword = async () => {
         detail: t("forgotPassword.success"),
         life: 5000,
       })
-      await navigateTo("/login")
+      await navigateTo(localePath("/login"))
     } else {
       toast.add({ severity: "error", summary: t("general.error"), detail: msg(res) || t("general.error"), life: 5000 })
     }

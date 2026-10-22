@@ -278,7 +278,7 @@
   "login": {
     "title": "Đăng nhập",
     "subtitle": "Vui lòng điền thông tin của bạn.",
-    "emailLabel": "Email",
+    "emailLabel": "Email hoặc VPF ID",
     "emailPlaceholder": "Nhập email hoặc VPF ID",
     "rememberMe": "Ghi nhớ đăng nhập",
     "password": "Mật khẩu",
@@ -489,7 +489,9 @@
         "vip": "Hội viên VIP",
         "vpf_membership": "Hội viên VPF",
         "competition": "Thi đấu"
-      }
+      },
+      "payNow": "Thanh toán ngay",
+      "reference": "Mã tham chiếu"
     },
     "verification": {
       "label": "Xác minh tài khoản",
@@ -524,7 +526,14 @@
     "discount": "Giảm giá",
     "freeTitle": "Không cần thanh toán",
     "freeBody": "Voucher đã giảm toàn bộ số tiền và giao dịch của bạn đã được kích hoạt.",
-    "viewBenefits": "Xem quyền lợi VIP"
+    "viewBenefits": "Xem quyền lợi VIP",
+    "kicker": "Thanh toán",
+    "lede": "Kiểm tra đơn hàng, áp dụng voucher nếu có, rồi thanh toán bằng chuyển khoản.",
+    "steps": {
+      "review": "Đơn hàng",
+      "pay": "Thanh toán",
+      "done": "Hoàn tất"
+    }
   },
   "register": {
     "title": "Đăng ký",
@@ -542,7 +551,8 @@
     "emailInvalid": "Vui lòng nhập email hợp lệ",
     "passwordRequired": "Vui lòng nhập mật khẩu",
     "passwordTooShort": "Mật khẩu phải có ít nhất 8 ký tự",
-    "passwordMismatch": "Mật khẩu không khớp"
+    "passwordMismatch": "Mật khẩu không khớp",
+    "passwordHint": "Ít nhất 8 ký tự."
   },
   "verifyEmail": {
     "title": "Xác minh email",
@@ -1063,5 +1073,9 @@
     "toggle": "Bộ lọc",
     "clearSearch": "Xoá tìm kiếm",
     "divisionHint": "Hạng tuổi = nhóm tuổi thi đấu"
+  },
+  "steps": {
+    "progress": "Tiến trình",
+    "done": "đã xong"
   }
 }

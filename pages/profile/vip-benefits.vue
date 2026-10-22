@@ -1,126 +1,83 @@
 <template>
-  <div class="min-h-full">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-surface-0">{{ $t("profile.tabs.vipBenefits") }}</h1>
-      <div v-if="isAdmin" class="flex items-center gap-2">
-        <span class="text-sm text-surface-400">
+  <div class="grid gap-6">
+    <PagePanel :title="$t('profile.tabs.vipBenefits')" ruled>
+      <template v-if="isAdmin" #actions>
+        <label class="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-color">
+          <ToggleSwitch v-model="adminForceActive" />
           {{ vipActive ? $t("profile.vipBenefits.previewNonVip") : $t("profile.vipBenefits.previewActive") }}
-        </span>
-        <ToggleSwitch v-model="adminForceActive" />
-      </div>
-    </div>
+        </label>
+      </template>
 
-    <div v-if="pending" class="flex justify-center py-12">
-      <ProgressSpinner />
-    </div>
+      <LoadingState v-if="pending" />
 
-    <div v-else class="space-y-6">
-      <!-- Membership status and renewal -->
-      <VipMembershipCard
-        v-if="showActive || vipExpiresAt"
-        :expires-at="vipExpiresAt"
-        :active="showActive"
-        @renew="goToCheckout"
-      />
+      <div v-else class="grid gap-6">
+        <VipMembershipCard v-if="showActive || vipExpiresAt" :expires-at="vipExpiresAt" :active="showActive" @renew="goToCheckout" />
 
-      <!-- Upsell for athletes without an active membership -->
-      <div v-if="!showActive" class="border border-surface-600 rounded-lg p-6 bg-surface-800 space-y-3">
-        <div class="flex items-center gap-2">
-          <i class="pi pi-star-fill text-primary text-xl" />
-          <h2 class="text-lg font-semibold text-surface-0">{{ $t("profile.vipBenefits.upsellTitle") }}</h2>
+        <!-- Upsell for athletes without an active membership -->
+        <div v-if="!showActive" class="grid gap-3 rounded-md border border-surface-200 border-l-[3px] border-l-accent-fill bg-surface-50 p-5">
+          <h3 class="flex items-center gap-2 font-display text-xl font-bold uppercase">
+            <AppIcon name="lucide:star" class="size-5 text-accent" />
+            {{ $t("profile.vipBenefits.upsellTitle") }}
+          </h3>
+          <p>{{ $t("profile.vipBenefits.description") }}</p>
+          <ul class="grid gap-1 text-sm">
+            <li v-for="feature in upsellFeatures" :key="feature" class="flex items-start gap-2">
+              <AppIcon name="lucide:check" class="mt-0.5 size-4 text-success" />
+              <span>{{ $t(feature) }}</span>
+            </li>
+          </ul>
+          <p class="text-sm text-muted-color">{{ $t("profile.vipBenefits.upsellTryIt") }}</p>
+          <Button class="justify-self-start" @click="goToCheckout">
+            <AppIcon name="lucide:star" class="size-4" />
+            {{ $t("profile.vipBenefits.registerNow") }} · {{ formattedPrice }}
+          </Button>
         </div>
-        <p class="text-surface-300">{{ $t("profile.vipBenefits.description") }}</p>
-        <ul class="text-sm text-surface-300 space-y-1">
-          <li v-for="feature in upsellFeatures" :key="feature" class="flex items-start gap-2">
-            <i class="pi pi-check text-primary text-xs mt-1 shrink-0" />
-            <span>{{ $t(feature) }}</span>
-          </li>
-        </ul>
-        <p class="text-sm text-surface-400">{{ $t("profile.vipBenefits.upsellTryIt") }}</p>
-        <Button
-          :label="`${$t('profile.vipBenefits.registerNow')} — ${formattedPrice}`"
-          icon="pi pi-star"
-          class="bg-primary"
-          @click="goToCheckout"
-        />
       </div>
+    </PagePanel>
 
-      <!-- Live preview -->
-      <div class="space-y-2">
-        <div class="flex items-center justify-between gap-2">
-          <span class="text-sm font-medium text-surface-300">{{ $t("profile.vipBenefits.livePreview") }}</span>
-          <Button
-            :label="$t('profile.vipBenefits.fullPreview')"
-            icon="pi pi-window-maximize"
-            severity="secondary"
-            text
-            size="small"
-            @click="fullPreviewVisible = true"
-          />
-        </div>
-        <VipProfilePreview
-          :full-name="athleteName"
+    <template v-if="!pending">
+      <PagePanel :title="$t('profile.vipBenefits.livePreview')">
+        <template #actions>
+          <Button severity="secondary" variant="text" size="small" @click="fullPreviewVisible = true">
+            <AppIcon name="lucide:maximize-2" class="size-4" />
+            {{ $t("profile.vipBenefits.fullPreview") }}
+          </Button>
+        </template>
+        <VipProfilePreview :full-name="athleteName" :form="form" :avatar-preview="avatarPreview" :banner-previews="bannerPreviews" scale="compact" />
+      </PagePanel>
+
+      <PagePanel>
+        <VipSettingsForm
           :form="form"
+          :athlete-name="athleteName"
           :avatar-preview="avatarPreview"
-          :banner-previews="bannerPreviews"
-          scale="compact"
+          :banner-slots="bannerSlots"
+          :next-banner-slot="nextBannerSlot"
+          :is-submitting="isSubmitting"
+          :has-changes="hasChanges"
+          :locked="!showActive"
+          :public-profile-url="publicProfileUrl"
+          @update-field="handleFieldUpdate"
+          @update-decorators="handleDecoratorUpdate"
+          @avatar-click="avatarInputRef?.click()"
+          @trigger-banner-input="bannerInputRef?.click()"
+          @clear-banner="clearBanner"
+          @submit="handleSubmit"
+          @register="goToCheckout"
         />
-      </div>
+      </PagePanel>
 
-      <VipSettingsForm
-        :form="form"
-        :athlete-name="athleteName"
-        :avatar-preview="avatarPreview"
-        :banner-slots="bannerSlots"
-        :next-banner-slot="nextBannerSlot"
-        :is-submitting="isSubmitting"
-        :has-changes="hasChanges"
-        :locked="!showActive"
-        :public-profile-url="publicProfileUrl"
-        @update-field="handleFieldUpdate"
-        @update-decorators="handleDecoratorUpdate"
-        @avatar-click="avatarInputRef?.click()"
-        @trigger-banner-input="bannerInputRef?.click()"
-        @clear-banner="clearBanner"
-        @submit="handleSubmit"
-        @register="goToCheckout"
-      />
+      <input ref="avatarInputRef" type="file" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden" tabindex="-1" aria-hidden="true" @change="onAvatarChange">
+      <input ref="bannerInputRef" type="file" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden" tabindex="-1" aria-hidden="true" @change="onBannerChange">
+    </template>
 
-      <input
-        ref="avatarInputRef"
-        type="file"
-        accept="image/jpeg,image/png,image/gif,image/webp"
-        class="hidden"
-        @change="onAvatarChange"
-      >
-      <input
-        ref="bannerInputRef"
-        type="file"
-        accept="image/jpeg,image/png,image/gif,image/webp"
-        class="hidden"
-        @change="onBannerChange"
-      >
-    </div>
-
-    <!-- Full-scale preview -->
-    <Dialog
-      v-model:visible="fullPreviewVisible"
-      modal
-      dismissable-mask
-      :header="$t('profile.vipBenefits.fullPreview')"
-      :style="{ width: 'min(1100px, 95vw)' }"
-    >
-      <VipProfilePreview
-        :full-name="athleteName"
-        :form="form"
-        :avatar-preview="avatarPreview"
-        :banner-previews="bannerPreviews"
-        scale="full"
-      />
+    <Dialog v-model:visible="fullPreviewVisible" modal dismissable-mask :header="$t('profile.vipBenefits.fullPreview')" class="w-[min(1100px,95vw)]">
+      <VipProfilePreview :full-name="athleteName" :form="form" :avatar-preview="avatarPreview" :banner-previews="bannerPreviews" scale="full" />
     </Dialog>
 
-    <!-- Crop before upload -->
-    <ImageCropperDialog
+    <!-- Crop before upload; the cropper library loads only when this opens. -->
+    <LazyImageCropperDialog
+      v-if="cropSrc"
       v-model:visible="cropVisible"
       :src="cropSrc"
       :aspect-ratio="cropSettings.aspectRatio"
@@ -133,32 +90,20 @@
       @update:visible="onCropVisibilityChange"
     />
 
-    <!-- Unsaved changes -->
-    <Dialog
-      v-model:visible="promptVisible"
-      modal
-      :closable="false"
-      :header="$t('profile.vipBenefits.unsavedTitle')"
-      :style="{ width: 'min(460px, 95vw)' }"
-    >
-      <p class="text-surface-300">{{ $t("profile.vipBenefits.unsavedMessage") }}</p>
+    <Dialog v-model:visible="promptVisible" modal :closable="false" :header="$t('profile.vipBenefits.unsavedTitle')" class="w-[min(460px,95vw)]">
+      <p>{{ $t("profile.vipBenefits.unsavedMessage") }}</p>
       <template #footer>
-        <Button :label="$t('profile.vipBenefits.unsavedKeepEditing')" severity="secondary" text @click="keepEditing" />
-        <Button :label="$t('profile.vipBenefits.unsavedDiscard')" severity="danger" text @click="discardChanges" />
-        <Button
-          :label="$t('profile.vipBenefits.unsavedSaveAndLeave')"
-          class="bg-primary text-primary-contrast"
-          :loading="isSubmitting"
-          @click="saveAndLeave(handleSubmit)"
-        />
+        <Button :label="$t('profile.vipBenefits.unsavedKeepEditing')" severity="secondary" variant="text" @click="keepEditing" />
+        <Button :label="$t('profile.vipBenefits.unsavedDiscard')" severity="danger" variant="text" @click="discardChanges" />
+        <Button :label="$t('profile.vipBenefits.unsavedSaveAndLeave')" :loading="isSubmitting" @click="saveAndLeave(handleSubmit)" />
       </template>
     </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onBeforeUnmount } from "vue"
 import { buildPatchPayload } from "~/lib/domain/patch-payload"
+import { formatVnd } from "~/lib/domain/format"
 import { isVipActive } from "~/lib/domain/vip"
 import type { ApiResponse } from "~/types/api"
 import type { VipBenefits, VipSettingsFormState } from "~/types/vip"
@@ -194,7 +139,8 @@ const publicProfileUrl = computed(() => {
 })
 
 const VIP_PRICE = 300_000
-const formattedPrice = computed(() => `${VIP_PRICE.toLocaleString("vi-VN")} VND`)
+const { locale } = useI18n()
+const formattedPrice = computed(() => formatVnd(VIP_PRICE, locale.value))
 
 const upsellFeatures = [
   "profile.vipBenefits.featureBanners",

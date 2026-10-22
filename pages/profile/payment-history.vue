@@ -1,45 +1,33 @@
 <template>
-  <div class="min-h-full">
-    <h1 class="text-2xl font-bold mb-6 text-surface-0">{{ $t("profile.tabs.paymentHistory") }}</h1>
-
-    <div v-if="pending" class="flex justify-center py-12">
-      <ProgressSpinner />
-    </div>
-    <div v-else-if="error" class="text-red-400 text-sm">{{ $t("general.error") }}</div>
-    <template v-else>
-      <div v-if="purchases.length === 0" class="text-surface-400 text-sm py-8 text-center">
-        {{ $t("profile.paymentHistory.empty") }}
-      </div>
-      <div v-else class="space-y-3">
-        <div
-          v-for="purchase in purchases"
-          :key="purchase.purchaseId"
-          class="border border-surface-600 rounded-lg p-4 bg-surface-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-          :class="purchase.status === 'pending' ? 'cursor-pointer hover:border-primary transition-colors' : ''"
-          @click="purchase.status === 'pending' && openQrDialog(purchase)"
-        >
-          <div class="w-full sm:flex-1 min-w-0">
-            <div class="flex flex-wrap items-center gap-2 mb-1">
-              <span class="font-mono text-sm text-surface-400 break-all sm:break-normal">{{ purchase.type.map((t) => $t(`profile.paymentHistory.type.${t}`)).join(" + ") }} - VPF{{ purchase.refCode }}</span>
-              <Tag :severity="statusSeverity(purchase.status)" :value="$t(`profile.paymentHistory.status.${purchase.status}`)" />
-            </div>
-            <div class="text-surface-0">{{ formatAmount(purchase.amount) }} VND</div>
-            <div class="text-surface-500 text-xs mt-1">{{ formatDate(purchase.createdAt) }}</div>
+  <PagePanel :title="$t('profile.tabs.paymentHistory')" ruled>
+    <LoadingState v-if="pending" />
+    <Message v-else-if="error" severity="error" :closable="false">{{ $t("general.error") }}</Message>
+    <p v-else-if="purchases.length === 0" class="py-6 text-center text-muted-color">{{ $t("profile.paymentHistory.empty") }}</p>
+    <ul v-else class="grid gap-3">
+      <li
+        v-for="purchase in purchases"
+        :key="purchase.purchaseId"
+        class="flex flex-col gap-3 rounded-md border border-surface-200 p-4 sm:flex-row sm:items-center sm:justify-between"
+        :class="purchase.status === 'pending' && 'border-l-[3px] border-l-accent-fill'"
+      >
+        <div class="min-w-0">
+          <div class="mb-1 flex flex-wrap items-center gap-2">
+            <span class="font-semibold">{{ purchase.type.map((type) => $t(`profile.paymentHistory.type.${type}`)).join(" + ") }}</span>
+            <Tag :severity="statusSeverity(purchase.status)" :value="$t(`profile.paymentHistory.status.${purchase.status}`)" />
           </div>
-          <div v-if="purchase.status === 'pending'" class="text-primary shrink-0 self-end sm:self-auto">
-            <i class="pi pi-qrcode text-2xl" />
-          </div>
+          <p class="font-display text-xl font-bold tabular-nums">{{ formatVnd(purchase.amount, locale) }}</p>
+          <p class="text-[0.8125rem] text-muted-color">
+            <span class="sr-only">{{ $t("profile.paymentHistory.reference") }}: </span><span class="font-mono">VPF{{ purchase.refCode }}</span> · {{ formatDateTime(purchase.createdAt) }}
+          </p>
         </div>
-      </div>
-    </template>
+        <Button v-if="purchase.status === 'pending'" class="shrink-0" @click="openQrDialog(purchase)">
+          <AppIcon name="lucide:qr-code" class="size-5" />
+          {{ $t("profile.paymentHistory.payNow") }}
+        </Button>
+      </li>
+    </ul>
 
-    <Dialog
-      v-model:visible="qrDialogVisible"
-      modal
-      dismissable-mask
-      :header="$t('profile.paymentHistory.qrDialogTitle')"
-      :closable="true"
-    >
+    <Dialog v-model:visible="qrDialogVisible" modal dismissable-mask :header="$t('profile.paymentHistory.qrDialogTitle')" class="w-[min(30rem,94vw)]">
       <QrPayment
         v-if="selectedPurchase && selectedPurchase.qrUrl"
         :ref-code="selectedPurchase.refCode"
@@ -49,11 +37,11 @@
         @cancelled="onCancelled"
       />
     </Dialog>
-  </div>
+  </PagePanel>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { formatVnd } from "~/lib/domain/format"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseStatus } from "~/types/purchases"
 
@@ -62,8 +50,7 @@ definePageMeta({
   middleware: "auth",
 })
 
-const { t } = useI18n()
-const toast = useToast()
+const { t, locale } = useI18n()
 
 const { data, pending, error, refresh } = await useFetch<ApiResponse<PurchaseStatus[]>>("/api/athletes/me/purchases")
 
@@ -77,9 +64,9 @@ function openQrDialog(purchase: PurchaseStatus) {
   qrDialogVisible.value = true
 }
 
+// QrPayment announces the payment itself.
 function onPaid() {
   qrDialogVisible.value = false
-  toast.add({ severity: "success", summary: t("general.success"), detail: t("checkout.paymentSuccess"), life: 5000 })
   refresh()
 }
 
@@ -88,12 +75,8 @@ function onCancelled() {
   refresh()
 }
 
-function formatAmount(amount: number) {
-  return amount.toLocaleString("vi-VN")
-}
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleString()
+function formatDateTime(dateStr: string) {
+  return new Date(dateStr).toLocaleString(locale.value === "vi" ? "vi-VN" : "en-GB", { dateStyle: "medium", timeStyle: "short" })
 }
 
 type TagSeverity = "success" | "info" | "warn" | "danger" | "secondary" | "contrast" | undefined

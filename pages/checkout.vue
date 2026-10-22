@@ -1,108 +1,62 @@
 <template>
-  <div class="min-h-screen dark-bg">
-    <div class="container mx-auto px-4 py-8 max-w-5xl">
-      <h1 class="text-2xl font-bold mb-6 text-surface-0">{{ $t("checkout.title") }}</h1>
+  <div>
+    <PageHeader :kicker="$t('checkout.kicker')" :title="$t('checkout.title')" :lede="$t('checkout.lede')" compact />
 
-      <!-- Initial step: two-column layout -->
-      <div v-if="step === 'initial'" class="flex flex-col lg:flex-row gap-6 items-start">
-        <!-- Left card: Items table -->
-        <div class="flex-1 border border-surface-600 rounded-lg p-5 bg-surface-800">
-          <h2 class="text-base font-semibold text-surface-0 mb-4">{{ $t("checkout.itemsTitle") }}</h2>
+    <PageSection class="grid gap-6">
+      <StepIndicator :steps="stepLabels" :current="stepIndex" :label="$t('steps.progress')" />
 
-          <DataTable :value="items" class="text-sm">
-            <template #empty>
-              <div class="text-surface-400 text-sm py-8 text-center">{{ $t("checkout.emptyCart") }}</div>
-            </template>
-            <Column :header="$t('checkout.item')">
-              <template #body="{ data }">
-                {{ data.name[locale as 'en' | 'vi'] ?? data.name.en }}
-              </template>
-            </Column>
-            <Column :header="$t('checkout.price')" style="text-align: right">
-              <template #body="{ data }">
-                <span class="font-semibold whitespace-nowrap">{{ formatAmount(data.amount) }} VND</span>
-              </template>
-            </Column>
-          </DataTable>
-        </div>
+      <!-- Order, voucher and total -->
+      <div v-if="step === 'initial'" class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <PagePanel :title="$t('checkout.itemsTitle')" ruled>
+          <p v-if="items.length === 0" class="py-6 text-center text-muted-color">{{ $t("checkout.emptyCart") }}</p>
+          <ul v-else class="grid">
+            <li v-for="item in items" :key="item.plan" class="flex items-baseline justify-between gap-4 border-b border-surface-200 py-3 last:border-b-0">
+              <span class="font-semibold">{{ item.name[locale as "en" | "vi"] ?? item.name.en }}</span>
+              <span class="font-display text-xl font-bold whitespace-nowrap tabular-nums">{{ formatVnd(item.amount, locale) }}</span>
+            </li>
+          </ul>
+        </PagePanel>
 
-        <!-- Right card: Total + confirm button -->
-        <div class="lg:w-72 w-full border border-surface-600 rounded-lg p-5 bg-surface-800 flex flex-col gap-4">
-          <h2 class="text-base font-semibold text-surface-0">{{ $t("checkout.totalTitle") }}</h2>
-
-          <VoucherPicker
-            v-if="voucherType && items.length"
-            v-model="selectedVoucherCode"
-            :type="voucherType"
-            :vouchers="vouchers"
-          />
-
-          <div class="border-t border-surface-600 pt-4 space-y-2 text-sm">
-            <div class="flex justify-between">
-              <span class="text-surface-400">{{ $t("checkout.subtotal") }}</span>
-              <span class="text-surface-0">{{ formatAmount(totals.subtotal) }} VND</span>
-            </div>
-            <div v-for="line in discountedLines" :key="line.type" class="flex justify-between text-primary">
-              <span>{{ $t("checkout.discount") }} · {{ line.voucher!.code }}</span>
-              <span>-{{ formatAmount(line.discount) }} VND</span>
+        <PagePanel :title="$t('checkout.totalTitle')" class="lg:sticky lg:top-20">
+          <div class="grid gap-5">
+            <VoucherPicker v-if="voucherType && items.length" v-model="selectedVoucherCode" :type="voucherType" :vouchers="vouchers" />
+            <CartSummary :lines="summaryLines" :total="totals.payable" />
+            <div class="grid gap-2">
+              <Button :label="$t('checkout.confirmButton')" :loading="isCreating" :disabled="items.length === 0" class="w-full" @click="handleConfirm" />
+              <Button :label="$t('checkout.backButton')" severity="secondary" variant="text" class="w-full" @click="router.back()" />
             </div>
           </div>
+        </PagePanel>
+      </div>
 
-          <div class="flex justify-between items-baseline border-t border-surface-600 pt-4">
-            <span class="text-surface-400 text-sm">{{ $t("checkout.total") }}</span>
-            <span class="text-2xl font-bold text-primary">{{ formatAmount(totals.payable) }} VND</span>
-          </div>
-          <Button
-            :label="$t('checkout.confirmButton')"
-            class="w-full"
-            :loading="isCreating"
-            :disabled="items.length === 0"
-            @click="handleConfirm"
-          />
-          <Button
-            :label="$t('checkout.backButton')"
-            severity="secondary"
-            text
-            class="w-full"
-            @click="router.back()"
-          />
+      <!-- Bank-transfer QR -->
+      <PagePanel v-else-if="step === 'pending' && purchase?.qrUrl" ruled>
+        <QrPayment :ref-code="purchase.refCode" :amount="purchase.amount" :qr-url="purchase.qrUrl" @paid="onPaid" @cancelled="step = 'cancelled'" />
+      </PagePanel>
+
+      <!-- A voucher covered the whole amount, so the purchase is already active -->
+      <PagePanel v-else-if="step === 'free'" ruled class="max-w-xl">
+        <div class="grid justify-items-start gap-3">
+          <AppIcon name="lucide:circle-check" class="size-10 text-success" />
+          <h2 class="font-display text-2xl font-bold uppercase">{{ $t("checkout.freeTitle") }}</h2>
+          <p>{{ $t("checkout.freeBody") }}</p>
+          <Button :label="$t('checkout.viewBenefits')" @click="onPaid" />
         </div>
-      </div>
+      </PagePanel>
 
-      <!-- Pending step: QR code payment -->
-      <QrPayment
-        v-else-if="step === 'pending' && purchase?.qrUrl"
-        :ref-code="purchase.refCode"
-        :amount="purchase.amount"
-        :qr-url="purchase.qrUrl"
-        @paid="onPaid"
-        @cancelled="step = 'cancelled'"
-      />
-
-      <!-- Free step: a voucher covered the whole amount, so the purchase is already active -->
-      <div v-else-if="step === 'free'" class="text-center py-12 space-y-4 max-w-md">
-        <i class="pi pi-check-circle text-5xl text-primary" />
-        <h2 class="text-xl font-semibold text-surface-0">{{ $t("checkout.freeTitle") }}</h2>
-        <p class="text-surface-300">{{ $t("checkout.freeBody") }}</p>
-        <Button :label="$t('checkout.viewBenefits')" @click="onPaid" />
-      </div>
-
-      <!-- Cancelled step -->
-      <div v-else-if="step === 'cancelled'" class="text-center py-12 space-y-4 max-w-md">
-        <i class="pi pi-times-circle text-5xl text-red-400" />
-        <p class="text-surface-300">{{ $t("checkout.cancelled") }}</p>
-        <Button
-          :label="$t('checkout.backButton')"
-          severity="secondary"
-          @click="router.back()"
-        />
-      </div>
-    </div>
+      <PagePanel v-else-if="step === 'cancelled'" class="max-w-xl">
+        <div class="grid justify-items-start gap-3">
+          <AppIcon name="lucide:circle-x" class="size-10 text-danger" />
+          <p>{{ $t("checkout.cancelled") }}</p>
+          <Button :label="$t('checkout.backButton')" severity="secondary" @click="router.back()" />
+        </div>
+      </PagePanel>
+    </PageSection>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue"
+import { formatVnd } from "~/lib/domain/format"
 import { computeVoucherTotals, type LineItems } from "~/lib/domain/vouchers"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseCreated } from "~/types/purchases"
@@ -145,6 +99,14 @@ const totals = computed(() => {
 
 const discountedLines = computed(() => totals.value.lines.filter((line) => line.discount > 0))
 
+const summaryLines = computed(() => [
+  { key: "subtotal", label: t("checkout.subtotal"), amount: totals.value.subtotal },
+  ...discountedLines.value.map((line) => ({ key: `discount-${line.type}`, label: `${t("checkout.discount")} · ${line.voucher?.code ?? ""}`, amount: line.discount, discount: true })),
+])
+
+const stepLabels = computed(() => [t("checkout.steps.review"), t("checkout.steps.pay"), t("checkout.steps.done")])
+const stepIndex = computed(() => (step.value === "initial" ? 0 : step.value === "pending" ? 1 : 2))
+
 onMounted(() => {
   try {
     const raw = localStorage.getItem(CHECKOUT_STORAGE_KEY)
@@ -155,10 +117,6 @@ onMounted(() => {
     items.value = []
   }
 })
-
-function formatAmount(amount: number) {
-  return amount.toLocaleString("vi-VN")
-}
 
 async function handleConfirm() {
   if (items.value.length === 0) return

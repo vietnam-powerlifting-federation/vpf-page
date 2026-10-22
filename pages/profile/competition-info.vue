@@ -1,64 +1,34 @@
 <template>
-  <div class="min-h-full">
-    <h1 class="text-2xl font-bold mb-6 text-surface-0">{{ $t("profile.tabs.competitionInfo") }}</h1>
-
-    <div v-if="pending" class="flex justify-center py-12">
-      <ProgressSpinner />
-    </div>
-    <div v-else-if="!rows.length" class="text-surface-400">
-      {{ $t("profile.competitionInfoTable.noCompetitions") }}
-    </div>
-    <div v-else>
-      <DataTable :value="rows" striped-rows class="w-full border border-surface-200 dark:border-surface-700">
-        <Column field="hostDate" :header="$t('profile.competitionInfoTable.date')">
-          <template #body="{ data }">
-            {{ formatDateDMY(data.hostDate) }}
-          </template>
-        </Column>
-        <Column field="meetName" :header="$t('profile.competitionInfoTable.competition')">
-          <template #body="{ data }">
-            <NuxtLinkLocale :to="`/competitions/${data.meetSlug}`" class="hover:underline">
-              {{ data.meetName }}
-            </NuxtLinkLocale>
-          </template>
-        </Column>
-        <Column :header="$t('profile.competitionInfoTable.status')">
-          <template #body="{ data }">
-            <span :class="data.completed ? 'text-surface-400' : 'text-primary'">
-              {{ data.completed ? $t("profile.competitionInfoTable.completed") : $t("profile.competitionInfoTable.registered") }}
-            </span>
-          </template>
-        </Column>
-        <Column :header="$t('profile.competitionInfoTable.action')">
-          <template #body="{ data }">
-            <template v-if="data.completed">
-              <Button size="small" :label="$t('profile.competitionInfoTable.viewDetail')" class="mr-2" @click="() => {}" />
-              <span class="text-surface-500 text-sm">({{ $t("profile.demo") }})</span>
-            </template>
-            <template v-else>
-              <Button size="small" :label="$t('profile.competitionInfoTable.change')" class="mr-2" @click="() => {}" />
-              <span class="text-surface-500 text-sm">({{ $t("profile.demo") }})</span>
-            </template>
-          </template>
-        </Column>
-        <Column :header="$t('profile.competitionInfoTable.displayOnProfile')">
-          <template #body="{ data }">
-            <template v-if="data.completed">
-              <Checkbox :model-value="data.displayOnProfile" :binary="true" disabled />
-              <span class="ml-2 text-surface-500 text-sm">({{ $t("profile.demo") }})</span>
-            </template>
-            <span v-else class="text-surface-600">—</span>
-          </template>
-        </Column>
-      </DataTable>
-    </div>
-  </div>
+  <PagePanel :title="$t('profile.tabs.competitionInfo')" ruled flush>
+    <LoadingState v-if="pending" />
+    <p v-else-if="!rows.length" class="px-4 pb-6 text-muted-color md:px-6">{{ $t("profile.competitionInfoTable.noCompetitions") }}</p>
+    <ResultsTable v-else :columns="columns" :rows="rows" :caption="$t('profile.tabs.competitionInfo')" :row-key="(row) => row.meetId">
+      <template #cell-date="{ row }">
+        <span class="tabular-nums">{{ formatDate(row.hostDate, locale) }}</span>
+      </template>
+      <template #cell-competition="{ row }">
+        <NuxtLinkLocale :to="`/competitions/${row.meetSlug}`" class="font-semibold decoration-accent decoration-2 underline-offset-3 hover:underline">{{ row.meetName }}</NuxtLinkLocale>
+      </template>
+      <template #cell-status="{ row }">
+        <Tag :severity="row.completed ? 'secondary' : 'info'" :value="row.completed ? $t('profile.competitionInfoTable.completed') : $t('profile.competitionInfoTable.registered')" />
+      </template>
+      <template #cell-action="{ row }">
+        <span class="inline-flex items-center gap-2">
+          <Button size="small" severity="secondary" variant="outlined" disabled :label="row.completed ? $t('profile.competitionInfoTable.viewDetail') : $t('profile.competitionInfoTable.change')" />
+          <Tag severity="secondary" :value="$t('profile.demo')" />
+        </span>
+      </template>
+      <template #cell-display="{ row }">
+        <Checkbox v-if="row.completed" :model-value="row.displayOnProfile" binary disabled :aria-label="$t('profile.competitionInfoTable.displayOnProfile')" />
+        <span v-else class="text-muted-color">–</span>
+      </template>
+    </ResultsTable>
+  </PagePanel>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue"
-import { useProfileCompetitions } from "~/composables/useProfileData"
-import { formatDateDMY } from "~/lib/domain/date"
+import { formatDate } from "~/lib/domain/format"
+import type { TableColumn } from "~/types/tables"
 import type { MeetPublic } from "~/types/meets"
 import type { Result } from "~/types/results"
 
@@ -94,7 +64,15 @@ const rows = computed(() => {
   })
 })
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+const columns = computed<TableColumn[]>(() => [
+  { key: "date", label: t("profile.competitionInfoTable.date") },
+  { key: "competition", label: t("profile.competitionInfoTable.competition"), rowHeader: true },
+  { key: "status", label: t("profile.competitionInfoTable.status") },
+  { key: "action", label: t("profile.competitionInfoTable.action") },
+  { key: "display", label: t("profile.competitionInfoTable.displayOnProfile") },
+])
 
 useHead({ title: () => t("profile.tabs.competitionInfo") })
 </script>

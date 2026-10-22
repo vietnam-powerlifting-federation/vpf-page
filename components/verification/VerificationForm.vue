@@ -1,116 +1,73 @@
 <template>
   <div>
-    <div v-if="pending" class="flex justify-center py-12">
-      <ProgressSpinner />
-    </div>
+    <LoadingState v-if="pending" />
 
     <template v-else>
-      <!-- Status banner -->
-      <div
-        v-if="status"
-        class="mb-6 p-4 rounded-lg border"
-        :class="statusBannerClass"
-      >
-        <p class="text-sm font-medium">{{ statusLabel }}</p>
-        <p v-if="status === 'rejected' && reviewNote" class="text-sm mt-1">
-          {{ $t("verification.reason") }}: {{ reviewNote }}
-        </p>
-      </div>
+      <Message v-if="status" :severity="statusSeverity" :closable="false" class="mb-6">
+        <p class="font-semibold">{{ statusLabel }}</p>
+        <p v-if="status === 'rejected' && reviewNote" class="mt-1">{{ $t("verification.reason") }}: {{ reviewNote }}</p>
+      </Message>
 
-      <form class="space-y-5" @submit.prevent="handleSubmit">
-        <div>
-          <label for="fullName" class="block mb-2 text-sm font-medium text-surface-800 dark:text-surface-200">
-            {{ $t("verification.fullName") }} <span class="text-primary">*</span>
-          </label>
-          <InputText id="fullName" v-model="form.fullName" class="w-full" :disabled="isLocked" :class="{ 'p-invalid': errors.fullName }" />
-          <small v-if="errors.fullName" class="p-error mt-1 block">{{ errors.fullName }}</small>
-        </div>
+      <form ref="formEl" class="grid gap-5" novalidate @submit.prevent="handleSubmit">
+        <AppField v-slot="f" :label="$t('verification.fullName')" :error="errors.fullName" required>
+          <InputText :id="f.id" v-model="form.fullName" autocomplete="name" :disabled="isLocked" :invalid="f.invalid" :aria-describedby="f.describedBy" class="w-full" />
+        </AppField>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div>
-            <label for="nationality" class="block mb-2 text-sm font-medium text-surface-800 dark:text-surface-200">
-              {{ $t("verification.nationality") }} <span class="text-primary">*</span>
-            </label>
-            <InputText id="nationality" v-model="form.nationality" class="w-full" :disabled="isLocked" :class="{ 'p-invalid': errors.nationality }" />
-            <small v-if="errors.nationality" class="p-error mt-1 block">{{ errors.nationality }}</small>
-          </div>
-          <div>
-            <label for="dob" class="block mb-2 text-sm font-medium text-surface-800 dark:text-surface-200">
-              {{ $t("verification.dob") }} <span class="text-primary">*</span>
-            </label>
+        <div class="grid gap-5 sm:grid-cols-2">
+          <AppField v-slot="f" :label="$t('verification.nationality')" :error="errors.nationality" required>
+            <InputText :id="f.id" v-model="form.nationality" autocomplete="country-name" :disabled="isLocked" :invalid="f.invalid" :aria-describedby="f.describedBy" class="w-full" />
+          </AppField>
+          <AppField v-slot="f" :label="$t('verification.dob')" :error="errors.dob" required>
             <InputNumber
-              id="dob"
               v-model="form.dob"
+              :input-id="f.id"
               :use-grouping="false"
               :min="1900"
               :max="currentYear"
+              :disabled="isLocked"
+              :invalid="f.invalid"
+              :aria-describedby="f.describedBy"
+              autocomplete="bday-year"
               class="w-full"
               input-class="w-full"
-              :disabled="isLocked"
-              :class="{ 'p-invalid': errors.dob }"
             />
-            <small v-if="errors.dob" class="p-error mt-1 block">{{ errors.dob }}</small>
-          </div>
+          </AppField>
         </div>
 
-        <div>
-          <label for="nationalId" class="block mb-2 text-sm font-medium text-surface-800 dark:text-surface-200">
-            {{ $t("verification.nationalId") }} <span class="text-primary">*</span>
-          </label>
-          <InputText id="nationalId" v-model="form.nationalId" class="w-full" :disabled="isLocked" :class="{ 'p-invalid': errors.nationalId }" />
-          <small v-if="errors.nationalId" class="p-error mt-1 block">{{ errors.nationalId }}</small>
-        </div>
+        <AppField v-slot="f" :label="$t('verification.nationalId')" :error="errors.nationalId" required>
+          <InputText :id="f.id" v-model="form.nationalId" inputmode="numeric" autocomplete="off" :disabled="isLocked" :invalid="f.invalid" :aria-describedby="f.describedBy" class="w-full" />
+        </AppField>
 
-        <div>
-          <label for="phoneNumber" class="block mb-2 text-sm font-medium text-surface-800 dark:text-surface-200">
-            {{ $t("verification.phoneNumber") }} <span class="text-primary">*</span>
-          </label>
-          <InputText id="phoneNumber" v-model="form.phoneNumber" class="w-full" :disabled="isLocked" :class="{ 'p-invalid': errors.phoneNumber }" />
-          <small v-if="errors.phoneNumber" class="p-error mt-1 block">{{ errors.phoneNumber }}</small>
-        </div>
+        <AppField v-slot="f" :label="$t('verification.phoneNumber')" :error="errors.phoneNumber" required>
+          <InputText :id="f.id" v-model="form.phoneNumber" type="tel" autocomplete="tel" :disabled="isLocked" :invalid="f.invalid" :aria-describedby="f.describedBy" class="w-full" />
+        </AppField>
 
-        <div>
-          <label for="address" class="block mb-2 text-sm font-medium text-surface-800 dark:text-surface-200">
-            {{ $t("verification.address") }} <span class="text-primary">*</span>
-          </label>
-          <Textarea id="address" v-model="form.address" rows="2" class="w-full" :disabled="isLocked" :class="{ 'p-invalid': errors.address }" />
-          <small v-if="errors.address" class="p-error mt-1 block">{{ errors.address }}</small>
-        </div>
+        <AppField v-slot="f" :label="$t('verification.address')" :error="errors.address" required>
+          <Textarea :id="f.id" v-model="form.address" rows="2" autocomplete="street-address" :disabled="isLocked" :invalid="f.invalid" :aria-describedby="f.describedBy" class="w-full" />
+        </AppField>
 
-        <!-- National ID card photo (front) -->
-        <div>
-          <label class="block mb-2 text-sm font-medium text-surface-800 dark:text-surface-200">
-            {{ $t("verification.idCardFront") }} <span class="text-primary">*</span>
-          </label>
-          <div
+        <AppField v-slot="f" :label="$t('verification.idCardFront')" :hint="$t('verification.idCardHint')" :error="errors.idCard" required>
+          <img
             v-if="idCardPreview"
-            class="mb-3 overflow-hidden rounded-lg border border-surface-200 dark:border-surface-700"
+            :src="idCardPreview"
+            :alt="$t('verification.idCardFront')"
+            class="mb-2 max-h-64 w-full rounded-md border border-surface-200 bg-surface-100 object-contain"
           >
-            <img :src="idCardPreview" alt="ID card front" class="w-full max-h-64 object-contain bg-surface-100 dark:bg-surface-900">
-          </div>
           <input
             v-if="!isLocked"
+            :id="f.id"
             ref="fileInput"
             type="file"
             accept="image/jpeg,image/png,image/webp"
             capture="environment"
-            class="block w-full text-sm text-surface-600 dark:text-surface-300
-                   file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2
-                   file:text-primary-contrast file:font-semibold hover:file:bg-primary-emphasis"
+            :aria-describedby="f.describedBy"
+            :aria-invalid="f.invalid || undefined"
+            class="block w-full text-sm text-muted-color file:mr-3 file:min-h-11 file:cursor-pointer file:rounded file:border file:border-surface-300 file:bg-surface-0 file:px-4 file:font-semibold file:text-color hover:file:bg-surface-100"
             @change="onFileChange"
           >
-          <small class="mt-1 block text-surface-500">{{ $t("verification.idCardHint") }}</small>
-          <small v-if="errors.idCard" class="p-error mt-1 block">{{ errors.idCard }}</small>
-        </div>
+        </AppField>
 
-        <Button
-          v-if="!isLocked"
-          type="submit"
-          :label="$t('verification.submitButton')"
-          class="w-full"
-          :loading="isSubmitting"
-          :disabled="isSubmitting"
-        />
+        <Button v-if="!isLocked" type="submit" :label="$t('verification.submitButton')" class="w-full" :loading="isSubmitting" />
 
         <slot name="actions" />
       </form>
@@ -119,7 +76,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from "vue"
 import type { ApiResponse } from "~/types/api"
 import type { IdentityVerification } from "~/types/verifications"
 
@@ -181,10 +137,10 @@ const statusLabel = computed(() => {
   return ""
 })
 
-const statusBannerClass = computed(() => {
-  if (status.value === "approved") return "bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-300"
-  if (status.value === "rejected") return "bg-primary/10 border-primary/20 text-primary-700 dark:text-primary-300"
-  return "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300"
+const statusSeverity = computed(() => {
+  if (status.value === "approved") return "success"
+  if (status.value === "rejected") return "error"
+  return "warn"
 })
 
 type StatusData = { emailVerified: boolean; identityVerified: boolean; verification: IdentityVerification | null }
@@ -237,8 +193,15 @@ const validate = (): boolean => {
   return !Object.values(errors).some(Boolean)
 }
 
+const formEl = ref<HTMLFormElement | null>(null)
+
 const handleSubmit = async () => {
-  if (!validate()) return
+  if (!validate()) {
+    // Move focus to the first field with an error, so it is read out and in view.
+    await nextTick()
+    formEl.value?.querySelector<HTMLElement>("[aria-invalid='true'], .p-invalid input, input.p-invalid")?.focus()
+    return
+  }
 
   isSubmitting.value = true
   try {

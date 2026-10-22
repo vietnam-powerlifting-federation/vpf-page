@@ -1,19 +1,18 @@
 <template>
   <div class="space-y-3">
     <div>
-      <label class="block text-sm font-medium text-surface-300">{{ $t("profile.vipBenefits.nameColor") }}</label>
-      <p class="text-sm text-surface-500 mt-1">{{ $t("profile.vipBenefits.nameColorHint") }}</p>
+      <p class="font-semibold">{{ $t("profile.vipBenefits.nameColor") }}</p>
+      <p class="mt-1 text-sm text-muted-color">{{ $t("profile.vipBenefits.nameColorHint") }}</p>
     </div>
 
-    <!-- Live sample on a dark swatch, so pale gradients stay legible -->
-    <div class="rounded-lg bg-surface-900 border border-surface-700 px-4 py-3">
-      <span
-        class="text-2xl sm:text-3xl font-bold break-words"
-        :class="hasDecorator ? '' : 'text-surface-0'"
-        :style="sampleStyle"
-      >
-        {{ sampleName }}
-      </span>
+    <!-- Live samples as the name will appear: on the dark board (title bands) and on a table row. -->
+    <div class="grid gap-2 sm:grid-cols-2">
+      <div class="rounded-md bg-board px-4 py-3">
+        <span class="font-display text-2xl font-extrabold break-words text-board-ink uppercase sm:text-3xl" :style="boardStyle">{{ sampleName }}</span>
+      </div>
+      <div class="rounded-md border border-surface-200 bg-surface-0 px-4 py-3">
+        <span class="text-xl font-semibold break-words" :style="sampleStyle">{{ sampleName }}</span>
+      </div>
     </div>
 
     <SelectButton
@@ -29,13 +28,13 @@
     <template v-if="mode !== 'none'">
       <!-- Presets -->
       <div>
-        <p class="text-sm text-surface-400 mb-2">{{ $t("profile.vipBenefits.colorPresets") }}</p>
+        <p class="mb-2 text-sm text-muted-color">{{ $t("profile.vipBenefits.colorPresets") }}</p>
         <div class="flex flex-wrap gap-2">
           <button
             v-for="preset in PRESETS"
             :key="preset.key"
             type="button"
-            class="w-8 h-8 rounded-full border border-surface-600 transition-transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            class="size-11 cursor-pointer rounded-full border-4 border-surface-0 ring-1 ring-surface-300 disabled:cursor-not-allowed disabled:opacity-50"
             :style="presetSwatchStyle(preset)"
             :title="$t(`profile.vipBenefits.preset${preset.key}`)"
             :aria-label="$t(`profile.vipBenefits.preset${preset.key}`)"
@@ -48,7 +47,7 @@
       <!-- Manual colours -->
       <div class="flex flex-wrap gap-4">
         <div class="flex flex-col gap-1">
-          <label class="text-sm text-surface-400">
+          <label class="text-sm text-muted-color">
             {{ mode === "solid" ? $t("profile.vipBenefits.colorSolid") : $t("profile.vipBenefits.colorStart") }}
           </label>
           <div class="flex items-center gap-2">
@@ -69,7 +68,7 @@
         </div>
 
         <div v-if="mode === 'gradient'" class="flex flex-col gap-1">
-          <label class="text-sm text-surface-400">{{ $t("profile.vipBenefits.colorEnd") }}</label>
+          <label class="text-sm text-muted-color">{{ $t("profile.vipBenefits.colorEnd") }}</label>
           <div class="flex items-center gap-2">
             <ColorPicker
               :model-value="stripHash(decorator2)"
@@ -96,8 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue"
-import { nameGradientStyle } from "~/lib/domain/patch-payload"
+import { nameDecoratorStyle } from "~/lib/domain/format"
 
 type Mode = "none" | "solid" | "gradient"
 type Preset = { key: string; from: string; to: string }
@@ -142,8 +140,8 @@ const derivedMode = computed<Mode>(() => {
 const modeOverride = ref<Mode | null>(null)
 const mode = computed<Mode>(() => modeOverride.value ?? derivedMode.value)
 
-const hasDecorator = computed(() => !!(props.decorator1 || props.decorator2))
-const sampleStyle = computed(() => nameGradientStyle(props.decorator1, props.decorator2))
+const sampleStyle = computed(() => nameDecoratorStyle(props.decorator1, props.decorator2))
+const boardStyle = computed(() => nameDecoratorStyle(props.decorator1, props.decorator2, "board"))
 
 function stripHash(v: string | null): string {
   return v ? v.replace(/^#/, "") : ""

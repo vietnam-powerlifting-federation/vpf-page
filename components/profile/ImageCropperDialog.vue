@@ -7,7 +7,7 @@
     :style="{ width: 'min(900px, 95vw)' }"
     @update:visible="(v: boolean) => emit('update:visible', v)"
   >
-    <p class="text-sm text-surface-400 mb-3">{{ $t("profile.vipBenefits.cropHint") }}</p>
+    <p class="mb-3 text-sm text-muted-color">{{ $t("profile.vipBenefits.cropHint") }}</p>
 
     <ClientOnly>
       <VuePictureCropper
@@ -18,7 +18,7 @@
         :options="cropperOptions"
       />
       <template #fallback>
-        <div class="flex justify-center items-center h-[420px] bg-surface-900 rounded-lg">
+        <div class="flex h-[420px] items-center justify-center rounded-md bg-board">
           <ProgressSpinner />
         </div>
       </template>
@@ -28,13 +28,12 @@
       <Button
         :label="$t('profile.vipBenefits.cropCancel')"
         severity="secondary"
-        text
+        variant="text"
         :disabled="busy"
         @click="emit('update:visible', false)"
       />
       <Button
         :label="$t('profile.vipBenefits.cropApply')"
-        class="bg-primary text-primary-contrast"
         :loading="busy"
         @click="onApply"
       />
@@ -70,7 +69,7 @@ const busy = ref(false)
 const boxStyle = {
   width: "100%",
   height: "420px",
-  backgroundColor: "var(--p-surface-900)",
+  backgroundColor: "var(--vpf-board)",
 }
 
 const cropperOptions = computed(() => ({

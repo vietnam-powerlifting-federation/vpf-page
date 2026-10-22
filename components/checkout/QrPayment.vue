@@ -1,71 +1,51 @@
 <template>
-  <div class="space-y-5 max-w-md">
-    <p class="text-surface-300 text-sm">{{ $t("checkout.scanQr") }}</p>
+  <div class="grid max-w-md gap-5">
+    <p>{{ $t("checkout.scanQr") }}</p>
 
-    <div class="bg-surface-800 rounded-lg p-4 space-y-3 text-sm">
-      <div class="flex justify-between">
-        <span class="text-surface-400">{{ $t("checkout.amount") }}</span>
-        <span class="font-semibold text-surface-0">{{ formatAmount(amount) }} VND</span>
+    <dl class="grid gap-2 rounded-md border border-surface-200 bg-surface-50 p-4 text-sm">
+      <div class="flex justify-between gap-4">
+        <dt class="text-muted-color">{{ $t("checkout.amount") }}</dt>
+        <dd class="font-display text-xl font-bold tabular-nums">{{ formatVnd(amount, locale) }}</dd>
       </div>
-      <div class="flex justify-between">
-        <span class="text-surface-400">{{ $t("checkout.transferNote") }}</span>
-        <span class="font-mono font-bold text-primary">SEVQR {{ refCode }}</span>
+      <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <dt class="text-muted-color">{{ $t("checkout.transferNote") }}</dt>
+        <dd class="font-mono text-base font-bold">SEVQR {{ refCode }}</dd>
       </div>
-    </div>
+    </dl>
 
-    <div class="flex justify-center">
-      <img
-        :src="qrUrl"
-        :alt="$t('checkout.qrAlt')"
-        class="w-64 h-64 rounded-lg bg-white"
-      >
-    </div>
+    <!-- QR codes need a light background to scan, in either theme. -->
+    <img :src="qrUrl" :alt="$t('checkout.qrAlt')" width="256" height="256" class="mx-auto size-64 rounded-md bg-light p-2">
 
-    <div class="flex items-center gap-2 justify-center text-surface-400 text-sm">
-      <ProgressSpinner style="width: 16px; height: 16px;" class="!mx-0" stroke-width="4" />
-      <span>{{ $t("checkout.waitingForPayment") }}</span>
-    </div>
+    <p class="flex items-center justify-center gap-2 text-sm text-muted-color" role="status">
+      <ProgressSpinner class="!m-0 !size-4" stroke-width="6" />
+      {{ $t("checkout.waitingForPayment") }}
+    </p>
 
-    <div class="flex justify-center pt-1">
-      <Button
-        :label="$t('checkout.cancelButton')"
-        severity="danger"
-        text
-        size="small"
-        :loading="isCancelling"
-        @click="handleCancel"
-      />
-    </div>
+    <Button :label="$t('checkout.cancelButton')" severity="danger" variant="text" :loading="isCancelling" class="justify-self-center" @click="handleCancel" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue"
+import { formatVnd } from "~/lib/domain/format"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseStatus } from "~/types/purchases"
 
+/** Bank-transfer QR for a pending purchase. Polls until the payment is matched or cancelled. */
 const { refCode, amount, qrUrl } = defineProps<{
   refCode: string
   amount: number
   qrUrl: string
 }>()
 
-const emit = defineEmits<{
-  paid: []
-  cancelled: []
-}>()
+const emit = defineEmits<{ paid: []; cancelled: [] }>()
 
 const POLL_INTERVAL_MS = 3_000
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const toast = useToast()
 
 const isCancelling = ref(false)
 let pollTimer: ReturnType<typeof setInterval> | null = null
-
-function formatAmount(value: number) {
-  return value.toLocaleString("vi-VN")
-}
 
 function startPolling() {
   pollTimer = setInterval(async () => {
@@ -75,6 +55,7 @@ function startPolling() {
 
       if (res.data.status === "active") {
         stopPolling()
+        // The payment arrives in the background, so it is announced with a toast.
         toast.add({ severity: "success", summary: t("general.success"), detail: t("checkout.paymentSuccess"), life: 5000 })
         emit("paid")
       } else if (res.data.status === "cancelled") {
@@ -82,7 +63,7 @@ function startPolling() {
         emit("cancelled")
       }
     } catch {
-      // silently ignore polling errors
+      // Polling errors are transient; the next tick tries again.
     }
   }, POLL_INTERVAL_MS)
 }
@@ -99,7 +80,7 @@ async function handleCancel() {
   try {
     await $fetch(`/api/purchases/${refCode}/cancel`, { method: "PATCH" })
   } catch {
-    // ignore — still move to cancelled UI
+    // Still show the cancelled state; an unpaid purchase expires on its own.
   } finally {
     isCancelling.value = false
     stopPolling()
@@ -107,6 +88,6 @@ async function handleCancel() {
   }
 }
 
-onMounted(() => startPolling())
-onUnmounted(() => stopPolling())
+onMounted(startPolling)
+onUnmounted(stopPolling)
 </script>

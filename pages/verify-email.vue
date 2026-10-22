@@ -1,51 +1,21 @@
 <template>
-  <div class="bg-surface-100 dark:bg-surface-900 py-10 md:py-14 px-4 min-h-[70vh]">
-    <div class="container mx-auto max-w-md">
-      <div class="rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-0 dark:bg-surface-950 shadow-sm p-8">
-        <h1 class="text-2xl font-bold text-surface-900 dark:text-surface-0">{{ $t("verifyEmail.title") }}</h1>
-        <p class="mt-2 text-sm text-surface-600 dark:text-surface-300">{{ $t("verifyEmail.subtitle") }}</p>
-
-        <form class="mt-8 space-y-5" @submit.prevent="handleVerify">
-          <div>
-            <label for="code" class="block mb-2 text-sm font-medium text-surface-800 dark:text-surface-200">
-              {{ $t("verifyEmail.codeLabel") }}
-            </label>
-            <InputText
-              id="code"
-              v-model="code"
-              inputmode="numeric"
-              :placeholder="$t('verifyEmail.codePlaceholder')"
-              class="w-full tracking-widest"
-            />
-          </div>
-
-          <Button
-            type="submit"
-            :label="$t('verifyEmail.verifyButton')"
-            class="w-full"
-            :loading="isLoading"
-            :disabled="isLoading"
-          />
-
-          <div class="text-center text-sm text-surface-600 dark:text-surface-300">
-            {{ $t("verifyEmail.noCode") }}
-            <button
-              type="button"
-              class="font-semibold text-primary hover:underline disabled:opacity-50"
-              :disabled="isResending"
-              @click="handleResend"
-            >
-              {{ $t("verifyEmail.resend") }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+  <AuthCard :title="$t('verifyEmail.title')" :subtitle="$t('verifyEmail.subtitle')">
+    <form class="grid gap-5" novalidate @submit.prevent="handleVerify">
+      <AppField v-slot="f" :label="$t('verifyEmail.codeLabel')">
+        <InputText :id="f.id" v-model="code" inputmode="numeric" autocomplete="one-time-code" class="w-full font-display text-xl tracking-[0.3em]" />
+      </AppField>
+      <Button type="submit" :label="$t('verifyEmail.verifyButton')" class="w-full" :loading="isLoading" />
+      <p class="text-center text-sm text-muted-color">
+        {{ $t("verifyEmail.noCode") }}
+        <button type="button" class="min-h-11 cursor-pointer font-semibold text-accent underline-offset-3 hover:underline disabled:opacity-50" :disabled="isResending" @click="handleResend">
+          {{ $t("verifyEmail.resend") }}
+        </button>
+      </p>
+    </form>
+  </AuthCard>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue"
 import type { ApiResponse } from "~/types/api"
 
 const { t } = useI18n()
@@ -58,6 +28,7 @@ const isResending = ref(false)
 type StatusData = { emailVerified: boolean; identityVerified: boolean; verification: unknown }
 
 const msg = useApiMessage()
+const localePath = useLocalePath()
 
 onMounted(async () => {
   // If already verified, skip straight to the identity verification form.
@@ -66,7 +37,7 @@ onMounted(async () => {
     credentials: "include",
   }) as ApiResponse<StatusData>
   if (res.success && res.data.emailVerified) {
-    await navigateTo("/verification")
+    await navigateTo(localePath("/verification"))
   }
 })
 
@@ -84,7 +55,7 @@ const handleVerify = async () => {
       credentials: "include",
     }) as ApiResponse<{ emailVerified: boolean }>
     if (res.success) {
-      await navigateTo("/verification")
+      await navigateTo(localePath("/verification"))
     } else {
       toast.add({ severity: "error", summary: t("general.error"), detail: msg(res) || t("general.error"), life: 5000 })
     }

@@ -1,289 +1,237 @@
 <template>
-  <div class="max-w-3xl mx-auto px-4 py-8">
-    <div v-if="pending" class="flex justify-center py-16">
-      <ProgressSpinner />
-    </div>
+  <div>
+    <PageHeader
+      :kicker="eligibility?.meet.meetName ?? $t('meets.kicker')"
+      :title="$t('competitionRegistration.title')"
+      :lede="eligibility ? $t('competitionRegistration.subtitle', { meet: eligibility.meet.meetName }) : undefined"
+      compact
+    />
 
-    <div v-else-if="!eligibility" class="py-8">
-      <Message severity="error" :closable="false">{{ $t("competitionRegistration.loadError") }}</Message>
-    </div>
+    <PageSection class="max-w-3xl">
+      <LoadingState v-if="pending" />
 
-    <template v-else>
-      <h1 class="text-2xl font-bold text-surface-0 mb-1">{{ $t("competitionRegistration.title") }}</h1>
-      <p class="text-surface-400 mb-6">{{ $t("competitionRegistration.subtitle", { meet: eligibility.meet.meetName }) }}</p>
+      <Message v-else-if="!eligibility" severity="error" :closable="false">{{ $t("competitionRegistration.loadError") }}</Message>
 
-      <!-- Hard gates -->
-      <Message v-if="!eligibility.registrationOpen" severity="warn" :closable="false">
-        {{ $t("competitionRegistration.notOpen") }}
-      </Message>
-
-      <Message v-else-if="eligibility.alreadyRegistered" severity="info" :closable="false">
-        {{ $t("competitionRegistration.alreadyRegistered") }}
-        <NuxtLinkLocale to="/profile/payment-history" class="underline ml-1">
-          {{ $t("competitionRegistration.viewInProfile") }}
-        </NuxtLinkLocale>
-      </Message>
-
-      <Message v-else-if="!eligibility.emailVerified" severity="warn" :closable="false">
-        {{ $t("competitionRegistration.emailNotVerified") }}
-        <NuxtLinkLocale to="/verify-email" class="underline ml-1">
-          {{ $t("competitionRegistration.verifyEmail") }}
-        </NuxtLinkLocale>
-      </Message>
-
-      <div v-else-if="eligibility.bans?.blocked" class="space-y-3">
-        <Message severity="error" :closable="false">
-          <div class="font-semibold mb-1">{{ $t("competitionRegistration.blockedTitle") }}</div>
-          <div>{{ blockMessage }}</div>
-        </Message>
-      </div>
-
-      <!-- Wizard -->
       <template v-else>
-        <ol class="flex flex-wrap gap-x-4 gap-y-1 text-sm mb-6">
-          <li v-for="(s, i) in stepLabels" :key="s" :class="i === stepIndex ? 'text-primary font-semibold' : 'text-surface-500'">
-            {{ i + 1 }}. {{ s }}
-          </li>
-        </ol>
-
-        <Message v-if="eligibility.bans?.violationOutcome === 'pledge'" severity="warn" :closable="false" class="mb-4">
-          {{ $t("competitionRegistration.pledgeNotice") }}
+        <!-- Reasons registration cannot start, in the order they are checked. -->
+        <Message v-if="!eligibility.registrationOpen" severity="warn" :closable="false">
+          {{ $t("competitionRegistration.notOpen") }}
         </Message>
 
-        <!-- Step 1: identity verification (mandatory before registering) -->
-        <section v-if="step === 'identity'" class="space-y-5">
-          <h2 class="text-lg font-semibold text-surface-0">{{ $t("competitionRegistration.stepIdentity") }}</h2>
+        <Message v-else-if="eligibility.alreadyRegistered" severity="info" :closable="false">
+          {{ $t("competitionRegistration.alreadyRegistered") }}
+          <NuxtLinkLocale to="/profile/payment-history" class="ml-1 font-semibold underline">{{ $t("competitionRegistration.viewInProfile") }}</NuxtLinkLocale>
+        </Message>
 
-          <Message v-if="identityStatus === 'approved'" severity="success" :closable="false">
-            {{ $t("competitionRegistration.identityApprovedNotice") }}
+        <Message v-else-if="!eligibility.emailVerified" severity="warn" :closable="false">
+          {{ $t("competitionRegistration.emailNotVerified") }}
+          <NuxtLinkLocale to="/verify-email" class="ml-1 font-semibold underline">{{ $t("competitionRegistration.verifyEmail") }}</NuxtLinkLocale>
+        </Message>
+
+        <Message v-else-if="eligibility.bans?.blocked" severity="error" :closable="false">
+          <p class="font-semibold">{{ $t("competitionRegistration.blockedTitle") }}</p>
+          <p class="mt-1">{{ blockMessage }}</p>
+        </Message>
+
+        <div v-else class="grid gap-6">
+          <StepIndicator :steps="stepLabels" :current="stepIndex" :label="$t('steps.progress')" />
+
+          <Message v-if="eligibility.bans?.violationOutcome === 'pledge'" severity="warn" :closable="false">
+            {{ $t("competitionRegistration.pledgeNotice") }}
           </Message>
-          <Message v-else-if="identityStatus === 'pending'" severity="info" :closable="false">
-            {{ $t("competitionRegistration.identityPendingNotice") }}
-          </Message>
-          <Message v-else severity="warn" :closable="false">
-            {{ $t("competitionRegistration.identityRequired") }}
-          </Message>
 
-          <VerificationForm
-            @update:status="(s) => (identityStatus = s ?? 'not_submitted')"
-            @submitted="onVerificationSubmitted"
-          />
+          <PagePanel ruled>
+            <!-- Step 1: identity verification (must be submitted before registering) -->
+            <div v-if="step === 'identity'" class="grid gap-5">
+              <h2 ref="stepHeading" tabindex="-1" class="font-display text-2xl font-bold uppercase focus:outline-none">{{ $t("competitionRegistration.stepIdentity") }}</h2>
+              <Message v-if="identityStatus === 'approved'" severity="success" :closable="false">{{ $t("competitionRegistration.identityApprovedNotice") }}</Message>
+              <Message v-else-if="identityStatus === 'pending'" severity="info" :closable="false">{{ $t("competitionRegistration.identityPendingNotice") }}</Message>
+              <Message v-else severity="warn" :closable="false">{{ $t("competitionRegistration.identityRequired") }}</Message>
 
-          <div class="flex justify-end">
-            <Button
-              :label="$t('competitionRegistration.next')"
-              :disabled="!canProceedIdentity"
-              @click="step = 'capacity'"
-            />
-          </div>
-        </section>
+              <VerificationForm @update:status="(s) => (identityStatus = s ?? 'not_submitted')" @submitted="onVerificationSubmitted" />
 
-        <!-- Step 2: capacity -->
-        <section v-else-if="step === 'capacity'" class="space-y-5">
-          <h2 class="text-lg font-semibold text-surface-0">{{ $t("competitionRegistration.capacityLegend") }}</h2>
-
-          <div class="space-y-3">
-            <label class="flex items-start gap-3 p-3 rounded-lg border border-surface-700 cursor-pointer">
-              <RadioButton v-model="form.capacity" input-id="cap-member" value="member" />
-              <span>
-                <span class="block text-surface-0 font-medium">{{ $t("competitionRegistration.member") }}</span>
-                <span class="block text-surface-400 text-sm">{{ $t("competitionRegistration.memberHint") }}</span>
-              </span>
-            </label>
-            <label
-              v-if="eligibility.meet.allowGuestRegistration"
-              class="flex items-start gap-3 p-3 rounded-lg border border-surface-700 cursor-pointer"
-            >
-              <RadioButton v-model="form.capacity" input-id="cap-guest" value="guest" />
-              <span>
-                <span class="block text-surface-0 font-medium">{{ $t("competitionRegistration.guest") }}</span>
-                <span class="block text-surface-400 text-sm">{{ $t("competitionRegistration.guestHint") }}</span>
-              </span>
-            </label>
-          </div>
-
-          <div class="space-y-3 pt-2">
-            <label v-if="form.capacity === 'member'" class="flex items-center gap-3">
-              <Checkbox v-model="form.membershipTermsAccepted" binary input-id="terms" />
-              <span class="text-surface-200 text-sm">{{ $t("competitionRegistration.membershipTerms") }}</span>
-            </label>
-            <label class="flex items-center gap-3">
-              <Checkbox v-model="form.dataConsentAccepted" binary input-id="consent" />
-              <span class="text-surface-200 text-sm">{{ $t("competitionRegistration.dataConsent") }}</span>
-            </label>
-          </div>
-
-          <div class="flex justify-between">
-            <Button :label="$t('competitionRegistration.back')" text @click="step = 'identity'" />
-            <Button :label="$t('competitionRegistration.next')" :disabled="!canProceedCapacity" @click="step = 'details'" />
-          </div>
-        </section>
-
-        <!-- Step 3: details -->
-        <section v-else-if="step === 'details'" class="space-y-5">
-          <h2 class="text-lg font-semibold text-surface-0">{{ $t("competitionRegistration.detailsLegend") }}</h2>
-
-          <div class="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-surface-300 text-sm mb-1">{{ $t("competitionRegistration.sportGender") }}</label>
-              <Select v-model="form.sex" :options="sexOptions" option-label="label" option-value="value" class="w-full" />
-            </div>
-            <div>
-              <label class="block text-surface-300 text-sm mb-1">{{ $t("competitionRegistration.weightClass") }}</label>
-              <Select v-model="form.weightClass" :options="weightClassOptions" option-label="label" option-value="value" class="w-full" />
-            </div>
-            <div>
-              <label class="block text-surface-300 text-sm mb-1">{{ $t("competitionRegistration.division") }}</label>
-              <div v-if="form.capacity === 'guest'" class="text-surface-400 text-sm py-2">
-                {{ $t("competitionRegistration.guestDivisionNote") }}
-              </div>
-              <Select
-                v-else-if="divisionOptions.length"
-                v-model="form.division"
-                :options="divisionOptions"
-                option-label="label"
-                option-value="value"
-                class="w-full"
-              />
-              <Message v-else severity="warn" :closable="false" class="text-sm">
-                {{ $t("competitionRegistration.noDivisions") }}
-              </Message>
-            </div>
-          </div>
-
-          <div>
-            <h3 class="text-surface-300 text-sm font-medium mb-2">{{ $t("competitionRegistration.rackPins") }}</h3>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div>
-                <label class="block text-surface-400 text-xs mb-1">{{ $t("competitionRegistration.squatRackPin") }}</label>
-                <InputNumber v-model="form.squatRackPin" :min="0" :max="30" show-buttons class="w-full" />
-              </div>
-              <div>
-                <label class="block text-surface-400 text-xs mb-1">{{ $t("competitionRegistration.benchRackPin") }}</label>
-                <InputNumber v-model="form.benchRackPin" :min="0" :max="30" show-buttons class="w-full" />
-              </div>
-              <div>
-                <label class="block text-surface-400 text-xs mb-1">{{ $t("competitionRegistration.benchSafetyPin") }}</label>
-                <InputNumber v-model="form.benchSafetyPin" :min="0" :max="30" show-buttons class="w-full" />
-              </div>
-              <div>
-                <label class="block text-surface-400 text-xs mb-1">{{ $t("competitionRegistration.benchFootBlock") }}</label>
-                <InputNumber v-model="form.benchFootBlock" :min="0" :max="30" show-buttons class="w-full" />
+              <div class="flex justify-end border-t border-surface-200 pt-4">
+                <Button :disabled="!canProceedIdentity" @click="goTo('capacity')">
+                  {{ $t("competitionRegistration.next") }}
+                  <AppIcon name="lucide:arrow-right" class="size-4" />
+                </Button>
               </div>
             </div>
-          </div>
 
-          <div>
-            <label class="block text-surface-300 text-sm mb-1">{{ $t("competitionRegistration.photo") }}</label>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              class="block w-full text-sm text-surface-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-primary file:text-primary-contrast file:cursor-pointer"
-              @change="onPhotoChange"
-            >
-            <p class="text-surface-500 text-xs mt-1">
-              {{ eligibility.athlete.competitionPhotoUrl ? $t("competitionRegistration.photoCurrent") : $t("competitionRegistration.photoHint") }}
-            </p>
-          </div>
+            <!-- Step 2: member or guest, and consent -->
+            <div v-else-if="step === 'capacity'" class="grid gap-5">
+              <h2 ref="stepHeading" tabindex="-1" class="font-display text-2xl font-bold uppercase focus:outline-none">{{ $t("competitionRegistration.capacityLegend") }}</h2>
 
-          <label class="flex items-center gap-3">
-            <Checkbox v-model="form.mediaPlus" binary input-id="mediaplus" />
-            <span class="text-surface-200 text-sm">
-              {{ $t("competitionRegistration.mediaPlus") }}
-              <span class="text-surface-500">— {{ formatAmount(eligibility.fees.mediaPlusFee) }} VND</span>
-            </span>
-          </label>
+              <fieldset class="m-0 grid gap-3 border-0 p-0">
+                <legend class="sr-only">{{ $t("competitionRegistration.capacityLegend") }}</legend>
+                <label
+                  v-for="option in capacityOptions"
+                  :key="option.value"
+                  class="flex cursor-pointer items-start gap-3 rounded-md border p-4 transition-colors duration-120 ease-snap"
+                  :class="form.capacity === option.value ? 'border-accent bg-accent-soft' : 'border-surface-300 hover:bg-surface-100'"
+                >
+                  <RadioButton v-model="form.capacity" :input-id="`cap-${option.value}`" :value="option.value" class="mt-0.5" />
+                  <span>
+                    <span class="block font-semibold">{{ option.label }}</span>
+                    <span class="block text-sm text-muted-color">{{ option.hint }}</span>
+                  </span>
+                </label>
+              </fieldset>
 
-          <div class="flex justify-between">
-            <Button :label="$t('competitionRegistration.back')" text @click="step = 'capacity'" />
-            <Button :label="$t('competitionRegistration.next')" :disabled="!canProceedDetails" @click="step = 'review'" />
-          </div>
-        </section>
+              <div class="grid gap-3">
+                <label v-if="form.capacity === 'member'" class="flex min-h-11 cursor-pointer items-center gap-3">
+                  <Checkbox v-model="form.membershipTermsAccepted" binary input-id="terms" />
+                  <span>{{ $t("competitionRegistration.membershipTerms") }}</span>
+                </label>
+                <label class="flex min-h-11 cursor-pointer items-center gap-3">
+                  <Checkbox v-model="form.dataConsentAccepted" binary input-id="consent" />
+                  <span>{{ $t("competitionRegistration.dataConsent") }}</span>
+                </label>
+              </div>
 
-        <!-- Step 4: review -->
-        <section v-else-if="step === 'review'" class="space-y-5">
-          <h2 class="text-lg font-semibold text-surface-0">{{ $t("competitionRegistration.reviewLegend") }}</h2>
-
-          <!-- A voucher picker per owed type; Media Plus has no type and is never discounted. -->
-          <div v-if="voucherTypes.length" class="bg-surface-800 rounded-lg p-4 space-y-4">
-            <div>
-              <h3 class="text-sm font-semibold text-surface-200">{{ $t("competitionRegistration.voucherLegend") }}</h3>
-              <p class="text-xs text-surface-500 mt-1">{{ $t("competitionRegistration.voucherHint") }}</p>
+              <div class="flex justify-between border-t border-surface-200 pt-4">
+                <Button severity="secondary" variant="text" @click="goTo('identity')">
+                  <AppIcon name="lucide:arrow-left" class="size-4" />
+                  {{ $t("competitionRegistration.back") }}
+                </Button>
+                <Button :disabled="!canProceedCapacity" @click="goTo('details')">
+                  {{ $t("competitionRegistration.next") }}
+                  <AppIcon name="lucide:arrow-right" class="size-4" />
+                </Button>
+              </div>
             </div>
-            <VoucherPicker
-              v-for="vt in voucherTypes"
-              :key="vt"
-              :model-value="selectedVoucherCodes[vt] ?? null"
-              :type="vt"
-              :vouchers="vouchers"
-              @update:model-value="selectedVoucherCodes[vt] = $event"
-            />
-          </div>
 
-          <div class="bg-surface-800 rounded-lg p-4 space-y-2 text-sm">
-            <div class="flex justify-between">
-              <span class="text-surface-400">{{ $t("competitionRegistration.entryFee") }}</span>
-              <span class="text-surface-0">{{ formatAmount(fees.entryFee) }} VND</span>
-            </div>
-            <div v-if="fees.membershipFee > 0" class="flex justify-between">
-              <span class="text-surface-400">{{ $t("competitionRegistration.membershipFee") }}</span>
-              <span class="text-surface-0">{{ formatAmount(fees.membershipFee) }} VND</span>
-            </div>
-            <div v-for="line in discountedLines" :key="line.type" class="flex justify-between text-primary">
-              <span>{{ $t("competitionRegistration.discount") }} · {{ typeLabel(line.type) }}</span>
-              <span>-{{ formatAmount(line.discount) }} VND</span>
-            </div>
-            <div v-if="fees.mediaPlusFee > 0" class="flex justify-between">
-              <span class="text-surface-400">{{ $t("competitionRegistration.mediaPlusFee") }}</span>
-              <span class="text-surface-0">{{ formatAmount(fees.mediaPlusFee) }} VND</span>
-            </div>
-            <div class="flex justify-between border-t border-surface-700 pt-2 font-semibold">
-              <span class="text-surface-200">{{ $t("competitionRegistration.total") }}</span>
-              <span class="text-primary">{{ formatAmount(totals.payable) }} VND</span>
-            </div>
-          </div>
+            <!-- Step 3: category and equipment settings -->
+            <div v-else-if="step === 'details'" class="grid gap-5">
+              <h2 ref="stepHeading" tabindex="-1" class="font-display text-2xl font-bold uppercase focus:outline-none">{{ $t("competitionRegistration.detailsLegend") }}</h2>
 
-          <div class="flex justify-between">
-            <Button :label="$t('competitionRegistration.back')" text @click="step = 'details'" />
-            <Button :label="$t('competitionRegistration.confirm')" :loading="isSubmitting" @click="submit" />
-          </div>
-        </section>
+              <div class="grid gap-4 sm:grid-cols-3">
+                <AppField v-slot="f" :label="$t('competitionRegistration.sportGender')" required>
+                  <Select v-model="form.sex" :options="sexOptions" option-label="label" option-value="value" :aria-labelledby="f.labelId" class="w-full" />
+                </AppField>
+                <AppField v-slot="f" :label="$t('competitionRegistration.weightClass')" required>
+                  <Select v-model="form.weightClass" :options="weightClassOptions" option-label="label" option-value="value" :aria-labelledby="f.labelId" class="w-full" />
+                </AppField>
+                <AppField v-slot="f" :label="$t('competitionRegistration.division')" :hint="form.capacity === 'guest' ? undefined : $t('filters.divisionHint')" required>
+                  <p v-if="form.capacity === 'guest'" class="py-2 text-sm text-muted-color">{{ $t("competitionRegistration.guestDivisionNote") }}</p>
+                  <Select
+                    v-else-if="divisionOptions.length"
+                    v-model="form.division"
+                    :options="divisionOptions"
+                    option-label="label"
+                    option-value="value"
+                    :aria-labelledby="f.labelId"
+                    :aria-describedby="f.describedBy"
+                    class="w-full"
+                  />
+                  <Message v-else severity="warn" :closable="false">{{ $t("competitionRegistration.noDivisions") }}</Message>
+                </AppField>
+              </div>
 
-        <!-- Step 5: payment -->
-        <section v-else-if="step === 'payment' && purchase?.qrUrl">
-          <QrPayment
-            :ref-code="purchase.refCode"
-            :amount="purchase.amount"
-            :qr-url="purchase.qrUrl"
-            @paid="step = 'done'"
-            @cancelled="step = 'review'"
-          />
-        </section>
+              <fieldset class="m-0 grid gap-3 border-0 p-0">
+                <legend class="mb-2 p-0 text-sm font-semibold">{{ $t("competitionRegistration.rackPins") }}</legend>
+                <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <AppField v-for="pin in rackPins" :key="pin.key" v-slot="f" :label="$t(pin.label)">
+                    <InputNumber v-model="form[pin.key]" :input-id="f.id" :min="0" :max="30" show-buttons button-layout="horizontal" class="w-full" input-class="w-full text-center" :increment-button-props="{ 'aria-label': '+' }" :decrement-button-props="{ 'aria-label': '−' }" />
+                  </AppField>
+                </div>
+              </fieldset>
 
-        <!-- Step 6: done -->
-        <section v-else-if="step === 'done' && purchase" class="space-y-3">
-          <Message :severity="purchase.identityVerified ? 'success' : 'info'" :closable="false">
-            <div class="font-semibold mb-1">
-              {{ purchase.identityVerified ? $t("competitionRegistration.confirmedTitle") : $t("competitionRegistration.pendingTitle") }}
+              <AppField
+                v-slot="f"
+                :label="$t('competitionRegistration.photo')"
+                :hint="eligibility.athlete.competitionPhotoUrl ? $t('competitionRegistration.photoCurrent') : $t('competitionRegistration.photoHint')"
+              >
+                <input
+                  :id="f.id"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  :aria-describedby="f.describedBy"
+                  class="block w-full text-sm text-muted-color file:mr-3 file:min-h-11 file:cursor-pointer file:rounded file:border file:border-surface-300 file:bg-surface-0 file:px-4 file:font-semibold file:text-color hover:file:bg-surface-100"
+                  @change="onPhotoChange"
+                >
+              </AppField>
+
+              <label class="flex min-h-11 cursor-pointer items-center gap-3">
+                <Checkbox v-model="form.mediaPlus" binary input-id="mediaplus" />
+                <span>
+                  {{ $t("competitionRegistration.mediaPlus") }}
+                  <span class="text-muted-color">· {{ formatVnd(eligibility.fees.mediaPlusFee, locale) }}</span>
+                </span>
+              </label>
+
+              <div class="flex justify-between border-t border-surface-200 pt-4">
+                <Button severity="secondary" variant="text" @click="goTo('capacity')">
+                  <AppIcon name="lucide:arrow-left" class="size-4" />
+                  {{ $t("competitionRegistration.back") }}
+                </Button>
+                <Button :disabled="!canProceedDetails" @click="goTo('review')">
+                  {{ $t("competitionRegistration.next") }}
+                  <AppIcon name="lucide:arrow-right" class="size-4" />
+                </Button>
+              </div>
             </div>
-            <div>
-              {{ purchase.identityVerified
-                ? $t("competitionRegistration.confirmedBody", { meet: eligibility.meet.meetName })
-                : $t("competitionRegistration.pendingBody", { meet: eligibility.meet.meetName }) }}
+
+            <!-- Step 4: vouchers, fees and confirm -->
+            <div v-else-if="step === 'review'" class="grid gap-5">
+              <h2 ref="stepHeading" tabindex="-1" class="font-display text-2xl font-bold uppercase focus:outline-none">{{ $t("competitionRegistration.reviewLegend") }}</h2>
+
+              <div v-if="voucherTypes.length" class="grid gap-4 rounded-md border border-surface-200 bg-surface-50 p-4">
+                <div>
+                  <h3 class="font-semibold">{{ $t("competitionRegistration.voucherLegend") }}</h3>
+                  <p class="text-sm text-muted-color">{{ $t("competitionRegistration.voucherHint") }}</p>
+                </div>
+                <VoucherPicker
+                  v-for="vt in voucherTypes"
+                  :key="vt"
+                  :model-value="selectedVoucherCodes[vt] ?? null"
+                  :type="vt"
+                  :vouchers="vouchers"
+                  @update:model-value="selectedVoucherCodes[vt] = $event"
+                />
+              </div>
+
+              <CartSummary :lines="summaryLines" :total="totals.payable" />
+
+              <div class="flex justify-between border-t border-surface-200 pt-4">
+                <Button severity="secondary" variant="text" @click="goTo('details')">
+                  <AppIcon name="lucide:arrow-left" class="size-4" />
+                  {{ $t("competitionRegistration.back") }}
+                </Button>
+                <Button :label="$t('competitionRegistration.confirm')" :loading="isSubmitting" @click="submit" />
+              </div>
             </div>
-          </Message>
-          <NuxtLinkLocale to="/profile/competition-info">
-            <Button :label="$t('competitionRegistration.viewInProfile')" text />
-          </NuxtLinkLocale>
-        </section>
+
+            <!-- Step 5: bank-transfer QR -->
+            <div v-else-if="step === 'payment' && purchase?.qrUrl" class="grid gap-5">
+              <h2 ref="stepHeading" tabindex="-1" class="font-display text-2xl font-bold uppercase focus:outline-none">{{ $t("competitionRegistration.stepPayment") }}</h2>
+              <QrPayment :ref-code="purchase.refCode" :amount="purchase.amount" :qr-url="purchase.qrUrl" @paid="goTo('done')" @cancelled="goTo('review')" />
+            </div>
+
+            <!-- Step 6: done -->
+            <div v-else-if="step === 'done' && purchase" class="grid gap-4">
+              <h2 ref="stepHeading" tabindex="-1" class="flex items-center gap-2 font-display text-2xl font-bold uppercase focus:outline-none">
+                <AppIcon :name="purchase.identityVerified ? 'lucide:circle-check' : 'lucide:clock'" class="size-7" :class="purchase.identityVerified ? 'text-success' : 'text-info'" />
+                {{ purchase.identityVerified ? $t("competitionRegistration.confirmedTitle") : $t("competitionRegistration.pendingTitle") }}
+              </h2>
+              <p>
+                {{ purchase.identityVerified
+                  ? $t("competitionRegistration.confirmedBody", { meet: eligibility.meet.meetName })
+                  : $t("competitionRegistration.pendingBody", { meet: eligibility.meet.meetName }) }}
+              </p>
+              <Button v-slot="slotProps" as-child class="justify-self-start">
+                <NuxtLinkLocale to="/profile/competition-info" :class="slotProps.class">{{ $t("competitionRegistration.viewInProfile") }}</NuxtLinkLocale>
+              </Button>
+            </div>
+          </PagePanel>
+        </div>
       </template>
-    </template>
+    </PageSection>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from "vue"
-import { formatWeightClass } from "~/lib/domain/patch-payload"
+import { DIVISION_LABEL_KEY, formatVnd, formatWeightClass } from "~/lib/domain/format"
 import { computeVoucherTotals } from "~/lib/domain/vouchers"
 import type { ApiResponse } from "~/types/api"
 import type { RegistrationEligibility, CompetitionRegistrationCreated, RegistrationIdentityState } from "~/types/competitions"
@@ -297,7 +245,7 @@ definePageMeta({
 
 const route = useRoute()
 const slug = route.params.slug as string
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const apiMessage = useApiMessage()
 const toast = useToast()
 
@@ -348,21 +296,32 @@ watch(
   { immediate: true },
 )
 
-const DIVISION_LABEL_KEY: Record<string, string> = {
-  open: "general.divisionOpen",
-  jr: "general.divisionJunior",
-  subjr: "general.divisionSubJunior",
-  mas1: "general.divisionMaster1",
-  mas2: "general.divisionMaster2",
-  mas3: "general.divisionMaster3",
-  mas4: "general.divisionMaster4",
-  guest: "general.divisionGuest",
-}
-
 const sexOptions = computed(() => [
-  { label: t("general.male"), value: "male" },
-  { label: t("general.female"), value: "female" },
+  { label: t("general.men"), value: "male" },
+  { label: t("general.women"), value: "female" },
 ])
+
+const capacityOptions = computed(() => [
+  { value: "member", label: t("competitionRegistration.member"), hint: t("competitionRegistration.memberHint") },
+  ...(eligibility.value?.meet.allowGuestRegistration
+    ? [{ value: "guest", label: t("competitionRegistration.guest"), hint: t("competitionRegistration.guestHint") }]
+    : []),
+])
+
+const rackPins = [
+  { key: "squatRackPin", label: "competitionRegistration.squatRackPin" },
+  { key: "benchRackPin", label: "competitionRegistration.benchRackPin" },
+  { key: "benchSafetyPin", label: "competitionRegistration.benchSafetyPin" },
+  { key: "benchFootBlock", label: "competitionRegistration.benchFootBlock" },
+] as const
+
+/** Move to a step and put focus on its heading, so keyboard and screen-reader users start there. */
+const stepHeading = ref<HTMLElement | null>(null)
+async function goTo(next: Step) {
+  step.value = next
+  await nextTick()
+  stepHeading.value?.focus()
+}
 
 const weightClassOptions = computed(() => {
   const e = eligibility.value
@@ -373,7 +332,7 @@ const weightClassOptions = computed(() => {
 const divisionOptions = computed(() => {
   const e = eligibility.value
   if (!e) return []
-  return e.options.divisions.map((d) => ({ label: t(DIVISION_LABEL_KEY[d] ?? d), value: d }))
+  return e.options.divisions.map((d) => ({ label: t(DIVISION_LABEL_KEY[d as keyof typeof DIVISION_LABEL_KEY] ?? d), value: d }))
 })
 
 // Reset the weight-class choice when the sporting gender changes (classes differ by sex).
@@ -454,6 +413,13 @@ const totals = computed(() =>
 
 const discountedLines = computed(() => totals.value.lines.filter((line) => line.discount > 0))
 
+const summaryLines = computed(() => [
+  { key: "entry", label: t("competitionRegistration.entryFee"), amount: fees.value.entryFee },
+  ...(fees.value.membershipFee > 0 ? [{ key: "membership", label: t("competitionRegistration.membershipFee"), amount: fees.value.membershipFee }] : []),
+  ...discountedLines.value.map((line) => ({ key: `discount-${line.type}`, label: `${t("competitionRegistration.discount")} · ${typeLabel(line.type)}`, amount: line.discount, discount: true })),
+  ...(fees.value.mediaPlusFee > 0 ? [{ key: "media", label: t("competitionRegistration.mediaPlusFee"), amount: fees.value.mediaPlusFee }] : []),
+])
+
 const blockMessage = computed(() => {
   const e = eligibility.value
   if (!e?.bans) return ""
@@ -467,10 +433,6 @@ const blockMessage = computed(() => {
   }
   return ""
 })
-
-function formatAmount(value: number) {
-  return value.toLocaleString("vi-VN")
-}
 
 function onPhotoChange(event: Event) {
   const input = event.target as HTMLInputElement
@@ -508,7 +470,7 @@ async function submit() {
 
     purchase.value = res.data
     // A fully-discounted registration arrives already active: skip the QR entirely.
-    step.value = res.data.status === "active" ? "done" : "payment"
+    await goTo(res.data.status === "active" ? "done" : "payment")
   } catch {
     toast.add({ severity: "error", summary: t("general.updateError"), detail: t("competitionRegistration.submitError"), life: 5000 })
   } finally {

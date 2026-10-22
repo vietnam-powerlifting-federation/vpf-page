@@ -1,56 +1,49 @@
 <template>
-  <div class="space-y-6">
+  <div class="grid gap-8">
     <!-- Avatar -->
-    <div class="flex flex-wrap items-start gap-4">
-      <div class="flex flex-col gap-2">
-        <label class="text-sm font-medium text-surface-300">{{ $t("profile.vipBenefits.avatar") }}</label>
-        <div class="w-24 h-24 rounded-lg overflow-hidden bg-surface-700 flex items-center justify-center border border-surface-600">
-          <img v-if="avatarPreview" :src="avatarPreview" alt="" class="w-full h-full object-cover">
-          <i v-else class="pi pi-user text-3xl text-surface-500" />
-        </div>
-        <p class="text-sm text-surface-400">{{ $t("profile.vipBenefits.changeAvatar") }}</p>
-        <Button
-          :label="$t('profile.vipBenefits.change')"
-          size="small"
-          class="bg-primary text-primary-contrast"
-          @click="emit('avatar-click')"
-        />
+    <div class="flex flex-wrap items-center gap-4">
+      <div class="grid size-24 shrink-0 place-items-center overflow-hidden rounded-md border border-surface-200 bg-surface-100">
+        <img v-if="avatarPreview" :src="avatarPreview" alt="" class="size-full object-cover">
+        <AppIcon v-else name="lucide:user" class="size-8 text-muted-color" />
+      </div>
+      <div class="grid gap-2">
+        <p class="font-semibold">{{ $t("profile.vipBenefits.avatar") }}</p>
+        <p class="text-sm text-muted-color">{{ $t("profile.vipBenefits.changeAvatar") }}</p>
+        <Button :label="$t('profile.vipBenefits.change')" severity="secondary" variant="outlined" size="small" class="justify-self-start" @click="emit('avatar-click')" />
       </div>
     </div>
 
     <!-- Cover photos -->
-    <div>
-      <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.vipBenefits.coverPhotos") }}</label>
-      <p class="text-sm text-surface-500 mb-2">{{ $t("profile.vipBenefits.maxPhotos") }}</p>
-      <div class="flex flex-wrap gap-3">
-        <div
-          v-for="idx in 5"
-          :key="idx"
-          class="w-20 h-20 rounded-lg overflow-hidden bg-surface-700 border border-surface-600 flex items-center justify-center relative shrink-0"
-        >
-          <img v-if="bannerSlots[idx - 1]" :src="bannerSlots[idx - 1] ?? ''" alt="" class="w-full h-full object-cover">
-          <i v-else class="pi pi-image text-2xl text-surface-500" />
+    <fieldset class="m-0 grid gap-2 border-0 p-0">
+      <legend class="p-0 font-semibold">{{ $t("profile.vipBenefits.coverPhotos") }}</legend>
+      <p class="text-sm text-muted-color">{{ $t("profile.vipBenefits.maxPhotos") }}</p>
+      <ul class="flex flex-wrap gap-3">
+        <li v-for="idx in 5" :key="idx" class="relative grid size-20 shrink-0 place-items-center overflow-hidden rounded-md border border-surface-200 bg-surface-100">
+          <img v-if="bannerSlots[idx - 1]" :src="bannerSlots[idx - 1] ?? ''" alt="" class="size-full object-cover">
+          <AppIcon v-else name="lucide:image" class="size-6 text-muted-color" />
           <button
             v-if="bannerSlots[idx - 1]"
             type="button"
-            class="absolute top-0.5 right-0.5 w-5 h-5 rounded bg-red-500 text-white flex items-center justify-center text-xs hover:bg-red-600"
-            :aria-label="$t('profile.vipBenefits.removePhoto')"
+            class="absolute top-0.5 right-0.5 grid size-8 cursor-pointer place-items-center rounded bg-danger text-surface-0 hover:opacity-90"
+            :aria-label="`${$t('profile.vipBenefits.removePhoto')} ${idx}`"
             @click="emit('clear-banner', idx)"
           >
-            <i class="pi pi-times" />
+            <AppIcon name="lucide:x" class="size-4" />
           </button>
-        </div>
-        <div
-          v-if="nextBannerSlot !== null"
-          class="w-20 h-20 rounded-lg border-2 border-dashed border-surface-600 flex items-center justify-center shrink-0 cursor-pointer hover:border-primary hover:bg-surface-800"
-          @click="emit('trigger-banner-input')"
-        >
-          <i class="pi pi-plus text-surface-500" />
-        </div>
-      </div>
-    </div>
+        </li>
+        <li v-if="nextBannerSlot !== null">
+          <button
+            type="button"
+            class="grid size-20 cursor-pointer place-items-center rounded-md border-2 border-dashed border-surface-300 text-muted-color hover:border-accent hover:bg-surface-100"
+            :aria-label="$t('profile.vipBenefits.addPhoto')"
+            @click="emit('trigger-banner-input')"
+          >
+            <AppIcon name="lucide:plus" class="size-6" />
+          </button>
+        </li>
+      </ul>
+    </fieldset>
 
-    <!-- Name colour -->
     <VipNameDecorator
       :disabled="false"
       :decorator1="form.decorator1 ?? null"
@@ -60,89 +53,70 @@
     />
 
     <!-- About me -->
-    <div class="flex flex-wrap items-start gap-4 gap-y-2">
-      <div class="flex-1 min-w-[200px]">
-        <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.vipBenefits.aboutMe") }}</label>
+    <div class="grid gap-2">
+      <AppField v-slot="f" :label="$t('profile.vipBenefits.aboutMe')">
         <Textarea
+          :id="f.id"
           :model-value="form.profileDescription ?? ''"
           :placeholder="$t('profile.vipBenefits.aboutMePlaceholder')"
-          class="w-full"
           rows="4"
-          @update:model-value="(v: string) => emit('update-field', 'profileDescription', v || null)"
+          class="w-full"
+          @update:model-value="(v: string | undefined) => emit('update-field', 'profileDescription', v || null)"
         />
-      </div>
-      <div class="flex items-center gap-2 pt-8">
-        <ToggleSwitch
-          :model-value="!!form.displayProfileDescription"
-          :aria-label="$t('profile.vipBenefits.displayOnProfile')"
-          @update:model-value="(v: boolean) => emit('update-field', 'displayProfileDescription', v)"
-        />
-        <span class="text-sm text-surface-400">{{ $t("profile.vipBenefits.displayOnProfile") }}</span>
-      </div>
+      </AppField>
+      <label class="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-color">
+        <ToggleSwitch :model-value="!!form.displayProfileDescription" @update:model-value="(v: boolean) => emit('update-field', 'displayProfileDescription', v)" />
+        {{ $t("profile.vipBenefits.displayOnProfile") }}
+      </label>
     </div>
 
     <!-- Nickname and social links -->
-    <div v-for="field in textFields" :key="field.key" class="flex flex-wrap items-center gap-4 gap-y-2">
-      <div class="flex-1 min-w-[200px]">
-        <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t(field.label) }}</label>
-        <InputText
-          :model-value="(form[field.key] as string | null) ?? ''"
-          :placeholder="$t(field.placeholder)"
-          class="w-full"
-          @update:model-value="(v: string) => emit('update-field', field.key, v || null)"
-        />
-      </div>
-      <div class="flex items-center gap-2 pt-8">
-        <ToggleSwitch
-          :model-value="!!form[field.toggle]"
-          :aria-label="$t('profile.vipBenefits.displayOnProfile')"
-          @update:model-value="(v: boolean) => emit('update-field', field.toggle, v)"
-        />
-        <span class="text-sm text-surface-400">{{ $t("profile.vipBenefits.displayOnProfile") }}</span>
+    <div class="grid gap-5 md:grid-cols-2">
+      <div v-for="field in textFields" :key="field.key" class="grid gap-2">
+        <AppField v-slot="f" :label="$t(field.label)">
+          <InputText
+            :id="f.id"
+            :model-value="(form[field.key] as string | null) ?? ''"
+            :placeholder="$t(field.placeholder)"
+            :type="field.key === 'vipPhoneNumber' ? 'tel' : field.key === 'alias' ? 'text' : 'url'"
+            class="w-full"
+            @update:model-value="(v: string | undefined) => emit('update-field', field.key, v || null)"
+          />
+        </AppField>
+        <label class="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-color">
+          <ToggleSwitch :model-value="!!form[field.toggle]" @update:model-value="(v: boolean) => emit('update-field', field.toggle, v)" />
+          {{ $t("profile.vipBenefits.displayOnProfile") }}
+        </label>
       </div>
     </div>
 
-    <!-- Sticky action bar: stays reachable now the form is long -->
-    <div class="sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-surface-900/95 backdrop-blur border-t border-surface-700 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-2 text-sm min-w-0">
+    <!-- Sticky action bar: stays reachable while the form is long -->
+    <div class="sticky bottom-0 -mx-4 -mb-4 flex flex-wrap items-center justify-between gap-3 border-t border-surface-200 bg-surface-0 px-4 py-3 md:-mx-6 md:-mb-6 md:px-6">
+      <p class="flex min-w-0 items-center gap-2 text-sm" role="status">
         <template v-if="locked">
-          <i class="pi pi-lock text-surface-400 shrink-0" />
-          <span class="text-surface-400">{{ $t("profile.vipBenefits.lockedHint") }}</span>
+          <AppIcon name="lucide:lock" class="size-4 text-muted-color" />
+          <span class="text-muted-color">{{ $t("profile.vipBenefits.lockedHint") }}</span>
         </template>
         <template v-else-if="hasChanges">
-          <i class="pi pi-circle-fill text-amber-400 text-xs shrink-0" />
-          <span class="text-amber-400">{{ $t("profile.vipBenefits.unsavedIndicator") }}</span>
+          <span class="size-2 rounded-full bg-warn" aria-hidden="true" />
+          <span class="font-semibold text-warn">{{ $t("profile.vipBenefits.unsavedIndicator") }}</span>
         </template>
         <template v-else>
-          <i class="pi pi-check-circle text-surface-500 shrink-0" />
-          <span class="text-surface-500">{{ $t("profile.vipBenefits.allSaved") }}</span>
+          <AppIcon name="lucide:circle-check" class="size-4 text-muted-color" />
+          <span class="text-muted-color">{{ $t("profile.vipBenefits.allSaved") }}</span>
         </template>
-      </div>
+      </p>
 
       <div class="flex items-center gap-2">
-        <Button
-          v-if="!locked && publicProfileUrl"
-          :label="$t('profile.vipBenefits.viewPublicProfile')"
-          icon="pi pi-external-link"
-          severity="secondary"
-          text
-          @click="navigateTo(publicProfileUrl)"
-        />
-        <Button
-          v-if="locked"
-          :label="$t('profile.vipBenefits.registerNow')"
-          icon="pi pi-star"
-          class="bg-primary text-primary-contrast"
-          @click="emit('register')"
-        />
-        <Button
-          v-else
-          :label="$t('profile.vipBenefits.saveChanges')"
-          class="bg-primary text-primary-contrast"
-          :loading="isSubmitting"
-          :disabled="isSubmitting || !hasChanges"
-          @click="emit('submit')"
-        />
+        <Button v-if="!locked && publicProfileUrl" severity="secondary" variant="text" @click="navigateTo(localePath(publicProfileUrl))">
+          <AppIcon name="lucide:external-link" class="size-4" />
+          {{ $t("profile.vipBenefits.viewPublicProfile") }}
+        </Button>
+        <Button v-if="locked" @click="emit('register')">
+          <AppIcon name="lucide:star" class="size-4" />
+          {{ $t("profile.vipBenefits.registerNow") }}
+        </Button>
+        <Button v-else :label="$t('profile.vipBenefits.saveChanges')" :loading="isSubmitting" :disabled="isSubmitting || !hasChanges" @click="emit('submit')" />
       </div>
     </div>
   </div>
@@ -164,6 +138,8 @@ defineProps<{
   locked: boolean
   publicProfileUrl: string | null
 }>()
+
+const localePath = useLocalePath()
 
 const emit = defineEmits<{
   "update-field": [key: string, value: string | boolean | null]

@@ -1,33 +1,25 @@
 <template>
-  <div class="min-h-full">
-    <h1 class="text-2xl font-bold mb-6 text-surface-0">{{ $t("profile.tabs.changePassword") }}</h1>
-    <p class="mb-4 text-surface-500 text-sm">
-      <span class="rounded bg-surface-700 px-2 py-0.5">{{ $t("profile.demo") }}</span>
-    </p>
-
-    <div class="max-w-md space-y-4">
-      <div>
-        <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.changePassword.currentPassword") }}</label>
-        <Password v-model="currentPassword" :placeholder="$t('profile.changePassword.enterCurrent')" class="w-full" disabled />
-      </div>
-      <div>
-        <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.changePassword.newPassword") }}</label>
-        <Password v-model="newPassword" :placeholder="$t('profile.changePassword.enterNew')" class="w-full" disabled />
-      </div>
-      <div>
-        <label class="block mb-2 text-sm font-medium text-surface-300">{{ $t("profile.changePassword.confirmPassword") }}</label>
-        <Password v-model="confirmPassword" :placeholder="$t('profile.changePassword.enterConfirm')" class="w-full" disabled />
-      </div>
-      <div class="pt-2">
-        <Button :label="$t('profile.changePassword.submit')" disabled />
-      </div>
-    </div>
-  </div>
+  <PagePanel :title="$t('profile.tabs.changePassword')" ruled>
+    <template #actions>
+      <Tag severity="secondary" :value="$t('profile.demo')" />
+    </template>
+    <!-- Not wired to the API yet, so every control stays disabled. -->
+    <form class="grid max-w-md gap-5" @submit.prevent>
+      <AppField v-slot="f" :label="$t('profile.changePassword.currentPassword')">
+        <Password v-model="currentPassword" :input-id="f.id" autocomplete="current-password" :feedback="false" toggle-mask disabled class="w-full" input-class="w-full" />
+      </AppField>
+      <AppField v-slot="f" :label="$t('profile.changePassword.newPassword')">
+        <Password v-model="newPassword" :input-id="f.id" autocomplete="new-password" :feedback="false" toggle-mask disabled class="w-full" input-class="w-full" />
+      </AppField>
+      <AppField v-slot="f" :label="$t('profile.changePassword.confirmPassword')">
+        <Password v-model="confirmPassword" :input-id="f.id" autocomplete="new-password" :feedback="false" toggle-mask disabled class="w-full" input-class="w-full" />
+      </AppField>
+      <Button type="submit" :label="$t('profile.changePassword.submit')" disabled class="justify-self-start" />
+    </form>
+  </PagePanel>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
-
 definePageMeta({
   layout: "account",
   middleware: "auth",

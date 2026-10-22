@@ -1,101 +1,66 @@
 <template>
-  <div class="bg-surface-100 dark:bg-surface-900 py-10 md:py-14 px-4">
-    <div class="container mx-auto max-w-5xl">
-      <div
-        class="grid grid-cols-1 md:grid-cols-2 overflow-hidden rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-0 dark:bg-surface-950 shadow-sm"
-      >
-        <!-- Left: form -->
-        <div class="p-8 md:p-10">
-          <h1 class="text-3xl font-bold text-surface-900 dark:text-surface-0">{{ $t("register.title") }}</h1>
-          <p class="mt-1 text-sm text-surface-600 dark:text-surface-300">{{ $t("register.subtitle") }}</p>
+  <AuthCard :title="$t('register.title')" :subtitle="$t('register.subtitle')">
+    <form ref="formEl" class="grid gap-5" novalidate @submit.prevent="handleRegister">
+      <AppField v-slot="f" :label="$t('register.emailLabel')" :error="errors.email">
+        <InputText
+          :id="f.id"
+          v-model="email"
+          type="email"
+          :placeholder="$t('register.emailPlaceholder')"
+          :invalid="f.invalid"
+          :aria-describedby="f.describedBy"
+          autocomplete="email"
+          class="w-full"
+        />
+      </AppField>
 
-          <form class="mt-8 space-y-5" @submit.prevent="handleRegister">
-            <div>
-              <label for="email" class="block mb-2 text-sm font-medium text-surface-800 dark:text-surface-200">
-                {{ $t("register.emailLabel") }}
-              </label>
-              <InputText
-                id="email"
-                v-model="email"
-                type="email"
-                :placeholder="$t('register.emailPlaceholder')"
-                class="w-full"
-                :class="{ 'p-invalid': errors.email }"
-                autocomplete="email"
-              />
-              <small v-if="errors.email" class="p-error mt-1 block">{{ errors.email }}</small>
-            </div>
+      <AppField v-slot="f" :label="$t('register.password')" :hint="$t('register.passwordHint')" :error="errors.password">
+        <Password
+          v-model="password"
+          :input-id="f.id"
+          :invalid="f.invalid"
+          :aria-describedby="f.describedBy"
+          :feedback="false"
+          toggle-mask
+          autocomplete="new-password"
+          class="w-full"
+          input-class="w-full"
+        />
+      </AppField>
 
-            <div>
-              <label for="password" class="block mb-2 text-sm font-medium text-surface-800 dark:text-surface-200">
-                {{ $t("register.password") }}
-              </label>
-              <Password
-                id="password"
-                v-model="password"
-                :placeholder="$t('register.passwordPlaceholder')"
-                class="w-full"
-                input-class="w-full"
-                :class="{ 'p-invalid': errors.password }"
-                toggle-mask
-                :feedback="true"
-                autocomplete="new-password"
-              />
-              <small v-if="errors.password" class="p-error mt-1 block">{{ errors.password }}</small>
-            </div>
+      <AppField v-slot="f" :label="$t('register.confirmPassword')" :error="errors.confirmPassword">
+        <Password
+          v-model="confirmPassword"
+          :input-id="f.id"
+          :invalid="f.invalid"
+          :aria-describedby="f.describedBy"
+          :feedback="false"
+          toggle-mask
+          autocomplete="new-password"
+          class="w-full"
+          input-class="w-full"
+        />
+      </AppField>
 
-            <div>
-              <label for="confirmPassword" class="block mb-2 text-sm font-medium text-surface-800 dark:text-surface-200">
-                {{ $t("register.confirmPassword") }}
-              </label>
-              <Password
-                id="confirmPassword"
-                v-model="confirmPassword"
-                :placeholder="$t('register.confirmPasswordPlaceholder')"
-                class="w-full"
-                input-class="w-full"
-                :class="{ 'p-invalid': errors.confirmPassword }"
-                :feedback="false"
-                toggle-mask
-                autocomplete="new-password"
-              />
-              <small v-if="errors.confirmPassword" class="p-error mt-1 block">{{ errors.confirmPassword }}</small>
-            </div>
+      <Button type="submit" :label="$t('register.registerButton')" class="w-full" :loading="isLoading" />
+    </form>
 
-            <Button
-              type="submit"
-              :label="$t('register.registerButton')"
-              class="w-full"
-              :loading="isLoading"
-              :disabled="isLoading"
-            />
-
-            <div class="text-center text-sm text-surface-600 dark:text-surface-300">
-              {{ $t("register.haveAccount") }}
-              <NuxtLinkLocale to="/login" class="font-semibold text-primary hover:underline">
-                {{ $t("register.loginNow") }}
-              </NuxtLinkLocale>
-            </div>
-          </form>
-        </div>
-
-        <!-- Right: banner -->
-        <div class="relative min-h-[380px] md:min-h-full">
-          <img :src="loginBg" alt="" class="h-full w-full object-cover">
-        </div>
-      </div>
-    </div>
-  </div>
+    <template #footer>
+      {{ $t("register.haveAccount") }}
+      <NuxtLinkLocale to="/login" class="font-semibold text-accent underline-offset-3 hover:underline">{{ $t("register.loginNow") }}</NuxtLinkLocale>
+    </template>
+  </AuthCard>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
 import type { ApiResponse, RegisterResponse } from "~/types/api"
-import loginBg from "~/assets/img/login-bg.png"
 
 const { t } = useI18n()
 const apiMessage = useApiMessage()
 const toast = useToast()
+const { refresh: refreshSession } = useAuthSession()
+const localePath = useLocalePath()
+const formEl = ref<HTMLFormElement | null>(null)
 
 const email = ref("")
 const password = ref("")
@@ -137,7 +102,11 @@ const validateForm = (): boolean => {
 }
 
 const handleRegister = async () => {
-  if (!validateForm()) return
+  if (!validateForm()) {
+    await nextTick()
+    formEl.value?.querySelector<HTMLElement>("[aria-invalid='true']")?.focus()
+    return
+  }
 
   isLoading.value = true
   try {
@@ -149,11 +118,9 @@ const handleRegister = async () => {
 
     if (response.success) {
       // Skip flow marks the email verified immediately; otherwise go verify the code first.
-      if (response.data.emailVerified) {
-        await navigateTo("/verification")
-      } else {
-        await navigateTo("/verify-email")
-      }
+      // Registering signs the athlete in; re-read the session so the next page's guard sees it.
+      await refreshSession()
+      await navigateTo(localePath(response.data.emailVerified ? "/verification" : "/verify-email"))
     } else {
       toast.add({ severity: "error", summary: t("general.error"), detail: apiMessage(response) || t("general.error"), life: 5000 })
     }
@@ -166,8 +133,5 @@ const handleRegister = async () => {
 
 useHead({ title: () => t("register.title") })
 
-definePageMeta({
-  layout: "auth",
-  pageTransition: { name: "page", mode: "out-in" },
-})
+definePageMeta({ layout: "auth" })
 </script>

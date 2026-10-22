@@ -1,31 +1,21 @@
 <template>
-  <div
-    class="rounded-lg border p-4 flex flex-wrap items-center justify-between gap-4"
-    :class="toneClass"
-  >
-    <div class="flex items-center gap-3 min-w-0">
-      <i class="pi text-2xl shrink-0" :class="[iconClass, iconColorClass]" />
+  <div class="flex flex-wrap items-center justify-between gap-4 rounded-md border p-4" :class="toneClass">
+    <div class="flex min-w-0 items-center gap-3">
+      <AppIcon :name="icon" class="size-7 shrink-0" :class="iconColorClass" />
       <div class="min-w-0">
-        <p class="font-semibold text-surface-0">{{ statusLabel }}</p>
-        <p class="text-sm text-surface-400">{{ detailLabel }}</p>
+        <p class="font-semibold">{{ statusLabel }}</p>
+        <p class="text-sm text-muted-color">{{ detailLabel }}</p>
       </div>
     </div>
-
-    <Button
-      v-if="showRenew"
-      :label="active ? $t('profile.vipBenefits.renew') : $t('profile.vipBenefits.renewExpired')"
-      :severity="expiringSoon || !active ? undefined : 'secondary'"
-      :outlined="!expiringSoon && active"
-      :class="expiringSoon || !active ? 'bg-primary text-primary-contrast' : ''"
-      icon="pi pi-refresh"
-      @click="emit('renew')"
-    />
+    <Button v-if="showRenew" :severity="expiringSoon || !active ? undefined : 'secondary'" :variant="expiringSoon || !active ? undefined : 'outlined'" @click="emit('renew')">
+      <AppIcon name="lucide:refresh-cw" class="size-4" />
+      {{ active ? $t("profile.vipBenefits.renew") : $t("profile.vipBenefits.renewExpired") }}
+    </Button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue"
-import { formatDateDMY } from "~/lib/domain/date"
+import { formatDate } from "~/lib/domain/format"
 
 /** Warn this far ahead of expiry, so renewals happen before the profile goes dark. */
 const RENEWAL_WINDOW_DAYS = 30
@@ -38,7 +28,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ renew: [] }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const daysLeft = computed(() => {
   if (!props.expiresAt) return null
@@ -64,7 +54,7 @@ const statusLabel = computed(() => {
 
 const detailLabel = computed(() => {
   if (!props.expiresAt) return t("profile.vipBenefits.statusNever")
-  const date = formatDateDMY(props.expiresAt)
+  const date = formatDate(props.expiresAt, locale.value, "long")
   if (!props.active) return t("profile.vipBenefits.statusExpiredOn", { date })
   if (daysLeft.value !== null && daysLeft.value <= RENEWAL_WINDOW_DAYS) {
     return t("profile.vipBenefits.statusDaysLeft", { date, days: daysLeft.value })
@@ -73,16 +63,16 @@ const detailLabel = computed(() => {
 })
 
 const toneClass = computed(() => {
-  if (!props.active) return "border-surface-600 bg-surface-800"
-  if (expiringSoon.value) return "border-amber-500/50 bg-amber-500/10"
-  return "border-primary/40 bg-primary/10"
+  if (!props.active) return "border-surface-200 bg-surface-50"
+  if (expiringSoon.value) return "border-warn bg-warn-soft"
+  return "border-accent bg-accent-soft"
 })
-const iconClass = computed(() => {
-  if (!props.active) return "pi-times-circle"
-  return expiringSoon.value ? "pi-exclamation-triangle" : "pi-star-fill"
+const icon = computed(() => {
+  if (!props.active) return "lucide:circle-x"
+  return expiringSoon.value ? "lucide:triangle-alert" : "lucide:star"
 })
 const iconColorClass = computed(() => {
-  if (!props.active) return "text-surface-400"
-  return expiringSoon.value ? "text-amber-400" : "text-primary"
+  if (!props.active) return "text-muted-color"
+  return expiringSoon.value ? "text-warn" : "text-accent"
 })
 </script>
