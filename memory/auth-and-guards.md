@@ -16,7 +16,7 @@ const currentUser = auth.user
 
 ## Client side
 
-The cookie is httpOnly and unreadable from JavaScript, so route middleware [middleware/auth.ts](../middleware/auth.ts) and [middleware/admin.ts](../middleware/admin.ts) verify by fetching `/api/auth/session` (forwarding the cookie header during SSR). They redirect to `/login?to=...` when unauthenticated, and `admin.ts` redirects to `/openvpf` when the role is not `admin`.
+The cookie is httpOnly and unreadable from JavaScript, so route middleware [middleware/auth.ts](../middleware/auth.ts) and [middleware/admin.ts](../middleware/admin.ts) verify by fetching `/api/auth/session` (forwarding the cookie header during SSR). They redirect to `/login?to=...` when unauthenticated, and `admin.ts` redirects to `/` when the role is not `admin`. Login and register call `useAuthSession().refresh()` before redirecting, so a guarded `?to=` target does not bounce back to `/login`.
 
 ## Account flows
 

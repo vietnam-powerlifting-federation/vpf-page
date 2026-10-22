@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# Debian-based rather than Alpine: better-sqlite3 and sharp resolve glibc
+# Debian-based rather than Alpine: sharp (used by @nuxt/image) resolves glibc
 # prebuilds, and the runtime stage must match the builder's libc.
 FROM node:24-slim AS builder
 
@@ -52,10 +52,6 @@ ENV NODE_ENV=production \
     PORT=3000
 
 COPY --from=builder --chown=node:node /app/.output ./.output
-
-# @nuxt/content restores its SQLite database to ./contents.sqlite on startup,
-# so the working directory has to be writable by the runtime user.
-RUN chown node:node /app
 
 USER node
 

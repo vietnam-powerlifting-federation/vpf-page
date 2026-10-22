@@ -1,6 +1,6 @@
 # Frontend redesign: "Scoreboard"
 
-Status: **Approved, not built** (decided 2026-10-23). This document is the source of truth for the new frontend. The prototype at [redesign/index.html](../redesign/index.html) (style A, `?style=scoreboard`) is the visual reference. Its CSS lives in [redesign/shared/base.css](../redesign/shared/base.css) + [redesign/styles/scoreboard.css](../redesign/styles/scoreboard.css), and its behaviour in [redesign/shared/app.js](../redesign/shared/app.js). Serve it with `python3 -m http.server 4173 -d redesign`. The broader rollout plan is in [redesign/PLAN.md](../redesign/PLAN.md).
+Status: **Built** (decided and implemented 2026-10-23). This document is the source of truth for the new frontend. The prototype at [redesign/index.html](../redesign/index.html) (style A, `?style=scoreboard`) is the visual reference. Its CSS lives in [redesign/shared/base.css](../redesign/shared/base.css) + [redesign/styles/scoreboard.css](../redesign/styles/scoreboard.css), and its behaviour in [redesign/shared/app.js](../redesign/shared/app.js). Serve it with `python3 -m http.server 4173 -d redesign`. The broader rollout plan is in [redesign/PLAN.md](../redesign/PLAN.md).
 
 ## 1. Scope and decisions
 

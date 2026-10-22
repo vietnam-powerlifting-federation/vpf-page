@@ -2,12 +2,11 @@
 
 `vpf-page` (package name `vpf-data`) is the Vietnam Powerlifting Federation website: a Nuxt 3 app (Vue 3, TypeScript, PrimeVue + Tailwind v4, Pinia, `@nuxtjs/i18n` en/vi) with a Nitro server backed by Postgres via Drizzle ORM.
 
-## Two halves
+## One app
 
-- **Marketing/content site** — [pages/index.vue](../pages/index.vue), `about`, `membership`, `championships`, `news`, `contact`, plus Nuxt Content markdown under [content/vi/](../content/vi/).
-- **`/openvpf`** — the application proper: athlete profiles ([pages/openvpf/athletes/[slug].vue](../pages/openvpf/athletes/%5Bslug%5D.vue)), competitions/meets, national records, athlete self-service (VIP settings, payment history, vouchers, password change), checkout, and an admin identity-verification queue.
+The marketing site was removed in the 2026 redesign; the application that lived under `/openvpf` is now the whole site at the root: rankings (`/`), national records, competitions and their results, athlete profiles, athlete self-service under `/profile` (VIP settings, payment history, vouchers, password change), checkout, competition registration, the auth pages, and the admin console under `/admin`.
 
-A global route middleware, [middleware/openvpf-redirect.global.ts](../middleware/openvpf-redirect.global.ts), 301-redirects every path under `/openvpf` unless it starts with an allowed top-level prefix (`/openvpf`, `/login`, `/register`, `/verify-email`, `/verification`, `/forgot-password`). **Adding a new top-level page means adding its prefix to that list**, otherwise it will be redirected.
+Old `/openvpf/**` links (and `/vi/openvpf/**`) are 301-redirected to the same path at the root by `routeRules` in [nuxt.config.ts](../nuxt.config.ts).
 
 ## Layer boundaries
 
