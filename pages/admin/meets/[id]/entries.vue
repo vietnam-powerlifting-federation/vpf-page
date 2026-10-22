@@ -1,11 +1,11 @@
 <template>
   <div class="p-4 md:p-8">
-    <NuxtLinkLocale :to="`/admin/meets/${meetId}`" class="text-sm text-primary hover:underline">
+    <NuxtLinkLocale :to="`/admin/meets/${meetId}`" class="text-sm text-accent hover:underline">
       ← {{ $t("admin.meets.title") }}
     </NuxtLinkLocale>
 
-    <h1 class="text-2xl font-bold mt-2 mb-1 text-surface-900 dark:text-surface-0">{{ $t("admin.entries.title") }}</h1>
-    <p class="text-sm text-surface-600 dark:text-surface-300 mb-6">{{ $t("admin.entries.subtitle") }}</p>
+    <h1 class="mt-2 mb-1 font-display text-3xl font-extrabold uppercase">{{ $t("admin.entries.title") }}</h1>
+    <p class="text-sm text-muted-color mb-6">{{ $t("admin.entries.subtitle") }}</p>
 
     <Message v-if="roster?.resultsImported" severity="info" class="mb-4">
       {{ $t("admin.entries.readOnly") }}
@@ -13,26 +13,23 @@
 
     <div class="flex flex-wrap gap-2 items-center mb-4">
       <Button
-        icon="pi pi-sync"
-        :label="$t('admin.entries.generate')"
         :loading="generating"
         :disabled="roster?.resultsImported"
-        @click="generate"
-      />
-      <a :href="exportUrl" download>
-        <Button icon="pi pi-download" outlined :label="$t('admin.entries.export')" />
-      </a>
-      <Button icon="pi pi-refresh" text severity="secondary" @click="() => refresh()" />
+        @click="generate"><AppIcon name="lucide:refresh-ccw" class="size-4" />{{ $t('admin.entries.generate') }}</Button>
+      <Button v-slot="slotProps" as-child outlined>
+        <a :href="exportUrl" download :class="slotProps.class"><AppIcon name="lucide:download" class="size-4" />{{ $t('admin.entries.export') }}</a>
+      </Button>
+      <Button :aria-label="$t('admin.common.refresh')" text severity="secondary" @click="() => refresh()"><AppIcon name="lucide:refresh-cw" class="size-4" /></Button>
 
       <div class="flex-1" />
 
       <template v-if="selected.length && !roster?.resultsImported">
-        <span class="text-sm text-surface-600 dark:text-surface-300">
+        <span class="text-sm text-muted-color">
           {{ $t("admin.entries.selected", { count: selected.length }) }}
         </span>
-        <InputText v-model="bulk.session" class="w-24" :placeholder="$t('admin.entries.session')" />
-        <InputText v-model="bulk.flight" class="w-24" :placeholder="$t('admin.entries.flight')" />
-        <InputText v-model="bulk.platform" class="w-24" :placeholder="$t('admin.entries.platform')" />
+        <InputText v-model="bulk.session" class="w-24" :placeholder="$t('admin.entries.session')" :aria-label="$t('admin.entries.session')" />
+        <InputText v-model="bulk.flight" class="w-24" :placeholder="$t('admin.entries.flight')" :aria-label="$t('admin.entries.flight')" />
+        <InputText v-model="bulk.platform" class="w-24" :placeholder="$t('admin.entries.platform')" :aria-label="$t('admin.entries.platform')" />
         <Button size="small" :label="$t('admin.entries.assign')" :loading="assigning" @click="bulkAssign" />
       </template>
     </div>
@@ -49,7 +46,7 @@
       <span
         v-for="group in groupCounts"
         :key="group.key"
-        class="text-xs rounded border border-surface-200 dark:border-surface-700 px-2 py-1 text-surface-600 dark:text-surface-300"
+        class="text-xs rounded border border-surface-200 px-2 py-1 text-muted-color"
       >
         {{ group.key }}: <strong>{{ group.count }}</strong>
       </span>
@@ -64,7 +61,7 @@
       striped-rows
       data-key="entryId"
       edit-mode="cell"
-      class="border border-surface-200 dark:border-surface-700"
+      class="border border-surface-200"
       :row-class="(row: MeetEntryWithAthlete) => (row.withdrawn ? 'opacity-50' : '')"
       @cell-edit-complete="onCellEdit"
     >
@@ -72,8 +69,8 @@
 
       <Column :header="$t('admin.entries.athlete')">
         <template #body="{ data }">
-          <div class="font-medium text-surface-900 dark:text-surface-0">{{ data.fullName }}</div>
-          <div class="text-xs text-surface-500 font-mono">{{ data.vpfId }}</div>
+          <div class="font-medium text-color">{{ data.fullName }}</div>
+          <div class="text-xs text-muted-color font-mono">{{ data.vpfId }}</div>
         </template>
       </Column>
 
@@ -91,7 +88,7 @@
             :value="data.purchaseStatus ?? $t('admin.entries.doorEntry')"
             :severity="data.purchaseStatus === 'active' ? 'success' : 'warn'"
           />
-          <div v-if="data.refCode" class="text-xs text-surface-500 font-mono">VPF{{ data.refCode }}</div>
+          <div v-if="data.refCode" class="text-xs text-muted-color font-mono">VPF{{ data.refCode }}</div>
           <Tag v-if="data.mediaPlus" class="mt-1" severity="info" :value="$t('admin.entries.mediaPlus')" />
         </template>
       </Column>
@@ -128,9 +125,9 @@
       -->
       <Column v-if="roster?.resultsImported" :header="$t('admin.entries.actual')">
         <template #body="{ data }">
-          <span v-if="!data.resultAssignment" class="text-surface-400">—</span>
-          <span v-else-if="matchesResult(data)" class="text-sm text-green-600">✓</span>
-          <span v-else class="text-sm text-amber-500">
+          <span v-if="!data.resultAssignment" class="text-muted-color">—</span>
+          <span v-else-if="matchesResult(data)" class="text-sm text-success">✓</span>
+          <span v-else class="text-sm text-warn">
             {{ data.resultAssignment.platform }}/{{ data.resultAssignment.session }}/{{ data.resultAssignment.flight }}
           </span>
         </template>

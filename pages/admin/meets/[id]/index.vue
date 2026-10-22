@@ -1,105 +1,102 @@
 <template>
   <div class="p-4 md:p-8 max-w-4xl">
-    <NuxtLinkLocale to="/admin/meets" class="text-sm text-primary hover:underline">
+    <NuxtLinkLocale to="/admin/meets" class="text-sm text-accent hover:underline">
       ← {{ $t("admin.meets.title") }}
     </NuxtLinkLocale>
 
-    <h1 class="text-2xl font-bold mt-2 mb-6 text-surface-900 dark:text-surface-0">
+    <h1 class="mt-2 mb-6 font-display text-3xl font-extrabold uppercase">
       {{ isNew ? $t("admin.meets.create") : form.meetName }}
     </h1>
 
     <form class="space-y-6" @submit.prevent="save">
-      <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 md:p-5 space-y-4">
-        <h2 class="text-base font-semibold text-surface-900 dark:text-surface-0">{{ $t("admin.meets.sectionBasics") }}</h2>
+      <section class="rounded-md border border-surface-200 p-4 md:p-5 space-y-4">
+        <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase">{{ $t("admin.meets.sectionBasics") }}</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="flex flex-col gap-1">
-            <label for="meetName" class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.meets.name") }}</label>
+            <label for="meetName" class="text-sm text-muted-color">{{ $t("admin.meets.name") }}</label>
             <InputText id="meetName" v-model="form.meetName" required @blur="suggestSlug" />
           </div>
 
           <div class="flex flex-col gap-1">
-            <label for="meetSlug" class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.meets.slug") }}</label>
+            <label for="meetSlug" class="text-sm text-muted-color">{{ $t("admin.meets.slug") }}</label>
             <InputText id="meetSlug" v-model="form.meetSlug" class="font-mono" />
-            <small class="text-surface-500">{{ $t("admin.meets.slugHint") }}</small>
+            <small class="text-muted-color">{{ $t("admin.meets.slugHint") }}</small>
           </div>
 
           <div class="flex flex-col gap-1">
-            <label for="city" class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.meets.city") }}</label>
+            <label for="city" class="text-sm text-muted-color">{{ $t("admin.meets.city") }}</label>
             <InputText id="city" v-model="form.city" />
           </div>
 
           <div class="flex flex-col gap-1">
-            <label for="type" class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.meets.type") }}</label>
+            <label for="type" class="text-sm text-muted-color">{{ $t("admin.meets.type") }}</label>
             <Select id="type" v-model="form.type" :options="typeOptions" option-label="label" option-value="value" show-clear />
           </div>
 
           <div class="flex flex-col gap-1 md:col-span-2">
-            <label for="mediaLink" class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.meets.mediaLink") }}</label>
+            <label for="mediaLink" class="text-sm text-muted-color">{{ $t("admin.meets.mediaLink") }}</label>
             <InputText id="mediaLink" v-model="form.mediaLink" />
           </div>
         </div>
       </section>
 
-      <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 md:p-5 space-y-4">
-        <h2 class="text-base font-semibold text-surface-900 dark:text-surface-0">{{ $t("admin.meets.sectionDates") }}</h2>
+      <section class="rounded-md border border-surface-200 p-4 md:p-5 space-y-4">
+        <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase">{{ $t("admin.meets.sectionDates") }}</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="flex flex-col gap-1">
-            <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.meets.hostDate") }}</label>
-            <DatePicker v-model="hostDate" date-format="dd/mm/yy" show-icon show-button-bar @update:model-value="syncSystemYear" />
-          </div>
+          <AppField v-slot="f" :label="$t('admin.meets.hostDate')">
+            <DatePicker v-model="hostDate" :input-id="f.id" date-format="dd/mm/yy" show-icon show-button-bar @update:model-value="syncSystemYear" />
+          </AppField>
+
+          <AppField v-slot="f" :label="$t('admin.meets.startRegistration')">
+            <DatePicker v-model="startRegistration" :input-id="f.id" date-format="dd/mm/yy" show-icon show-button-bar />
+            <small class="text-muted-color">{{ $t("admin.meets.openEndedStart") }}</small>
+          </AppField>
+
+          <AppField v-slot="f" :label="$t('admin.meets.closeRegistration')">
+            <DatePicker v-model="closeRegistration" :input-id="f.id" date-format="dd/mm/yy" show-icon show-button-bar />
+            <small class="text-muted-color">{{ $t("admin.meets.openEndedClose") }}</small>
+          </AppField>
 
           <div class="flex flex-col gap-1">
-            <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.meets.startRegistration") }}</label>
-            <DatePicker v-model="startRegistration" date-format="dd/mm/yy" show-icon show-button-bar />
-            <small class="text-surface-500">{{ $t("admin.meets.openEndedStart") }}</small>
-          </div>
-
-          <div class="flex flex-col gap-1">
-            <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.meets.closeRegistration") }}</label>
-            <DatePicker v-model="closeRegistration" date-format="dd/mm/yy" show-icon show-button-bar />
-            <small class="text-surface-500">{{ $t("admin.meets.openEndedClose") }}</small>
-          </div>
-
-          <div class="flex flex-col gap-1">
-            <label for="systemYear" class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.meets.systemYear") }}</label>
+            <label for="systemYear" class="text-sm text-muted-color">{{ $t("admin.meets.systemYear") }}</label>
             <InputNumber id="systemYear" v-model="form.systemYear" :use-grouping="false" :min="1900" :max="2200" />
-            <small class="text-surface-500">{{ $t("admin.meets.systemYearHint") }}</small>
+            <small class="text-muted-color">{{ $t("admin.meets.systemYearHint") }}</small>
           </div>
         </div>
       </section>
 
-      <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 md:p-5 space-y-4">
-        <h2 class="text-base font-semibold text-surface-900 dark:text-surface-0">{{ $t("admin.meets.sectionEntry") }}</h2>
+      <section class="rounded-md border border-surface-200 p-4 md:p-5 space-y-4">
+        <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase">{{ $t("admin.meets.sectionEntry") }}</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="flex flex-col gap-1">
-            <label for="entryFee" class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.meets.entryFee") }}</label>
+            <label for="entryFee" class="text-sm text-muted-color">{{ $t("admin.meets.entryFee") }}</label>
             <InputNumber id="entryFee" v-model="form.entryFee" :min="0" :step="50000" suffix=" ₫" />
-            <small class="text-surface-500">{{ $t("admin.meets.entryFeeHint") }}</small>
+            <small class="text-muted-color">{{ $t("admin.meets.entryFeeHint") }}</small>
           </div>
         </div>
 
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2">
             <ToggleSwitch v-model="published" input-id="published" />
-            <label for="published" class="text-sm text-surface-700 dark:text-surface-200">{{ $t("admin.meets.publish") }}</label>
+            <label for="published" class="text-sm text-color">{{ $t("admin.meets.publish") }}</label>
           </div>
           <div class="flex items-center gap-2">
             <ToggleSwitch v-model="form.allowGuestRegistration" input-id="guests" />
-            <label for="guests" class="text-sm text-surface-700 dark:text-surface-200">{{ $t("admin.meets.allowGuests") }}</label>
+            <label for="guests" class="text-sm text-color">{{ $t("admin.meets.allowGuests") }}</label>
           </div>
           <div class="flex items-center gap-2">
             <ToggleSwitch v-model="form.allowSpotterRegistration" input-id="spotters" />
-            <label for="spotters" class="text-sm text-surface-700 dark:text-surface-200">{{ $t("admin.meets.allowSpotters") }}</label>
+            <label for="spotters" class="text-sm text-color">{{ $t("admin.meets.allowSpotters") }}</label>
           </div>
           <Message v-if="form.allowSpotterRegistration" severity="secondary" size="small" variant="simple">
             {{ $t("admin.meets.spotterStub") }}
           </Message>
           <div class="flex items-center gap-2">
             <ToggleSwitch v-model="form.legacy" input-id="legacy" :disabled="legacyLocked" />
-            <label for="legacy" class="text-sm text-surface-700 dark:text-surface-200">{{ $t("admin.meets.legacyFlag") }}</label>
+            <label for="legacy" class="text-sm text-color">{{ $t("admin.meets.legacyFlag") }}</label>
           </div>
           <Message v-if="legacyLocked" severity="warn" size="small" variant="simple">
             {{ $t("admin.meets.legacyLocked") }}
@@ -114,41 +111,31 @@
           type="button"
           severity="secondary"
           outlined
-          icon="pi pi-copy"
-          :label="$t('admin.meets.clone')"
-          @click="cloneDialog = true"
-        />
-        <NuxtLinkLocale v-if="!isNew" :to="`/admin/meets/${meetId}/entries`">
-          <Button type="button" text :label="$t('admin.meets.entries')" />
-        </NuxtLinkLocale>
-        <NuxtLinkLocale v-if="!isNew && !form.legacy" :to="`/admin/meets/${meetId}/results`">
-          <Button type="button" text :label="$t('admin.meets.results')" />
-        </NuxtLinkLocale>
+          @click="cloneDialog = true"><AppIcon name="lucide:copy" class="size-4" />{{ $t('admin.meets.clone') }}</Button>
+        <Button v-if="!isNew" v-slot="slotProps" as-child text><NuxtLinkLocale :to="`/admin/meets/${meetId}/entries`" :class="slotProps.class">{{ $t('admin.meets.entries') }}</NuxtLinkLocale></Button>
+        <Button v-if="!isNew && !form.legacy" v-slot="slotProps" as-child text><NuxtLinkLocale :to="`/admin/meets/${meetId}/results`" :class="slotProps.class">{{ $t('admin.meets.results') }}</NuxtLinkLocale></Button>
         <div class="flex-1" />
         <Button
           v-if="!isNew"
           type="button"
           severity="danger"
           outlined
-          icon="pi pi-trash"
-          :label="$t('admin.meets.delete')"
-          @click="deleteDialog = true"
-        />
+          @click="deleteDialog = true"><AppIcon name="lucide:trash-2" class="size-4" />{{ $t('admin.meets.delete') }}</Button>
       </div>
     </form>
 
     <!-- Ban list (§5.3): meet-scoped, so it lives here rather than on a global screen. -->
-    <section v-if="!isNew" class="mt-10 rounded-lg border border-surface-200 dark:border-surface-700 p-4 md:p-5">
-      <h2 class="text-base font-semibold text-surface-900 dark:text-surface-0">{{ $t("admin.banList.title") }}</h2>
-      <p class="text-sm text-surface-600 dark:text-surface-300 mb-4">{{ $t("admin.banList.subtitle") }}</p>
+    <section v-if="!isNew" class="mt-10 rounded-md border border-surface-200 p-4 md:p-5">
+      <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase">{{ $t("admin.banList.title") }}</h2>
+      <p class="text-sm text-muted-color mb-4">{{ $t("admin.banList.subtitle") }}</p>
 
       <div class="grid grid-cols-1 md:grid-cols-[200px_1fr_auto] gap-3 items-end mb-4">
         <div class="flex flex-col gap-1">
-          <label for="banVpfId" class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.banList.athlete") }}</label>
+          <label for="banVpfId" class="text-sm text-muted-color">{{ $t("admin.banList.athlete") }}</label>
           <InputText id="banVpfId" v-model="banForm.vpfId" placeholder="VPF000123" />
         </div>
         <div class="flex flex-col gap-1">
-          <label for="banReason" class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.banList.reason") }}</label>
+          <label for="banReason" class="text-sm text-muted-color">{{ $t("admin.banList.reason") }}</label>
           <InputText id="banReason" v-model="banForm.reason" :placeholder="$t('admin.banList.reasonPlaceholder')" />
         </div>
         <Button :label="$t('admin.banList.add')" :loading="banSaving" @click="addBan" />
@@ -163,11 +150,11 @@
         <span class="text-sm">{{ banPreview }}</span>
       </Message>
 
-      <DataTable v-if="bans.length" :value="bans" size="small" class="border border-surface-200 dark:border-surface-700">
+      <DataTable v-if="bans.length" :value="bans" size="small" class="border border-surface-200">
         <Column :header="$t('admin.banList.athlete')">
           <template #body="{ data }">
             <div class="font-medium">{{ data.userName }}</div>
-            <div class="text-xs text-surface-500">{{ data.vpfId }}</div>
+            <div class="text-xs text-muted-color">{{ data.vpfId }}</div>
           </template>
         </Column>
         <Column :header="$t('admin.banList.reason')" field="reason" />
@@ -177,24 +164,21 @@
           </template>
         </Column>
       </DataTable>
-      <p v-else class="text-sm text-surface-500">{{ $t("admin.banList.empty") }}</p>
+      <p v-else class="text-sm text-muted-color">{{ $t("admin.banList.empty") }}</p>
     </section>
 
     <Dialog v-model:visible="cloneDialog" modal :header="$t('admin.meets.cloneTitle')" class="w-full max-w-md">
-      <p class="text-sm text-surface-600 dark:text-surface-300 mb-4">{{ $t("admin.meets.cloneHint") }}</p>
+      <p class="text-sm text-muted-color mb-4">{{ $t("admin.meets.cloneHint") }}</p>
       <div class="space-y-3">
-        <div class="flex flex-col gap-1">
-          <label class="text-sm">{{ $t("admin.meets.name") }}</label>
-          <InputText v-model="cloneForm.meetName" />
-        </div>
-        <div class="flex flex-col gap-1">
-          <label class="text-sm">{{ $t("admin.meets.systemYear") }}</label>
-          <InputNumber v-model="cloneForm.systemYear" :use-grouping="false" />
-        </div>
-        <div class="flex flex-col gap-1">
-          <label class="text-sm">{{ $t("admin.meets.hostDate") }}</label>
-          <DatePicker v-model="cloneHostDate" date-format="dd/mm/yy" show-icon show-button-bar />
-        </div>
+        <AppField v-slot="f" :label="$t('admin.meets.name')">
+            <InputText :id="f.id" v-model="cloneForm.meetName" />
+        </AppField>
+        <AppField v-slot="f" :label="$t('admin.meets.systemYear')">
+            <InputNumber v-model="cloneForm.systemYear" :input-id="f.id" :use-grouping="false" />
+        </AppField>
+        <AppField v-slot="f" :label="$t('admin.meets.hostDate')">
+            <DatePicker v-model="cloneHostDate" :input-id="f.id" date-format="dd/mm/yy" show-icon show-button-bar />
+        </AppField>
       </div>
       <template #footer>
         <Button text :label="$t('admin.common.cancel')" @click="cloneDialog = false" />
@@ -205,14 +189,12 @@
     <Dialog v-model:visible="deleteDialog" modal :header="$t('admin.meets.deleteTitle')" class="w-full max-w-md">
       <Message severity="warn" size="small" class="mb-3">{{ $t("admin.meets.deleteWarning") }}</Message>
       <div class="space-y-3">
-        <div class="flex flex-col gap-1">
-          <label class="text-sm">{{ $t("admin.meets.deleteConfirm", { name: form.meetName }) }}</label>
-          <InputText v-model="deleteForm.confirmName" />
-        </div>
-        <div class="flex flex-col gap-1">
-          <label class="text-sm">{{ $t("admin.common.reason") }}</label>
-          <InputText v-model="deleteForm.reason" />
-        </div>
+        <AppField v-slot="f" :label="$t('admin.meets.deleteConfirm', { name: form.meetName })">
+            <InputText :id="f.id" v-model="deleteForm.confirmName" />
+        </AppField>
+        <AppField v-slot="f" :label="$t('admin.common.reason')">
+            <InputText :id="f.id" v-model="deleteForm.reason" />
+        </AppField>
       </div>
       <template #footer>
         <Button text :label="$t('admin.common.cancel')" @click="deleteDialog = false" />

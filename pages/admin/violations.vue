@@ -1,33 +1,30 @@
 <template>
   <div class="p-4 md:p-8 max-w-5xl">
-    <h1 class="text-2xl font-bold mb-1 text-surface-900 dark:text-surface-0">{{ $t("admin.violations.title") }}</h1>
-    <p class="text-sm text-surface-600 dark:text-surface-300 mb-6">{{ $t("admin.violations.subtitle") }}</p>
+    <h1 class="mb-1 font-display text-3xl font-extrabold uppercase">{{ $t("admin.violations.title") }}</h1>
+    <p class="text-sm text-muted-color mb-6">{{ $t("admin.violations.subtitle") }}</p>
 
-    <form class="mb-8 rounded-lg border border-surface-200 dark:border-surface-700 p-4 md:p-5 space-y-4" @submit.prevent="record">
-      <h2 class="text-base font-semibold text-surface-900 dark:text-surface-0">{{ $t("admin.violations.recordTitle") }}</h2>
+    <form class="mb-8 rounded-md border border-surface-200 p-4 md:p-5 space-y-4" @submit.prevent="record">
+      <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase">{{ $t("admin.violations.recordTitle") }}</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="flex flex-col gap-1">
-          <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.violations.athlete") }}</label>
-          <InputText v-model="form.vpfId" placeholder="VPF000123" required />
-        </div>
+        <AppField v-slot="f" :label="$t('admin.violations.athlete')">
+            <InputText :id="f.id" v-model="form.vpfId" placeholder="VPF000123" required />
+        </AppField>
 
-        <div class="flex flex-col gap-1">
-          <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.violations.expireYear") }}</label>
-          <InputNumber v-model="form.expireYear" :use-grouping="false" :min="1900" :max="2200" show-clear />
+        <AppField v-slot="f" :label="$t('admin.violations.expireYear')">
+            <InputNumber v-model="form.expireYear" :input-id="f.id" :use-grouping="false" :min="1900" :max="2200" show-clear />
           <!-- A blank field here is a permanent sanction, which is not what blank usually implies. -->
-          <small class="text-amber-500">{{ $t("admin.violations.expireYearHint") }}</small>
-        </div>
+          <small class="text-warn">{{ $t("admin.violations.expireYearHint") }}</small>
+        </AppField>
 
-        <div class="flex flex-col gap-1 md:col-span-3">
-          <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.violations.note") }}</label>
-          <InputText v-model="form.note" required />
-        </div>
+        <AppField v-slot="f" :label="$t('admin.violations.note')" class="md:col-span-3">
+            <InputText :id="f.id" v-model="form.note" required />
+        </AppField>
       </div>
 
       <div v-if="form.expireYear === null" class="flex items-center gap-2">
         <Checkbox v-model="form.confirmPermanent" input-id="permanent" binary />
-        <label for="permanent" class="text-sm text-amber-500">{{ $t("admin.violations.confirmPermanent") }}</label>
+        <label for="permanent" class="text-sm text-warn">{{ $t("admin.violations.confirmPermanent") }}</label>
       </div>
 
       <!--
@@ -41,25 +38,25 @@
 
     <div class="mb-4 flex flex-wrap gap-2 items-center">
       <IconField>
-        <InputIcon class="pi pi-search" />
+        <InputIcon><AppIcon name="lucide:search" class="size-4" /></InputIcon>
         <InputText v-model="filterVpfId" :placeholder="$t('admin.violations.filterAthlete')" class="w-56" />
       </IconField>
       <div class="flex items-center gap-2">
         <Checkbox v-model="inForceOnly" input-id="inForce" binary />
-        <label for="inForce" class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.violations.inForceOnly") }}</label>
+        <label for="inForce" class="text-sm text-muted-color">{{ $t("admin.violations.inForceOnly") }}</label>
       </div>
-      <Button icon="pi pi-refresh" text severity="secondary" @click="() => refresh()" />
+      <Button :aria-label="$t('admin.common.refresh')" text severity="secondary" @click="() => refresh()"><AppIcon name="lucide:refresh-cw" class="size-4" /></Button>
     </div>
 
     <div v-if="pending" class="flex justify-center py-12"><ProgressSpinner /></div>
-    <div v-else-if="!rows.length" class="text-surface-500 py-8">{{ $t("admin.violations.none") }}</div>
-    <DataTable v-else :value="rows" striped-rows class="border border-surface-200 dark:border-surface-700">
+    <div v-else-if="!rows.length" class="text-muted-color py-8">{{ $t("admin.violations.none") }}</div>
+    <DataTable v-else :value="rows" striped-rows class="border border-surface-200">
       <Column :header="$t('admin.violations.athlete')">
         <template #body="{ data }">
           <NuxtLinkLocale :to="`/admin/athletes/${data.vpfId}`" class="font-medium hover:underline">
             {{ data.userName }}
           </NuxtLinkLocale>
-          <div class="text-xs text-surface-500 font-mono">{{ data.vpfId }}</div>
+          <div class="text-xs text-muted-color font-mono">{{ data.vpfId }}</div>
         </template>
       </Column>
       <Column :header="$t('admin.violations.note')" field="note" />
@@ -72,7 +69,7 @@
       <Column :header="$t('admin.violations.consequence')">
         <template #body="{ data }">
           <Tag :value="`${$t('admin.violations.level')} ${data.level}`" :severity="outcomeSeverity(data.outcome)" />
-          <div class="text-xs text-surface-500 mt-1">{{ $t(`admin.violations.outcomes.${data.outcome}`) }}</div>
+          <div class="text-xs text-muted-color mt-1">{{ $t(`admin.violations.outcomes.${data.outcome}`) }}</div>
         </template>
       </Column>
       <Column :header="$t('general.date')">
@@ -86,11 +83,10 @@
     </DataTable>
 
     <Dialog v-model:visible="liftDialog" modal :header="$t('admin.violations.liftTitle')" class="w-full max-w-md">
-      <p class="text-sm text-surface-600 dark:text-surface-300 mb-3">{{ $t("admin.violations.liftPrompt") }}</p>
-      <div class="flex flex-col gap-1">
-        <label class="text-sm">{{ $t("admin.common.reason") }}</label>
-        <InputText v-model="liftReason" />
-      </div>
+      <p class="text-sm text-muted-color mb-3">{{ $t("admin.violations.liftPrompt") }}</p>
+      <AppField v-slot="f" :label="$t('admin.common.reason')">
+            <InputText :id="f.id" v-model="liftReason" />
+      </AppField>
       <template #footer>
         <Button text :label="$t('admin.common.cancel')" @click="liftDialog = false" />
         <Button severity="danger" :label="$t('admin.violations.lift')" :disabled="!liftReason" :loading="lifting" @click="lift" />

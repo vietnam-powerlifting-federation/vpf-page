@@ -2,27 +2,22 @@
   <div class="p-4 md:p-8">
     <div class="flex flex-wrap items-center gap-3 mb-6">
       <div class="flex-1 min-w-0">
-        <h1 class="text-2xl font-bold text-surface-900 dark:text-surface-0">{{ $t("admin.meets.title") }}</h1>
-        <p class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.meets.subtitle") }}</p>
+        <h1 class="font-display text-3xl font-extrabold uppercase">{{ $t("admin.meets.title") }}</h1>
+        <p class="text-sm text-muted-color">{{ $t("admin.meets.subtitle") }}</p>
       </div>
-      <NuxtLinkLocale to="/admin/meets/new">
-        <Button icon="pi pi-plus" :label="$t('admin.meets.create')" />
-      </NuxtLinkLocale>
+      <Button v-slot="slotProps" as-child><NuxtLinkLocale to="/admin/meets/new" :class="slotProps.class"><AppIcon name="lucide:plus" class="size-4" />{{ $t('admin.meets.create') }}</NuxtLinkLocale></Button>
     </div>
 
     <div class="mb-4 flex flex-wrap gap-2 items-center">
       <IconField>
-        <InputIcon class="pi pi-search" />
+        <InputIcon><AppIcon name="lucide:search" class="size-4" /></InputIcon>
         <InputText v-model="search" :placeholder="$t('admin.meets.search')" class="w-64" />
       </IconField>
-      <Button
-        :icon="showHidden ? 'pi pi-eye' : 'pi pi-eye-slash'"
-        :label="showHidden ? $t('admin.meets.showingHidden') : $t('admin.meets.showHidden')"
-        outlined
-        severity="secondary"
-        @click="showHidden = !showHidden"
-      />
-      <Button icon="pi pi-refresh" text severity="secondary" @click="() => refresh()" />
+      <Button outlined severity="secondary" :aria-pressed="showHidden" @click="showHidden = !showHidden">
+        <AppIcon :name="showHidden ? 'lucide:eye' : 'lucide:eye-off'" class="size-4" />
+        {{ showHidden ? $t('admin.meets.showingHidden') : $t('admin.meets.showHidden') }}
+      </Button>
+      <Button :aria-label="$t('admin.common.refresh')" text severity="secondary" @click="() => refresh()"><AppIcon name="lucide:refresh-cw" class="size-4" /></Button>
     </div>
 
     <div v-if="pending" class="flex justify-center py-12"><ProgressSpinner /></div>
@@ -32,14 +27,14 @@
       striped-rows
       paginator
       :rows="25"
-      class="border border-surface-200 dark:border-surface-700"
+      class="border border-surface-200"
     >
       <Column :header="$t('admin.meets.name')">
         <template #body="{ data }">
-          <NuxtLinkLocale :to="`/admin/meets/${data.meetId}`" class="font-medium text-primary hover:underline">
+          <NuxtLinkLocale :to="`/admin/meets/${data.meetId}`" class="font-medium text-accent hover:underline">
             {{ data.meetName }}
           </NuxtLinkLocale>
-          <div class="text-xs text-surface-500 font-mono">{{ data.meetSlug }}</div>
+          <div class="text-xs text-muted-color font-mono">{{ data.meetSlug }}</div>
         </template>
       </Column>
       <Column :header="$t('admin.meets.hostDate')">
@@ -63,12 +58,8 @@
       <Column :header="$t('admin.meets.tools')">
         <template #body="{ data }">
           <div class="flex gap-1">
-            <NuxtLinkLocale :to="`/admin/meets/${data.meetId}/entries`">
-              <Button size="small" text :label="$t('admin.meets.entries')" />
-            </NuxtLinkLocale>
-            <NuxtLinkLocale v-if="!data.legacy" :to="`/admin/meets/${data.meetId}/results`">
-              <Button size="small" text :label="$t('admin.meets.results')" />
-            </NuxtLinkLocale>
+            <Button v-slot="slotProps" as-child size="small" text><NuxtLinkLocale :to="`/admin/meets/${data.meetId}/entries`" :class="slotProps.class">{{ $t('admin.meets.entries') }}</NuxtLinkLocale></Button>
+            <Button v-if="!data.legacy" v-slot="slotProps" as-child size="small" text><NuxtLinkLocale :to="`/admin/meets/${data.meetId}/results`" :class="slotProps.class">{{ $t('admin.meets.results') }}</NuxtLinkLocale></Button>
           </div>
         </template>
       </Column>

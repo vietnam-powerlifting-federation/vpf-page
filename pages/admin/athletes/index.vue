@@ -1,11 +1,11 @@
 <template>
   <div class="p-4 md:p-8">
-    <h1 class="text-2xl font-bold mb-1 text-surface-900 dark:text-surface-0">{{ $t("admin.athletes.title") }}</h1>
-    <p class="text-sm text-surface-600 dark:text-surface-300 mb-6">{{ $t("admin.athletes.subtitle") }}</p>
+    <h1 class="mb-1 font-display text-3xl font-extrabold uppercase">{{ $t("admin.athletes.title") }}</h1>
+    <p class="text-sm text-muted-color mb-6">{{ $t("admin.athletes.subtitle") }}</p>
 
     <div class="mb-4 flex flex-wrap gap-2 items-center">
       <IconField>
-        <InputIcon class="pi pi-search" />
+        <InputIcon><AppIcon name="lucide:search" class="size-4" /></InputIcon>
         <InputText v-model="search" :placeholder="$t('admin.athletes.search')" class="w-72" />
       </IconField>
 
@@ -28,7 +28,7 @@
         :placeholder="$t('admin.athletes.flags')"
       />
 
-      <Button icon="pi pi-refresh" text severity="secondary" @click="() => refresh()" />
+      <Button :aria-label="$t('admin.common.refresh')" text severity="secondary" @click="() => refresh()"><AppIcon name="lucide:refresh-cw" class="size-4" /></Button>
     </div>
 
     <div v-if="pending" class="flex justify-center py-12"><ProgressSpinner /></div>
@@ -41,25 +41,25 @@
       :total-records="total"
       :first="(page - 1) * pageSize"
       striped-rows
-      class="border border-surface-200 dark:border-surface-700"
+      class="border border-surface-200"
       @page="onPage"
     >
       <Column :header="$t('general.name')">
         <template #body="{ data }">
           <NuxtLinkLocale
             :to="`/admin/athletes/${data.vpfId}`"
-            class="font-medium text-primary hover:underline"
+            class="font-medium text-accent hover:underline"
           >
             {{ data.fullName }}
           </NuxtLinkLocale>
-          <div class="text-xs text-surface-500 font-mono">{{ data.vpfId }}</div>
+          <div class="text-xs text-muted-color font-mono">{{ data.vpfId }}</div>
         </template>
       </Column>
       <Column :header="$t('admin.athletes.email')" field="email" />
       <Column :header="$t('general.yearOfBirth')" field="dob" />
       <Column :header="$t('admin.athletes.membershipExpiry')">
         <template #body="{ data }">
-          <span :class="isLapsed(data.vpfMembershipExpiresAt) ? 'text-amber-500' : ''">
+          <span :class="isLapsed(data.vpfMembershipExpiresAt) ? 'text-warn' : ''">
             {{ data.vpfMembershipExpiresAt ? formatDateDMY(data.vpfMembershipExpiresAt) : $t("admin.athletes.noExpiry") }}
           </span>
         </template>

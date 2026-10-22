@@ -1,14 +1,14 @@
 <template>
   <div class="p-4 md:p-8 max-w-6xl">
-    <h1 class="text-2xl font-bold mb-1 text-surface-900 dark:text-surface-0">{{ $t("admin.dashboard.title") }}</h1>
-    <p class="text-sm text-surface-600 dark:text-surface-300 mb-6">{{ $t("admin.dashboard.subtitle") }}</p>
+    <h1 class="mb-1 font-display text-3xl font-extrabold uppercase">{{ $t("admin.dashboard.title") }}</h1>
+    <p class="text-sm text-muted-color mb-6">{{ $t("admin.dashboard.subtitle") }}</p>
 
     <div v-if="pending" class="flex justify-center py-12"><ProgressSpinner /></div>
 
     <template v-else-if="data">
-      <div v-if="queueEmpty" class="rounded-lg border border-surface-200 dark:border-surface-700 p-8 text-center">
-        <i class="pi pi-check-circle text-3xl text-green-500 mb-2" />
-        <p class="text-surface-600 dark:text-surface-300">{{ $t("admin.dashboard.allClear") }}</p>
+      <div v-if="queueEmpty" class="rounded-md border border-surface-200 p-8 text-center">
+        <AppIcon name="lucide:circle-check" class="size-8 text-success mb-2" />
+        <p class="text-muted-color">{{ $t("admin.dashboard.allClear") }}</p>
       </div>
 
       <div v-else class="space-y-3">
@@ -16,12 +16,12 @@
         <NuxtLinkLocale
           v-if="data.pendingVerifications > 0"
           to="/admin/verifications"
-          class="flex items-center gap-4 rounded-lg border border-surface-200 dark:border-surface-700 p-4 hover:border-primary"
+          class="flex items-center gap-4 rounded-md border border-surface-200 p-4 hover:border-accent"
         >
-          <i class="pi pi-id-card text-xl text-primary" />
+          <AppIcon name="lucide:id-card" class="size-5 text-accent" />
           <div class="flex-1 min-w-0">
-            <p class="font-medium text-surface-900 dark:text-surface-0">{{ $t("admin.dashboard.verifications") }}</p>
-            <p class="text-sm text-surface-500">{{ $t("admin.dashboard.verificationsHint") }}</p>
+            <p class="font-medium text-color">{{ $t("admin.dashboard.verifications") }}</p>
+            <p class="text-sm text-muted-color">{{ $t("admin.dashboard.verificationsHint") }}</p>
           </div>
           <Tag :value="String(data.pendingVerifications)" severity="warn" />
         </NuxtLinkLocale>
@@ -29,12 +29,12 @@
         <NuxtLinkLocale
           v-if="data.stalePurchases > 0"
           to="/admin/purchases?status=pending&order=oldest"
-          class="flex items-center gap-4 rounded-lg border border-surface-200 dark:border-surface-700 p-4 hover:border-primary"
+          class="flex items-center gap-4 rounded-md border border-surface-200 p-4 hover:border-accent"
         >
-          <i class="pi pi-wallet text-xl text-primary" />
+          <AppIcon name="lucide:wallet" class="size-5 text-accent" />
           <div class="flex-1 min-w-0">
-            <p class="font-medium text-surface-900 dark:text-surface-0">{{ $t("admin.dashboard.stalePurchases") }}</p>
-            <p class="text-sm text-surface-500">
+            <p class="font-medium text-color">{{ $t("admin.dashboard.stalePurchases") }}</p>
+            <p class="text-sm text-muted-color">
               {{ $t("admin.dashboard.stalePurchasesHint", { amount: formatVnd(data.stalePurchaseValue) }) }}
             </p>
           </div>
@@ -44,67 +44,61 @@
         <div
           v-for="meet in data.meetsMissingResults"
           :key="`results-${meet.meetId}`"
-          class="rounded-lg border border-surface-200 dark:border-surface-700 p-4"
+          class="rounded-md border border-surface-200 p-4"
         >
           <div class="flex items-center gap-4">
-            <i class="pi pi-upload text-xl text-primary" />
+            <AppIcon name="lucide:upload" class="size-5 text-accent" />
             <div class="flex-1 min-w-0">
-              <p class="font-medium text-surface-900 dark:text-surface-0 truncate">{{ meet.meetName }}</p>
-              <p class="text-sm text-surface-500">
+              <p class="font-medium text-color truncate">{{ meet.meetName }}</p>
+              <p class="text-sm text-muted-color">
                 {{ $t("admin.dashboard.missingResults", { date: formatDateDMY(meet.hostDate) }) }}
               </p>
             </div>
-            <NuxtLinkLocale :to="`/admin/meets/${meet.meetId}/results`">
-              <Button size="small" :label="$t('admin.dashboard.importResults')" outlined />
-            </NuxtLinkLocale>
+            <Button v-slot="slotProps" as-child size="small" outlined><NuxtLinkLocale :to="`/admin/meets/${meet.meetId}/results`" :class="slotProps.class">{{ $t('admin.dashboard.importResults') }}</NuxtLinkLocale></Button>
           </div>
         </div>
 
         <div
           v-for="meet in data.meetsNeedingEntries"
           :key="`entries-${meet.meetId}`"
-          class="rounded-lg border border-surface-200 dark:border-surface-700 p-4"
+          class="rounded-md border border-surface-200 p-4"
         >
           <div class="flex items-center gap-4">
-            <i class="pi pi-list text-xl text-primary" />
+            <AppIcon name="lucide:list" class="size-5 text-accent" />
             <div class="flex-1 min-w-0">
-              <p class="font-medium text-surface-900 dark:text-surface-0 truncate">{{ meet.meetName }}</p>
-              <p class="text-sm text-surface-500">
+              <p class="font-medium text-color truncate">{{ meet.meetName }}</p>
+              <p class="text-sm text-muted-color">
                 {{ $t("admin.dashboard.needsEntries", { count: meet.paidRegistrations ?? 0 }) }}
               </p>
             </div>
-            <NuxtLinkLocale :to="`/admin/meets/${meet.meetId}/entries`">
-              <Button size="small" :label="$t('admin.dashboard.buildRoster')" outlined />
-            </NuxtLinkLocale>
+            <Button v-slot="slotProps" as-child size="small" outlined><NuxtLinkLocale :to="`/admin/meets/${meet.meetId}/entries`" :class="slotProps.class">{{ $t('admin.dashboard.buildRoster') }}</NuxtLinkLocale></Button>
           </div>
         </div>
 
         <div
           v-for="meet in data.meetsClosingSoon"
           :key="`closing-${meet.meetId}`"
-          class="rounded-lg border border-surface-200 dark:border-surface-700 p-4"
+          class="rounded-md border border-surface-200 p-4"
         >
           <div class="flex items-center gap-4">
-            <i class="pi pi-clock text-xl text-surface-500" />
+            <AppIcon name="lucide:clock" class="size-5 text-muted-color" />
             <div class="flex-1 min-w-0">
-              <p class="font-medium text-surface-900 dark:text-surface-0 truncate">{{ meet.meetName }}</p>
-              <p class="text-sm text-surface-500">
+              <p class="font-medium text-color truncate">{{ meet.meetName }}</p>
+              <p class="text-sm text-muted-color">
                 {{ $t("admin.dashboard.closingSoon", { date: formatDateDMY(meet.closeRegistration) }) }}
               </p>
             </div>
-            <NuxtLinkLocale :to="`/admin/meets/${meet.meetId}`">
-              <Button size="small" :label="$t('admin.dashboard.openMeet')" text />
-            </NuxtLinkLocale>
+            <Button v-slot="slotProps" as-child size="small" text><NuxtLinkLocale :to="`/admin/meets/${meet.meetId}`" :class="slotProps.class">{{ $t('admin.dashboard.openMeet') }}</NuxtLinkLocale></Button>
           </div>
         </div>
       </div>
 
       <!-- Vanity metrics, deliberately below the fold. -->
-      <div class="mt-10 pt-6 border-t border-surface-200 dark:border-surface-800">
+      <div class="mt-10 pt-6 border-t border-surface-200">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div v-for="stat in stats" :key="stat.label">
-            <p class="text-xs uppercase tracking-wide text-surface-500">{{ $t(stat.label) }}</p>
-            <p class="text-xl font-semibold text-surface-900 dark:text-surface-0">{{ stat.value }}</p>
+            <p class="text-xs uppercase tracking-wide text-muted-color">{{ $t(stat.label) }}</p>
+            <p class="text-xl font-semibold text-color">{{ stat.value }}</p>
           </div>
         </div>
       </div>

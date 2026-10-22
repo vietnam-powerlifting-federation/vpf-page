@@ -780,7 +780,8 @@
     "common": {
       "cancel": "Cancel",
       "save": "Save",
-      "reason": "Reason"
+      "reason": "Reason",
+      "refresh": "Refresh"
     },
     "dashboard": {
       "title": "What needs you",

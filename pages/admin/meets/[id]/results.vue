@@ -1,17 +1,17 @@
 <template>
   <div class="p-4 md:p-8">
-    <NuxtLinkLocale :to="`/admin/meets/${meetId}`" class="text-sm text-primary hover:underline">
+    <NuxtLinkLocale :to="`/admin/meets/${meetId}`" class="text-sm text-accent hover:underline">
       ← {{ $t("admin.meets.title") }}
     </NuxtLinkLocale>
 
-    <h1 class="text-2xl font-bold mt-2 mb-1 text-surface-900 dark:text-surface-0">{{ $t("admin.import.title") }}</h1>
-    <p class="text-sm text-surface-600 dark:text-surface-300 mb-6">{{ $t("admin.import.subtitle") }}</p>
+    <h1 class="mt-2 mb-1 font-display text-3xl font-extrabold uppercase">{{ $t("admin.import.title") }}</h1>
+    <p class="text-sm text-muted-color mb-6">{{ $t("admin.import.subtitle") }}</p>
 
     <!-- Step 1 — pick a file. -->
-    <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 md:p-5 mb-6">
+    <section class="rounded-md border border-surface-200 p-4 md:p-5 mb-6">
       <div class="flex flex-wrap items-center gap-3">
         <span class="flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-contrast text-sm font-semibold">1</span>
-        <h2 class="text-base font-semibold text-surface-900 dark:text-surface-0 flex-1">{{ $t("admin.import.step1") }}</h2>
+        <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase flex-1">{{ $t("admin.import.step1") }}</h2>
         <input
           ref="fileInput"
           type="file"
@@ -19,17 +19,17 @@
           class="hidden"
           @change="onFileChange"
         >
-        <Button icon="pi pi-file" :label="$t('admin.import.chooseFile')" outlined @click="fileInput?.click()" />
-        <span v-if="fileName" class="text-sm text-surface-600 dark:text-surface-300 font-mono">{{ fileName }}</span>
+        <Button outlined @click="fileInput?.click()"><AppIcon name="lucide:file" class="size-4" />{{ $t('admin.import.chooseFile') }}</Button>
+        <span v-if="fileName" class="text-sm text-muted-color font-mono">{{ fileName }}</span>
       </div>
-      <p class="mt-3 text-sm text-surface-500">{{ $t("admin.import.step1Hint") }}</p>
+      <p class="mt-3 text-sm text-muted-color">{{ $t("admin.import.step1Hint") }}</p>
     </section>
 
     <!-- Step 2 — preview. Nothing has been written. -->
-    <section v-if="preview" class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 md:p-5 mb-6">
+    <section v-if="preview" class="rounded-md border border-surface-200 p-4 md:p-5 mb-6">
       <div class="flex items-center gap-3 mb-4">
         <span class="flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-contrast text-sm font-semibold">2</span>
-        <h2 class="text-base font-semibold text-surface-900 dark:text-surface-0">{{ $t("admin.import.step2") }}</h2>
+        <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase">{{ $t("admin.import.step2") }}</h2>
       </div>
 
       <Message v-for="issue in preview.issues" :key="issue.code" severity="error" class="mb-3">
@@ -57,7 +57,7 @@
         size="small"
         striped-rows
         scrollable
-        class="border border-surface-200 dark:border-surface-700"
+        class="border border-surface-200"
         :row-class="rowClass"
       >
         <Column :header="$t('admin.import.line')" style="width: 4rem">
@@ -66,8 +66,8 @@
 
         <Column :header="$t('admin.import.athlete')">
           <template #body="{ data }">
-            <div class="font-medium text-surface-900 dark:text-surface-0">{{ data.row.name }}</div>
-            <div class="text-xs text-surface-500">
+            <div class="font-medium text-color">{{ data.row.name }}</div>
+            <div class="text-xs text-muted-color">
               <span v-if="data.match.vpfId" class="font-mono">{{ data.match.vpfId }}</span>
               <span v-else>{{ $t("admin.import.unmatched") }}</span>
               <span v-if="data.match.method"> · {{ $t(`admin.import.matchedBy.${data.match.method}`) }}</span>
@@ -108,14 +108,14 @@
         <Column :header="$t('general.division')">
           <template #body="{ data }">
             <div>{{ data.row.division ?? "—" }}</div>
-            <div class="text-xs text-surface-500">{{ data.row.divisionRaw }}</div>
+            <div class="text-xs text-muted-color">{{ data.row.divisionRaw }}</div>
           </template>
         </Column>
 
         <Column :header="$t('general.weightClass')">
           <template #body="{ data }">
             {{ data.row.weightClass === 999 ? "120+/84+" : data.row.weightClass ?? "—" }}
-            <div class="text-xs text-surface-500">{{ data.row.bodyWeight }} kg</div>
+            <div class="text-xs text-muted-color">{{ data.row.bodyWeight }} kg</div>
           </template>
         </Column>
 
@@ -131,7 +131,7 @@
                 {{ data.derived.bestSquat }} / {{ data.derived.bestBench }} / {{ data.derived.bestDeadlift }}
                 = <strong>{{ data.derived.total }}</strong>
               </div>
-              <div class="text-xs text-surface-500">
+              <div class="text-xs text-muted-color">
                 GL {{ data.derived.gl ?? "—" }} ·
                 {{ data.derived.disqualified ? $t("admin.import.dq") : `#${data.derived.placement}` }}
               </div>
@@ -141,21 +141,21 @@
                 severity="danger"
                 :value="$t('admin.import.dq')"
               />
-              <div v-for="(reason, i) in data.derived.dqReasons" :key="i" class="text-xs text-red-500">
+              <div v-for="(reason, i) in data.derived.dqReasons" :key="i" class="text-xs text-danger">
                 {{ localized(reason) }}
               </div>
             </template>
-            <span v-else class="text-surface-400">—</span>
+            <span v-else class="text-muted-color">—</span>
           </template>
         </Column>
 
         <Column :header="$t('admin.import.action')">
           <template #body="{ data }">
             <Tag :value="$t(`admin.import.actions.${data.action}`)" :severity="actionSeverity(data.action)" />
-            <div v-if="data.createsTeam" class="text-xs text-surface-500 mt-1">
+            <div v-if="data.createsTeam" class="text-xs text-muted-color mt-1">
               {{ $t("admin.import.newTeam", { team: data.createsTeam }) }}
             </div>
-            <div v-if="data.changes.length" class="text-xs text-surface-500 mt-1">
+            <div v-if="data.changes.length" class="text-xs text-muted-color mt-1">
               {{ data.changes.map((change: FieldChange) => change.field).join(", ") }}
             </div>
           </template>
@@ -167,7 +167,7 @@
               v-for="(issue, i) in data.row.issues"
               :key="i"
               class="text-xs"
-              :class="issue.severity === 'error' ? 'text-red-500' : 'text-amber-500'"
+              :class="issue.severity === 'error' ? 'text-danger' : 'text-warn'"
             >
               {{ localized(issue.message) }}
             </div>
@@ -177,8 +177,8 @@
 
       <!-- A withdrawn lifter must actually disappear. -->
       <div v-if="preview.deletions.length" class="mt-4">
-        <p class="text-sm font-medium text-red-500 mb-1">{{ $t("admin.import.willDelete") }}</p>
-        <ul class="text-sm text-surface-600 dark:text-surface-300 list-disc list-inside">
+        <p class="text-sm font-medium text-danger mb-1">{{ $t("admin.import.willDelete") }}</p>
+        <ul class="text-sm text-muted-color list-disc list-inside">
           <li v-for="deletion in preview.deletions" :key="deletion.vpfId">
             {{ deletion.fullName }} ({{ deletion.vpfId }}) — {{ deletion.division }} {{ deletion.weightClass }}
           </li>
@@ -187,10 +187,10 @@
     </section>
 
     <!-- Step 3 — commit. -->
-    <section v-if="preview && preview.rows.length" class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 md:p-5">
+    <section v-if="preview && preview.rows.length" class="rounded-md border border-surface-200 p-4 md:p-5">
       <div class="flex items-center gap-3 mb-4">
         <span class="flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-contrast text-sm font-semibold">3</span>
-        <h2 class="text-base font-semibold text-surface-900 dark:text-surface-0">{{ $t("admin.import.step3") }}</h2>
+        <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase">{{ $t("admin.import.step3") }}</h2>
       </div>
 
       <Message v-if="preview.blocked" severity="error" size="small" class="mb-3">

@@ -780,7 +780,8 @@
     "common": {
       "cancel": "Huỷ",
       "save": "Lưu",
-      "reason": "Lý do"
+      "reason": "Lý do",
+      "refresh": "Làm mới"
     },
     "dashboard": {
       "title": "Việc đang chờ bạn",

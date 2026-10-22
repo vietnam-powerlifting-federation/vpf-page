@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-full p-4 md:p-8">
-    <h1 class="text-2xl font-bold mb-2 text-surface-900 dark:text-surface-0">{{ $t("adminVerifications.title") }}</h1>
-    <p class="text-sm text-surface-600 dark:text-surface-300 mb-6">{{ $t("adminVerifications.subtitle") }}</p>
+    <h1 class="mb-2 font-display text-3xl font-extrabold uppercase">{{ $t("adminVerifications.title") }}</h1>
+    <p class="text-sm text-muted-color mb-6">{{ $t("adminVerifications.subtitle") }}</p>
 
     <div class="mb-4 flex gap-2">
       <SelectButton
@@ -11,20 +11,20 @@
         option-value="value"
         :allow-empty="false"
       />
-      <Button icon="pi pi-refresh" :label="$t('adminVerifications.refresh')" outlined @click="() => refresh()" />
+      <Button outlined @click="() => refresh()"><AppIcon name="lucide:refresh-cw" class="size-4" />{{ $t('adminVerifications.refresh') }}</Button>
     </div>
 
     <div v-if="pending" class="flex justify-center py-12">
       <ProgressSpinner />
     </div>
-    <div v-else-if="!rows.length" class="text-surface-500 py-8">
+    <div v-else-if="!rows.length" class="text-muted-color py-8">
       {{ $t("adminVerifications.empty") }}
     </div>
-    <DataTable v-else :value="rows" striped-rows class="w-full border border-surface-200 dark:border-surface-700">
+    <DataTable v-else :value="rows" striped-rows class="w-full border border-surface-200">
       <Column :header="$t('adminVerifications.athlete')">
         <template #body="{ data }">
-          <div class="font-medium text-surface-900 dark:text-surface-0">{{ data.fullName }}</div>
-          <div class="text-xs text-surface-500">{{ data.vpfId }} · {{ data.userEmail }}</div>
+          <div class="font-medium text-color">{{ data.fullName }}</div>
+          <div class="text-xs text-muted-color">{{ data.vpfId }} · {{ data.userEmail }}</div>
         </template>
       </Column>
       <Column field="nationalId" :header="$t('verification.nationalId')" />
@@ -35,12 +35,12 @@
           <button
             v-if="data.idCardFrontUrl"
             type="button"
-            class="text-primary hover:underline text-sm"
+            class="text-accent hover:underline text-sm"
             @click="openImage(data.idCardFrontUrl)"
           >
             {{ $t("adminVerifications.viewImage") }}
           </button>
-          <span v-else class="text-surface-500 text-sm">{{ $t("adminVerifications.imageRemoved") }}</span>
+          <span v-else class="text-muted-color text-sm">{{ $t("adminVerifications.imageRemoved") }}</span>
         </template>
       </Column>
       <Column :header="$t('adminVerifications.status')">
@@ -78,7 +78,7 @@
 
     <!-- Reject reason dialog -->
     <Dialog v-model:visible="rejectDialog" :header="$t('adminVerifications.rejectTitle')" modal class="w-full max-w-md">
-      <p class="text-sm text-surface-600 dark:text-surface-300 mb-3">{{ $t("adminVerifications.rejectPrompt") }}</p>
+      <p class="text-sm text-muted-color mb-3">{{ $t("adminVerifications.rejectPrompt") }}</p>
       <Textarea v-model="rejectNote" rows="3" class="w-full" :placeholder="$t('adminVerifications.rejectPlaceholder')" />
       <template #footer>
         <Button :label="$t('adminVerifications.cancel')" text @click="rejectDialog = false" />

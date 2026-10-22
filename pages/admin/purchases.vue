@@ -1,11 +1,11 @@
 <template>
   <div class="p-4 md:p-8">
-    <h1 class="text-2xl font-bold mb-1 text-surface-900 dark:text-surface-0">{{ $t("admin.purchases.title") }}</h1>
-    <p class="text-sm text-surface-600 dark:text-surface-300 mb-6">{{ $t("admin.purchases.subtitle") }}</p>
+    <h1 class="mb-1 font-display text-3xl font-extrabold uppercase">{{ $t("admin.purchases.title") }}</h1>
+    <p class="text-sm text-muted-color mb-6">{{ $t("admin.purchases.subtitle") }}</p>
 
     <div class="mb-4 flex flex-wrap gap-2 items-center">
       <IconField>
-        <InputIcon class="pi pi-search" />
+        <InputIcon><AppIcon name="lucide:search" class="size-4" /></InputIcon>
         <InputText v-model="search" :placeholder="$t('admin.purchases.search')" class="w-72" />
       </IconField>
 
@@ -33,24 +33,24 @@
         :off-label="$t('admin.purchases.newestFirst')"
       />
 
-      <Button icon="pi pi-refresh" text severity="secondary" @click="() => refresh()" />
+      <Button :aria-label="$t('admin.common.refresh')" text severity="secondary" @click="() => refresh()"><AppIcon name="lucide:refresh-cw" class="size-4" /></Button>
     </div>
 
     <div v-if="pending" class="flex justify-center py-12"><ProgressSpinner /></div>
-    <div v-else-if="!rows.length" class="text-surface-500 py-8">{{ $t("admin.purchases.empty") }}</div>
+    <div v-else-if="!rows.length" class="text-muted-color py-8">{{ $t("admin.purchases.empty") }}</div>
     <DataTable
       v-else
       :value="rows"
       striped-rows
       paginator
       :rows="25"
-      class="border border-surface-200 dark:border-surface-700"
+      class="border border-surface-200"
     >
       <Column :header="$t('admin.purchases.memo')">
         <template #body="{ data }">
           <!-- The memo is the key to matching a bank transfer (§7.2). -->
-          <span class="font-mono font-semibold text-primary">{{ data.expectedMemo }}</span>
-          <div class="text-xs text-surface-500">{{ age(data.createdAt) }}</div>
+          <span class="font-mono font-semibold text-accent">{{ data.expectedMemo }}</span>
+          <div class="text-xs text-muted-color">{{ age(data.createdAt) }}</div>
         </template>
       </Column>
 
@@ -59,7 +59,7 @@
           <NuxtLinkLocale :to="`/admin/athletes/${data.vpfId}`" class="font-medium hover:underline">
             {{ data.userName }}
           </NuxtLinkLocale>
-          <div class="text-xs text-surface-500">{{ data.userEmail }}</div>
+          <div class="text-xs text-muted-color">{{ data.userEmail }}</div>
         </template>
       </Column>
 
@@ -68,14 +68,14 @@
           <div class="flex flex-wrap gap-1">
             <Tag v-for="itemType in data.type" :key="itemType" :value="$t(`admin.purchases.types.${itemType}`)" severity="secondary" />
           </div>
-          <div v-if="data.meetName" class="text-xs text-surface-500 mt-1">
+          <div v-if="data.meetName" class="text-xs text-muted-color mt-1">
             {{ data.meetName }} · {{ data.division }} {{ data.weightClass === 999 ? "+" : data.weightClass }}
             <span v-if="data.mediaPlus"> · Media Plus</span>
           </div>
-          <div v-if="data.vipDurationMonths" class="text-xs text-surface-500 mt-1">
+          <div v-if="data.vipDurationMonths" class="text-xs text-muted-color mt-1">
             {{ $t("admin.purchases.vipMonths", { months: data.vipDurationMonths }) }}
           </div>
-          <div v-if="data.membershipYear" class="text-xs text-surface-500 mt-1">
+          <div v-if="data.membershipYear" class="text-xs text-muted-color mt-1">
             {{ $t("admin.purchases.membershipYear", { year: data.membershipYear }) }}
           </div>
         </template>
@@ -84,7 +84,7 @@
       <Column :header="$t('admin.purchases.amount')">
         <template #body="{ data }">
           <span class="font-medium">{{ formatVnd(data.amount) }} ₫</span>
-          <div v-for="voucher in data.vouchers" :key="voucher.code" class="text-xs text-green-600">
+          <div v-for="voucher in data.vouchers" :key="voucher.code" class="text-xs text-success">
             {{ voucher.code }} −{{ formatVnd(voucher.discount) }} ₫
           </div>
         </template>
@@ -93,7 +93,7 @@
       <Column :header="$t('admin.purchases.status')">
         <template #body="{ data }">
           <Tag :value="$t(`admin.purchases.statuses.${data.status}`)" :severity="statusSeverity(data.status)" />
-          <div v-if="data.approvedBy" class="text-xs text-surface-500 mt-1">
+          <div v-if="data.approvedBy" class="text-xs text-muted-color mt-1">
             {{ $t("admin.purchases.approvedBy", { who: data.approvedBy }) }}
           </div>
         </template>

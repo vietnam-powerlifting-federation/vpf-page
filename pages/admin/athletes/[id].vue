@@ -1,118 +1,104 @@
 <template>
   <div class="p-4 md:p-8 max-w-4xl">
-    <NuxtLinkLocale to="/admin/athletes" class="text-sm text-primary hover:underline">
+    <NuxtLinkLocale to="/admin/athletes" class="text-sm text-accent hover:underline">
       ← {{ $t("admin.athletes.title") }}
     </NuxtLinkLocale>
 
-    <h1 class="text-2xl font-bold mt-2 text-surface-900 dark:text-surface-0">{{ form.fullName }}</h1>
-    <p class="text-sm text-surface-500 font-mono mb-6">{{ vpfId }}</p>
+    <h1 class="mt-2 font-display text-3xl font-extrabold uppercase">{{ form.fullName }}</h1>
+    <p class="text-sm text-muted-color font-mono mb-6">{{ vpfId }}</p>
 
     <form class="space-y-6" @submit.prevent="save">
-      <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 md:p-5 space-y-4">
-        <h2 class="text-base font-semibold text-surface-900 dark:text-surface-0">{{ $t("admin.athletes.sectionIdentity") }}</h2>
+      <section class="rounded-md border border-surface-200 p-4 md:p-5 space-y-4">
+        <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase">{{ $t("admin.athletes.sectionIdentity") }}</h2>
         <Message severity="secondary" size="small" variant="simple">{{ $t("admin.athletes.identityHint") }}</Message>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="flex flex-col gap-1">
-            <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("general.name") }}</label>
-            <InputText v-model="form.fullName" />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("general.yearOfBirth") }}</label>
-            <InputNumber v-model="form.dob" :use-grouping="false" :min="1900" :max="2200" />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.athletes.nationalId") }}</label>
-            <InputText v-model="form.nationalId" />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.athletes.nationality") }}</label>
-            <InputText v-model="form.nationality" />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.athletes.phone") }}</label>
-            <InputText v-model="form.phoneNumber" />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.athletes.email") }}</label>
-            <InputText v-model="form.email" />
-            <small v-if="emailChanged" class="text-amber-500">{{ $t("admin.athletes.emailChangeHint") }}</small>
-          </div>
-          <div class="flex flex-col gap-1 md:col-span-2">
-            <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.athletes.address") }}</label>
-            <InputText v-model="form.address" />
-          </div>
-          <div class="flex flex-col gap-1 md:col-span-2">
-            <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.athletes.slug") }}</label>
-            <InputText v-model="form.slug" class="font-mono" />
-            <small v-if="slugChanged" class="text-amber-500">{{ $t("admin.athletes.slugChangeHint") }}</small>
-          </div>
+          <AppField v-slot="f" :label="$t('general.name')">
+            <InputText :id="f.id" v-model="form.fullName" />
+          </AppField>
+          <AppField v-slot="f" :label="$t('general.yearOfBirth')">
+            <InputNumber v-model="form.dob" :input-id="f.id" :use-grouping="false" :min="1900" :max="2200" />
+          </AppField>
+          <AppField v-slot="f" :label="$t('admin.athletes.nationalId')">
+            <InputText :id="f.id" v-model="form.nationalId" />
+          </AppField>
+          <AppField v-slot="f" :label="$t('admin.athletes.nationality')">
+            <InputText :id="f.id" v-model="form.nationality" />
+          </AppField>
+          <AppField v-slot="f" :label="$t('admin.athletes.phone')">
+            <InputText :id="f.id" v-model="form.phoneNumber" />
+          </AppField>
+          <AppField v-slot="f" :label="$t('admin.athletes.email')">
+            <InputText :id="f.id" v-model="form.email" />
+            <small v-if="emailChanged" class="text-warn">{{ $t("admin.athletes.emailChangeHint") }}</small>
+          </AppField>
+          <AppField v-slot="f" :label="$t('admin.athletes.address')" class="md:col-span-2">
+            <InputText :id="f.id" v-model="form.address" />
+          </AppField>
+          <AppField v-slot="f" :label="$t('admin.athletes.slug')" class="md:col-span-2">
+            <InputText :id="f.id" v-model="form.slug" class="font-mono" />
+            <small v-if="slugChanged" class="text-warn">{{ $t("admin.athletes.slugChangeHint") }}</small>
+          </AppField>
         </div>
       </section>
 
-      <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 md:p-5 space-y-4">
-        <h2 class="text-base font-semibold text-surface-900 dark:text-surface-0">{{ $t("admin.athletes.sectionMembership") }}</h2>
+      <section class="rounded-md border border-surface-200 p-4 md:p-5 space-y-4">
+        <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase">{{ $t("admin.athletes.sectionMembership") }}</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="flex flex-col gap-1">
-            <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.athletes.vpfExpiry") }}</label>
-            <DatePicker v-model="vpfExpiry" date-format="dd/mm/yy" show-icon show-button-bar />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.athletes.vipExpiry") }}</label>
-            <DatePicker v-model="vipExpiry" date-format="dd/mm/yy" show-icon show-button-bar />
+          <AppField v-slot="f" :label="$t('admin.athletes.vpfExpiry')">
+            <DatePicker v-model="vpfExpiry" :input-id="f.id" date-format="dd/mm/yy" show-icon show-button-bar />
+          </AppField>
+          <AppField v-slot="f" :label="$t('admin.athletes.vipExpiry')">
+            <DatePicker v-model="vipExpiry" :input-id="f.id" date-format="dd/mm/yy" show-icon show-button-bar />
             <!-- Clearing this revokes VIP (`isVipActive`); permanent VIP = a far-future date. -->
-            <small class="text-amber-500">{{ $t("admin.athletes.vipNullHint") }}</small>
-          </div>
+            <small class="text-warn">{{ $t("admin.athletes.vipNullHint") }}</small>
+          </AppField>
         </div>
       </section>
 
-      <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 md:p-5 space-y-4">
-        <h2 class="text-base font-semibold text-surface-900 dark:text-surface-0">{{ $t("admin.athletes.sectionRack") }}</h2>
-        <p class="text-sm text-surface-500">{{ $t("admin.athletes.rackHint") }}</p>
+      <section class="rounded-md border border-surface-200 p-4 md:p-5 space-y-4">
+        <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase">{{ $t("admin.athletes.sectionRack") }}</h2>
+        <p class="text-sm text-muted-color">{{ $t("admin.athletes.rackHint") }}</p>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div v-for="pin in rackPins" :key="pin.field" class="flex flex-col gap-1">
-            <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t(pin.label) }}</label>
-            <InputNumber v-model="form[pin.field]" :use-grouping="false" :min="0" />
-          </div>
+          <AppField v-for="pin in rackPins" :key="pin.field" v-slot="f" :label="$t(pin.label)">
+            <InputNumber v-model="form[pin.field]" :input-id="f.id" :use-grouping="false" :min="0" />
+          </AppField>
         </div>
       </section>
 
-      <section class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 md:p-5 space-y-4">
-        <h2 class="text-base font-semibold text-surface-900 dark:text-surface-0">{{ $t("admin.athletes.sectionSanctions") }}</h2>
+      <section class="rounded-md border border-surface-200 p-4 md:p-5 space-y-4">
+        <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase">{{ $t("admin.athletes.sectionSanctions") }}</h2>
 
         <div class="flex items-center gap-2">
           <ToggleSwitch v-model="form.drugViolate" input-id="doping" />
-          <label for="doping" class="text-sm text-surface-700 dark:text-surface-200">{{ $t("admin.athletes.dopingBan") }}</label>
+          <label for="doping" class="text-sm text-color">{{ $t("admin.athletes.dopingBan") }}</label>
         </div>
         <Message v-if="dopingChanged" severity="warn" size="small">
           {{ $t("admin.athletes.dopingWarning") }}
         </Message>
-        <div v-if="dopingChanged" class="flex flex-col gap-1">
-          <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.common.reason") }}</label>
-          <InputText v-model="drugViolateReason" required />
-        </div>
+        <AppField v-if="dopingChanged" v-slot="f" :label="$t('admin.common.reason')">
+            <InputText :id="f.id" v-model="drugViolateReason" required />
+        </AppField>
 
-        <div class="flex flex-col gap-1">
-          <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.athletes.role") }}</label>
-          <Select v-model="form.role" :options="roleOptions" option-label="label" option-value="value" class="w-48" />
-        </div>
+        <AppField v-slot="f" :label="$t('admin.athletes.role')">
+            <Select v-model="form.role" :aria-labelledby="f.labelId" :options="roleOptions" option-label="label" option-value="value" class="w-48" />
+        </AppField>
 
-        <div class="flex flex-col gap-1">
-          <label class="text-sm text-surface-600 dark:text-surface-300">{{ $t("admin.athletes.notes") }}</label>
-          <Textarea v-model="form.notes" rows="3" auto-resize />
-          <small class="text-surface-500">{{ $t("admin.athletes.notesHint") }}</small>
-        </div>
+        <AppField v-slot="f" :label="$t('admin.athletes.notes')">
+            <Textarea :id="f.id" v-model="form.notes" rows="3" auto-resize />
+          <small class="text-muted-color">{{ $t("admin.athletes.notesHint") }}</small>
+        </AppField>
       </section>
 
       <Button type="submit" :label="$t('admin.common.save')" :loading="saving" :disabled="dopingChanged && !drugViolateReason" />
     </form>
 
     <!-- Violations for this athlete, with the consequence spelled out. -->
-    <section class="mt-10 rounded-lg border border-surface-200 dark:border-surface-700 p-4 md:p-5">
-      <h2 class="text-base font-semibold text-surface-900 dark:text-surface-0 mb-1">{{ $t("admin.violations.title") }}</h2>
+    <section class="mt-10 rounded-md border border-surface-200 p-4 md:p-5">
+      <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase mb-1">{{ $t("admin.violations.title") }}</h2>
       <p class="text-sm mb-4" :class="outcomeClass">{{ outcomeText }}</p>
 
-      <DataTable v-if="violations.length" :value="violations" size="small" class="border border-surface-200 dark:border-surface-700">
+      <DataTable v-if="violations.length" :value="violations" size="small" class="border border-surface-200">
         <Column :header="$t('admin.violations.note')" field="note" />
         <Column :header="$t('admin.violations.expireYear')">
           <template #body="{ data }">
@@ -123,11 +109,9 @@
           <template #body="{ data }">{{ formatDateDMY(data.createdAt) }}</template>
         </Column>
       </DataTable>
-      <p v-else class="text-sm text-surface-500">{{ $t("admin.violations.none") }}</p>
+      <p v-else class="text-sm text-muted-color">{{ $t("admin.violations.none") }}</p>
 
-      <NuxtLinkLocale to="/admin/violations" class="inline-block mt-3">
-        <Button size="small" text :label="$t('admin.violations.manage')" />
-      </NuxtLinkLocale>
+      <Button v-slot="slotProps" as-child size="small" text><NuxtLinkLocale to="/admin/violations" :class="slotProps.class">{{ $t('admin.violations.manage') }}</NuxtLinkLocale></Button>
     </section>
   </div>
 </template>
