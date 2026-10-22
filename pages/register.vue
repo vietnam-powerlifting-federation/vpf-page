@@ -1,5 +1,5 @@
 <template>
-  <AuthCard :title="$t('register.title')" :subtitle="$t('register.subtitle')">
+  <AuthCard :title="$t('register.title')" :subtitle="$t('register.subtitle')" :image="loginBg">
     <form ref="formEl" class="grid gap-5" novalidate @submit.prevent="handleRegister">
       <AppField v-slot="f" :label="$t('register.emailLabel')" :error="errors.email">
         <InputText
@@ -54,6 +54,7 @@
 
 <script setup lang="ts">
 import type { ApiResponse, RegisterResponse } from "~/types/api"
+import loginBg from "~/assets/img/login-bg.png"
 
 const { t } = useI18n()
 const apiMessage = useApiMessage()
@@ -133,5 +134,5 @@ const handleRegister = async () => {
 
 useHead({ title: () => t("register.title") })
 
-definePageMeta({ layout: "auth" })
+definePageMeta({ layout: "auth", wide: "split" })
 </script>

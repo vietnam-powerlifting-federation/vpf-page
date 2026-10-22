@@ -97,7 +97,7 @@ No italic headings, ever. No text smaller than 12px (`0.75rem`).
 - **Title band** (`PageHeader`): a full-bleed board holding the kicker, h1, lede (`board-ink-2`), an optional help disclosure (amber summary), and an optional right-hand slot. Rankings uses that slot for the top 3. At ≥1024px it's a two-column grid (`0.9fr / 1.3fr`); below that it stacks.
 - **Content** is on `paper` below the band, with panels in `surface` and a 1px `line` border. The filter panel has a 3px `ink` top rule.
 - **Footer** (Ft2): federation name and the line "Results are official once a competition is closed." Nothing else.
-- **Layouts:** `default` (header + slot + footer), `account` (adds the profile section nav: side rail ≥1024px, scrollable tabs below), `admin` (adds the admin nav), `auth` (one centred card on `paper`, header kept).
+- **Layouts:** `default` (header + slot + footer), `account` (adds the profile section nav: side rail ≥1024px, scrollable tabs below), `admin` (adds the admin nav), `auth` (one centred card on `paper`, header kept). Login and register use the wide variant: the form on the left and the VPF photo (`assets/img/login-bg.png`) on the right from 768px, in one card; on phones the photo is hidden and the form comes first. Other auth pages (forgot password, verify email, identity verification) are the single card.
 
 ## 5. Components
 
@@ -213,4 +213,4 @@ Open:
 1. **JS budget missed.** Each route loads about 185–220 KB gzip against the 120 KB target. 156 KB of that is the shared bundle every page loads: Vue, Nuxt, the router, vue-i18n, PrimeVue core and Toast. Options: load Toast only when needed, and use less PrimeVue on the public pages.
 2. **LCP and CLS not measured yet.**
 3. **Registration after identity verification** hasn't been tested end to end, because that would mean submitting a verification for the test account.
-4. **Deviation from §4:** the login page keeps a photo panel (from 768px, hidden on phones). The register page doesn't have it yet; adding it is a one-line change if wanted.
+4. ~~Photo panel on login only.~~ Done: login and register both use the photo panel, now the intended design in §4.
