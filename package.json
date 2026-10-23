@@ -8,9 +8,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "test": "vitest run",
-    "test:api": "vitest run --project api",
-    "test:watch": "vitest"
+    "test": "./scripts/run-tests.sh",
+    "test:api": "./scripts/run-tests.sh --project api"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1004.0",
