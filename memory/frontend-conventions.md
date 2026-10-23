@@ -15,13 +15,29 @@ Never raw hex/OKLCH in components, and no `@apply`. Fonts are Barlow (`font-sans
 
 ## Components
 
-Components are auto-imported **by file name** (`pathPrefix: false`), so names must be unique across folders. Layout: `components/layout/{header,page,footer}`, the public results tables in `components/tables` (native `<table>`, not DataTable), filters in `components/filters`, generic pieces in `components/util` (`AppIcon`, `AppField`, `StepIndicator`, `LoadingState`), and feature folders (`athletes`, `competitions`, `records`, `account`, `checkout`, `profile`, `admin`). PrimeVue owns the name `FormField`; ours is `AppField`.
+Components are auto-imported **by file name** (`pathPrefix: false`), so names must be unique across folders. Layout: `components/layout/{header,page,footer}`, the public results tables in `components/tables` (native `<table>`, not DataTable), filters in `components/filters`, generic pieces in `components/util` (`AppIcon`, `AppField`, `StepIndicator`, `LoadingState`), and feature folders (`rankings`, `records`, `competitions` (with `registration/`), `athletes`, `account` (the profile tabs and VIP settings), `auth`, `checkout`, `admin` (by area), `verification`). PrimeVue owns the name `FormField`; ours is `AppField`.
 
 Icons are Lucide, inlined as SVG by `<AppIcon name="lucide:search" />` from the generated map in [lib/constants/icons.ts](../lib/constants/icons.ts) (no icon runtime ships). Write the full `lucide:` name as a string literal and run `node scripts/gen-icons.mjs` after using a new icon. Icon-only buttons carry an `aria-label`.
 
 The public pages (rankings, records, competitions, athletes, auth) use small native components so they do not load PrimeVue's runtime: `AppButton`, `NativeSelect`/`FilterSelect`, `SideDrawer` (native `<dialog>`), `AppTabs`, `AppTag`, and the native header drawer and user menu. Account, checkout, registration and admin screens use PrimeVue (`Button`, `InputText`, `Select`, `Dialog`, `DataTable`, …); a newly used PrimeVue component must be added to `primevue.components.include` in nuxt.config.ts and its tokens to theme/preset.ts. Toasts are mounted lazily (`LazyToast` in app.vue), so only use them for background results. A link styled as a button is `<Button v-slot="p" as-child><NuxtLinkLocale :class="p.class">`, never a button inside a link.
 
 Every page uses one of four layouts: `default`, `account` (profile tabs), `admin`, `auth` (one centred card; `definePageMeta({ wide: true })` widens it). Pages start with a `PageHeader` title band, then `PageSection`.
+
+## Thin pages
+
+A page in `pages/` is `definePageMeta`, a title or SEO call (`usePageTitle`, `usePageSeo`, or `useSeoMeta` when the title comes from data), at most one composable call, and components. All 30 pages are under about 60 lines. Where things go instead:
+
+- **Pure rules** (sorting, grouping, fees, validation constants, row shaping) in `lib/domain`, taking `t` as a parameter when they need wording. Types they share live in `types/`, so `lib/` never imports from `composables/`.
+- **State and requests** in a composable, named after what it serves: `useRankingsPage`, `useAdminPurchases`, `useLoginForm`. It returns **one `reactive` object**, so templates read `rankings.pageRows` without `.value`.
+- **Markup** in components of three kinds: *presentational* (props and events only: `ResultsTable`, `RankingsFilters`), *cards or screens* (one per page; they may call their own composable and often wrap `AuthCard` or `AdminPage`: `LoginCard`, `AdminPurchasesScreen`), and *flows* that switch between steps and take a composable's state as one typed prop (`CheckoutFlow`, `CompetitionResults`).
+- **Several sibling parts editing the same state** (the registration wizard, admin vouchers, the meet editor, the results import) share it with provide/inject: a `createX` function, `useXPage()` in the screen that provides it, and `useX()` in the parts. Never write to a prop (ESLint `vue/no-mutating-props` fails the build of the habit): bind `:model-value` plus an event, or use injected state.
+
+Pitfalls that cost time:
+
+- A composable that awaits (`await useFetch`, `await $fetch`) loses the component instance after its first `await`. Call `useI18n`, `useNotify`, `useAuthSession`, `useHead` and the like **before** it, and call it from `<script setup>` with `await`.
+- When the state must be provided before the data arrives, start the fetch without awaiting, provide, and return a `ready` promise that the screen awaits.
+- Watchers do not re-run during server rendering. A `watch(data, prefill, { immediate: true })` created before the data has arrived renders defaults on the server and hydrates with different values (the registration wizard did this). Prefill explicitly once the data is in.
+- vue-tsc can fail with "Excessive stack depth" on a literal-URL `$fetch`. It lands on whichever call is checked first (`VerificationForm.vue` in the baseline); passing the URL as a `string` avoids it.
 
 ## i18n is mandatory
 

@@ -151,18 +151,28 @@ The top three of the **current filter set** appear as cards on the board (`board
 ```
 assets/styles/main.css      @import "tailwindcss"; tokens (§3) as CSS vars + @theme; base element styles
 layouts/                    default · account · admin · auth
+pages/                      thin: meta + SEO + components (see "Thin pages" in memory/frontend-conventions.md)
 components/layout/header/   SiteHeader, MainNav, MobileNav, UserMenu, LangSwitch, ThemeToggle, BrandMark
-components/layout/page/     PageHeader (title band), PageSection
+components/layout/page/     PageHeader (title band), PageSection, PagePanel, AuthCard (the auth layout's card)
 components/layout/footer/   SiteFooter
 components/tables/          ResultsTable, cells/ (RankCell, AthleteCell, LiftCell, AttemptCell, GlCell), components/ (TablePager, TableEmpty, TableSkeleton)
-components/filters/         SearchField, SegmentedControl, FilterChips
-components/{athletes,competitions,records,account,checkout,admin}/   feature components
-components/util/            AppIcon, LoadingState, ApiError, ExternalLink
-composables/                existing data composables + useQueryState
-lib/domain/format.ts        display formatters (weight class, kg, GL) moved out of patch-payload.ts
+components/filters/         SearchField, SegmentedControl, FilterSelect, FilterChips
+components/rankings/        RankingLeaders, RankingsFilters, RankingsResults
+components/records/         RecordsFilters, RecordsCurrent, RecordsHistory, RecordsMatrix, RecordHistoryTable, RecordDetailDrawer
+components/competitions/    CompetitionList, CompetitionResults, the three scoresheet tabs, registration/ (flow, gate, six steps)
+components/athletes/        AthleteHeader, AthleteContent, AthletePbs, AthleteRecords, AthleteHistory, …
+components/account/         the profile tabs (one panel per tab) and the VIP settings parts
+components/auth/            LoginCard, RegisterCard, ForgotPasswordCard, VerifyEmailCard, IdentityVerificationCard
+components/checkout/        CheckoutFlow, CheckoutReview, QrPayment, VoucherPicker, CartSummary
+components/admin/           AdminPage (shell) + one folder per area, each with a *Screen component
+components/util/            AppIcon, AppField, AppButton, LoadingState, …
+composables/                data and state: useRankingsPage, useRecordsPage, useCompetitionPage, useAthletePage,
+                            useRegistrationPage, useCheckoutPage, useVip*, useAdmin*, plus useNotify, usePageSeo,
+                            usePageTitle, useFormFocus, useQueryState
+lib/domain/                 pure rules: format.ts, rankings.ts, record-history.ts, meet-rows.ts, registration.ts, vip.ts, …
 ```
 
-Repo rules still apply (CLAUDE.md): Tailwind utilities only, no `@apply`, every string via `$t()` in both `en.json` and `vi.json`, and no SQL file edits.
+Repo rules still apply (CLAUDE.md): Tailwind utilities only, no `@apply`, every string via `$t()` in both `en.json` and `vi.json`, no SQL file edits, and pages stay thin.
 
 ## 8. Routes
 
@@ -249,3 +259,21 @@ Still open:
 2. ~~Identity verification R2 upload untested.~~ Done on 2026-10-23 after the R2 credentials were fixed: the verification form uploaded the ID-card photo (a generated "TEST ID - NOT REAL" image) to the bucket, and approving it from `/admin/verifications` deleted the object again (confirmed with a HeadObject: NotFound). Before that, the rest of the flow had been tested with a verification row inserted directly in the database: approval from `/admin/verifications`, then a Test Meet registration through the wizard (member, Men 74 kg Open, no Media Plus, entry fee 0 ₫ + 2026 membership 200,000 ₫), the QR step, and the purchase approved from `/admin/purchases`; the wizard moved to "Registration successful" on its own.
 3. **SSR HTML weight:** pages are 47–73 KB gzip, mostly PrimeVue theme and component styles that the module injects into every page.
 4. **Admin athlete editor** shows hydration mismatches: its form is filled on the client after the server rendered it empty. This was already the case before the redesign.
+
+### Thin pages (2026-10-23)
+
+Every page is now meta plus components: 30 pages went from 6,092 lines to 406, the largest being Rankings at 56. The rule is in CLAUDE.md and the patterns in [memory/frontend-conventions.md](../memory/frontend-conventions.md). The same change fixed three placements: `RankingLeaders` moved to `rankings/`, `components/profile/` merged into `account/`, and `AuthCard` moved to `layout/page/`.
+
+| Area | Commit |
+| --- | --- |
+| Folder fixes + rule | `fd8f6eb` |
+| Rankings, Records, competition, athlete, competitions list | `fe019c9`, `b920a17`, `98e537c`, `c8ea5fd` |
+| Auth, checkout, profile | `3b8923e`, `d7395f6`, `a22aa6c` |
+| Registration wizard (+ SSR prefill fix) | `b7cdd79`, `c949d02` |
+| Admin | `604075d`, `f0ac2ef` |
+| Type fixes | `be4fc98` |
+
+How it was checked: the server-rendered HTML of 31 public routes (every tab, filter, locale, a VIP athlete, the 404) is byte-identical to before; ESLint is clean; every one of the 740 literal translation keys exists in both locales; vue-tsc reports the same 22 errors as before (none new, all in server code, tests, and one pre-existing "excessive stack depth" in `VerificationForm.vue`); and each screen was exercised in the browser as the test admin (nothing saved).
+
+One bug surfaced and was fixed: the registration wizard's prefill ran before its data arrived, so the server rendered defaults and the client hydrated with the saved values.
+
