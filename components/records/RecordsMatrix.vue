@@ -41,7 +41,7 @@ import type { Sex } from "~/types/union-types"
 const props = defineProps<{
   rows: RecordRow[]
   sex: Sex
-  weightClasses: number[]
+  weightClasses: readonly number[]
   caption: string
   decorators: Map<string, { decorator1: string | null; decorator2: string | null }>
 }>()

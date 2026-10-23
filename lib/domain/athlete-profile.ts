@@ -24,6 +24,8 @@ export function vipBanners(vip: VipBenefits | null): string[] {
 /** Whether any social link or phone number is both set and chosen for display. */
 export function hasVisibleSocials(vip: VipBenefits | null): boolean {
   if (!vip) return false
-  return (vip.displayFacebook && !!vip.facebook) || (vip.displayInstagram && !!vip.instagram) || (vip.displayTiktok && !!vip.tiktok)
-    || (vip.displayYoutube && !!vip.youtube) || (vip.displayMobilePhone && !!vip.vipPhoneNumber)
+  return Boolean(
+    (vip.displayFacebook && vip.facebook) || (vip.displayInstagram && vip.instagram) || (vip.displayTiktok && vip.tiktok)
+    || (vip.displayYoutube && vip.youtube) || (vip.displayMobilePhone && vip.vipPhoneNumber),
+  )
 }

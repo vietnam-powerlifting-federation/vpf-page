@@ -57,7 +57,7 @@ export function useVipSettingsForm(settings: Ref<VipBenefits | null>, editable: 
 
     isSubmitting.value = true
     try {
-      let body: FormData | typeof patch = patch
+      let body: FormData | Record<string, unknown> = patch
       if (hasFiles) {
         const fd = new FormData()
         for (const [key, value] of Object.entries(patch)) {
@@ -68,10 +68,12 @@ export function useVipSettingsForm(settings: Ref<VipBenefits | null>, editable: 
         body = fd
       }
 
-      const res = (await $fetch("/api/athletes/me/vip-settings", {
+      // A plain `string` url: a literal makes the compiler resolve the typed API route table and run out of stack.
+      const url: string = "/api/athletes/me/vip-settings"
+      const res = await $fetch<ApiResponse<VipBenefits>>(url, {
         method: "PATCH",
         body,
-      })) as ApiResponse<VipBenefits>
+      })
 
       if (res.success) toast.add({ severity: "success", summary: t("general.success"), detail: apiMessage(res), life: 3000 })
       else notify.apiError(res, t("general.updateError"))

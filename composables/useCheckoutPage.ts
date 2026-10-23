@@ -63,10 +63,12 @@ export function useCheckoutPage() {
 
     isCreating.value = true
     try {
-      const res = (await $fetch("/api/purchases", {
+      // A plain `string` url: a literal makes the compiler resolve the typed API route table and run out of stack.
+      const url: string = "/api/purchases"
+      const res = await $fetch<ApiResponse<PurchaseCreated>>(url, {
         method: "POST",
         body: { plan: item.plan, type: item.type, voucherCode: selectedVoucherCode.value ?? undefined },
-      })) as ApiResponse<PurchaseCreated>
+      })
 
       if (!res.success || !res.data) {
         notify.error(apiMessage(res) || t("general.validationError"), t("general.updateError"))
