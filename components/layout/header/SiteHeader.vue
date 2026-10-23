@@ -18,8 +18,8 @@
         </div>
 
         <!--
-          Who is signed in is only known in the browser: competition pages are
-          prerendered, and that HTML is shared by every visitor.
+          Who is signed in is only known in the browser, so the server-rendered
+          HTML never depends on the visitor's session.
         -->
         <ClientOnly>
           <template #fallback>

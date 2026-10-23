@@ -5,14 +5,10 @@
  * throws — a missing value fails when something first tries to use it, naming
  * what is missing and why.
  *
- * That distinction matters more than it looks. This module used to validate at
- * import time, and `nuxt build` loads the Nitro bundle to prerender pages, so a
- * build could not start without a JWT secret and a full set of R2 credentials —
- * none of which prerendering touches. The Dockerfile answered that with six
- * `build-time-placeholder` environment variables, which meant the build proved
- * nothing about the real configuration and any genuinely missing value surfaced
- * in production instead. Deferring to first use lets the build run with no
- * secrets at all while keeping the same clear failure for a real misconfiguration.
+ * That distinction matters: `nuxt build` loads the Nitro bundle, and validating
+ * at import time would make the build demand a JWT secret and a full set of R2
+ * credentials. Deferring to first use lets the build run with no secrets at all
+ * while keeping the same clear failure for a real misconfiguration.
  *
  * Not `useRuntimeConfig()`: this module is also loaded by the drizzle-kit CLI and
  * by Vitest, neither of which has a Nuxt runtime to read from.

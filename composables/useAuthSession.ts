@@ -25,24 +25,12 @@ type NuxtAppWithSession = ReturnType<typeof useNuxtApp> & {
  * `/api/auth/session`, the header hit `/api/athletes/me`, and `useProfileAthlete`
  * hit it a third time, so one guarded page load cost three round trips for the
  * same answer. `ensureLoaded` collapses them into one.
- *
- * State is deliberately not populated during prerender: a prerendered page's
- * payload is one file served to every visitor, so a session baked into it would
- * be handed to the wrong person. Prerendering stays logged-out and the browser
- * fetches for real on hydration.
  */
 export function useAuthSession() {
   const athlete = useState<AuthAthlete | null>("auth-session-athlete", () => null)
   const ready = useState<boolean>("auth-session-ready", () => false)
 
   async function fetchSession(): Promise<void> {
-    // No visitor exists at prerender time, and anything stored would be shared.
-    if (import.meta.prerender) {
-      athlete.value = null
-      ready.value = true
-      return
-    }
-
     try {
       const res = await $fetch<ApiResponse<AthleteRecordData>>("/api/athletes/me", {
         credentials: "include",

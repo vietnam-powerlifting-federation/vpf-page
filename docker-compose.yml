@@ -2,8 +2,6 @@ services:
   app:
     build:
       context: .
-      secrets:
-        - database_url
     image: vpf-page
     env_file: .env
     environment:
@@ -23,9 +21,3 @@ services:
 
 volumes:
   redis-data:
-
-# Passed to the build stage only, so nuxt's prerender step can read meet slugs
-# from the database. Sourced from DATABASE_URL (loaded from .env by Compose).
-secrets:
-  database_url:
-    environment: DATABASE_URL

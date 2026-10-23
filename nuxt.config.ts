@@ -123,38 +123,6 @@ export default defineNuxtConfig({
   // lives in server/service/ instead, where the code that caches a response is
   // the code that knows whether it is public.
 
-  nitro: {
-    prerender: {
-      crawlLinks: false,
-    },
-    hooks: {
-      async "prerender:routes"(routes) {
-        // The container build runs without a reachable database (see Dockerfile),
-        // so degrade gracefully: skip competition prerendering and let these
-        // routes fall back to on-demand SSR + swr caching at runtime.
-        try {
-          const { getVisibleMeetSlugs } = await import("./server/repository/meet-slugs")
-          const slugs = await getVisibleMeetSlugs()
-          routes.add("/competitions")
-          for (const slug of slugs) {
-            routes.add(`/competitions/${slug}`)
-          }
-        } catch (error) {
-          const message = error instanceof Error ? error.message : String(error)
-          console.warn(`[prerender] Skipping competition pages, could not load meet slugs: ${message}`)
-        }
-      },
-    },
-  },
-
-  experimental: {
-    // Prerendered competition pages inline their data instead of fetching a
-    // separate _payload.json. With extraction on, the client did not know the
-    // route was prerendered until the app manifest arrived, hydrated without
-    // data and refetched, which emptied the list for a moment (CLS ~0.2).
-    payloadExtraction: false,
-  },
-
   devtools: {
     timeline: {
       enabled: true
