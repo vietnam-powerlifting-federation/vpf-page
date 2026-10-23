@@ -1,24 +1,16 @@
 import type { UserPublicWithDecorators } from "~/types/users"
-import type { MeetPublic, MeetResult, MeetDataPayload } from "~/types/meets"
+import type { GroupedByGenderDivision, MeetPublic, MeetResult, MeetDataPayload, MeetRow } from "~/types/meets"
 import type { Sex, Division } from "~/types/union-types"
 import type { ApiResponse } from "~/types/api"
 
 const sexOrder = ["male", "female"] satisfies Sex[]
 const divisionOrder = ["open", "jr", "subjr", "mas1", "mas2", "mas3", "mas4", "guest"] satisfies Division[]
 
-export type GroupedByGenderDivision = Array<{
-  sex: Sex
-  divisions: Array<{
-    division: Division
-    results: (MeetResult & { athlete?: UserPublicWithDecorators })[]
-  }>
-}>
-
 export type MeetDataReturn = {
   meet: ComputedRef<MeetPublic | null>
   results: ComputedRef<MeetResult[]>
   athletes: ComputedRef<UserPublicWithDecorators[]>
-  resultsWithAthletes: ComputedRef<(MeetResult & { athlete?: UserPublicWithDecorators })[]>
+  resultsWithAthletes: ComputedRef<MeetRow[]>
   groupedByGenderDivision: ComputedRef<GroupedByGenderDivision>
   pending: Ref<boolean>
   error: Ref<Error | null>
