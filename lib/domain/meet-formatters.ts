@@ -1,3 +1,4 @@
+import { formatDateDMY } from "~/lib/domain/date"
 import type { MeetPublic } from "~/types/meets"
 
 /**
@@ -29,4 +30,11 @@ export function groupMeetsByYear(meets: MeetPublic[]): { year: string; meets: Me
     else groups.set(year, [meet])
   }
   return [...groups].map(([year, list]) => ({ year, meets: list }))
+}
+
+/** "01/01/2026 → 01/05/2026"; a missing bound reads "no limit", which an empty date would not convey. */
+export function registrationWindow(meet: MeetPublic, noLimit: string): string {
+  const from = meet.startRegistration ? formatDateDMY(meet.startRegistration) : noLimit
+  const to = meet.closeRegistration ? formatDateDMY(meet.closeRegistration) : noLimit
+  return `${from} → ${to}`
 }

@@ -4,7 +4,7 @@
       ← {{ backLabel }}
     </NuxtLinkLocale>
 
-    <div class="flex flex-wrap items-center gap-3" :class="[backTo ? 'mt-2' : '', subtitle ? 'mb-6' : '']">
+    <div class="mb-6 flex flex-wrap items-center gap-3" :class="backTo && 'mt-2'">
       <div class="min-w-0 flex-1">
         <h1 class="font-display text-3xl font-extrabold uppercase">{{ title }}</h1>
         <p v-if="subtitle" class="text-sm text-muted-color" :class="mono && 'font-mono'">{{ subtitle }}</p>
