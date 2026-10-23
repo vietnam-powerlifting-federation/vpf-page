@@ -42,19 +42,16 @@ export function useRegistrationForm(
     mediaPlus: false,
   })
 
-  // Prefill rack pins from the athlete's saved data once eligibility loads.
-  watch(
-    eligibility,
-    (e) => {
-      if (!e) return
-      identityStatus.value = e.identityStatus
-      form.squatRackPin = e.athlete.squatRackPin ?? 0
-      form.benchRackPin = e.athlete.benchRackPin ?? 0
-      form.benchSafetyPin = e.athlete.benchSafetyPin ?? 0
-      form.benchFootBlock = e.athlete.benchFootBlock ?? 0
-    },
-    { immediate: true },
-  )
+  // Prefill identity status and rack pins from the athlete's saved data. Called once the
+  // eligibility has loaded (so server rendering sees it too) and whenever it is re-read.
+  function applyEligibility(e: RegistrationEligibility) {
+    identityStatus.value = e.identityStatus
+    form.squatRackPin = e.athlete.squatRackPin ?? 0
+    form.benchRackPin = e.athlete.benchRackPin ?? 0
+    form.benchSafetyPin = e.athlete.benchSafetyPin ?? 0
+    form.benchFootBlock = e.athlete.benchFootBlock ?? 0
+  }
+  watch(eligibility, (e) => { if (e) applyEligibility(e) }, { immediate: true })
 
   // Reset the weight-class choice when the sporting gender changes (classes differ by sex).
   watch(() => form.sex, () => { form.weightClass = null })
@@ -179,7 +176,7 @@ export function useRegistrationForm(
   }
 
   return reactive({
-    identityStatus, form, setPhoto, purchase, isSubmitting,
+    identityStatus, form, setPhoto, purchase, isSubmitting, applyEligibility,
     sexOptions, capacityOptions, weightClassOptions, divisionOptions,
     canProceedIdentity, canProceedCapacity, canProceedDetails,
     fees, vouchers, voucherTypes, selectedVoucherCodes, selectVoucher,

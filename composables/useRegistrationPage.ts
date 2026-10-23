@@ -25,7 +25,9 @@ function createRegistration(slug: string) {
     eligibility, pending: fetched.pending, gate, blockMessage, refreshEligibility,
     wizard: reactive(wizard), entry,
   })
-  return { registration, ready: fetched }
+  // Watchers do not re-run during server rendering, so once the data has arrived the entry is prefilled explicitly.
+  const ready = fetched.then(() => { if (eligibility.value) entry.applyEligibility(eligibility.value) })
+  return { registration, ready }
 }
 
 /**
