@@ -54,6 +54,14 @@ export function formatDate(date: string | Date | null | undefined, locale: strin
   })
 }
 
+/** "23 Oct 2026, 14:05" / "23 thg 10, 2026 14:05": a moment, in the visitor's time zone. */
+export function formatDateTime(date: string | Date | null | undefined, locale: string): string {
+  if (!date) return "–"
+  const d = typeof date === "string" ? new Date(date) : date
+  if (Number.isNaN(d.getTime())) return String(date)
+  return d.toLocaleString(intlLocale(locale), { dateStyle: "medium", timeStyle: "short" })
+}
+
 export const SEX_LABEL_KEY: Record<Sex, string> = {
   male: "general.men",
   female: "general.women",
