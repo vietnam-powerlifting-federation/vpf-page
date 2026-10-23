@@ -78,6 +78,18 @@ export const MEET_TYPE_LABEL_KEY: Record<MeetType, string> = {
   other: "general.meetTypeOther",
 }
 
+/** "Men · 74 kg · Open": the line under an athlete's name. `t` is the active locale's translate function. */
+export function athleteMeta(
+  row: { sex: Sex; weightClass: number | null; division: Division | null },
+  t: (key: string) => string,
+): string {
+  return [
+    t(SEX_LABEL_KEY[row.sex]),
+    formatWeightClass(row.weightClass, row.sex),
+    row.division ? t(DIVISION_LABEL_KEY[row.division]) : null,
+  ].filter(Boolean).join(" · ")
+}
+
 /**
  * Accent- and case-insensitive form for search: "Nguyễn Văn Đức" → "nguyen van duc".
  * `đ` is its own letter rather than a decorated `d`, so it needs its own rule.

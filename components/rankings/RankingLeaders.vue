@@ -20,9 +20,9 @@
           :to="athletePath(row)"
           class="col-start-2 font-semibold no-underline [overflow-wrap:anywhere] after:absolute after:inset-0 after:rounded-md hover:underline hover:underline-offset-3 sm:col-start-1"
         >
-          <span :style="nameDecoratorStyle(decorators.get(row.vpfId)?.decorator1, decorators.get(row.vpfId)?.decorator2, 'board')">{{ row.name }}</span>
+          <span :style="nameDecoratorStyle(decoratorMap.get(row.vpfId)?.decorator1, decoratorMap.get(row.vpfId)?.decorator2, 'board')">{{ row.name }}</span>
         </NuxtLinkLocale>
-        <span class="col-start-2 text-[0.8125rem] text-board-ink-2 sm:col-start-1">{{ meta(row) }}</span>
+        <span class="col-start-2 text-[0.8125rem] text-board-ink-2 sm:col-start-1">{{ athleteMeta(row, t) }}</span>
         <span class="col-start-3 row-span-2 row-start-1 font-display text-[1.625rem] leading-[1.2] font-bold tracking-[0.01em] tabular-nums sm:col-start-1 sm:row-span-1 sm:row-start-auto sm:mt-1 sm:text-[2rem]">
           {{ score(row) }}<small class="ml-1 font-sans text-[0.8125rem] font-semibold text-accent-fill">{{ unit }}</small>
         </span>
@@ -32,18 +32,17 @@
 </template>
 
 <script setup lang="ts">
-import { formatGl, formatKg, nameDecoratorStyle } from "~/lib/domain/format"
+import { athleteMeta, formatGl, formatKg, nameDecoratorStyle } from "~/lib/domain/format"
 import type { RankingRow } from "~/types/results"
 
 /** "Leading the table": the top three of the current filter set, as cards on the board. */
 const props = defineProps<{
   rows: RankingRow[]
   sort: "gl" | "total" | "bestSquat" | "bestBench" | "bestDeadlift"
-  meta: (row: RankingRow) => string
-  decorators: Map<string, { decorator1: string | null; decorator2: string | null }>
 }>()
 
-const { locale } = useI18n()
+const { t, locale } = useI18n()
+const { decoratorMap } = useNameDecorators()
 const titleId = useId()
 
 const leaders = computed(() => props.rows.slice(0, 3))
