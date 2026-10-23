@@ -18,6 +18,9 @@ Do not use @apply for styling
 Always ensure multiple languages are supported
 Prioritize using primevue components over default components
 Skip server tests
+Pages are thin: a page only declares its meta and SEO, calls the composable(s) that supply its state and data, and composes feature components
+Feature markup (forms, tables, cards, filters), option lists and labels belong in components/, state and data fetching in composables/, pure formatting and rules in lib/domain
+A page that grows past roughly 60 lines, or holds markup of its own beyond layout components (PageHeader, PageSection), needs something extracted
 
 This rule enforces validation for API endpoints:
 
