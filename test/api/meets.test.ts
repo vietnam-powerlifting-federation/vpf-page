@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { createMockH3Event } from "../utils/h3-event"
-import { fixtureMeets } from "../fixtures/data"
+import { fixtureMeets, TEST_USER_IDS, UNKNOWN_USER_ID } from "../fixtures/data"
 
 const hiddenMeet = fixtureMeets.find((meet) => meet.hidden)!
 
@@ -80,7 +80,7 @@ describe("API: meets", () => {
       const handler = (await import("~/server/api/meets/[id]/index")).default
       const event = createMockH3Event({
         params: { id: hiddenMeet.meetSlug },
-        context: { user: { vpfId: "VPF000901", email: "athlete1@test.vpf", role: "user" } },
+        context: { user: { userId: TEST_USER_IDS.VPF000901, vpfId: "VPF000901", email: "athlete1@test.vpf", role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(false)
@@ -100,7 +100,7 @@ describe("API: meets", () => {
       const handler = (await import("~/server/api/meets/[id]/index")).default
       const event = createMockH3Event({
         params: { id: hiddenMeet.meetSlug },
-        context: { user: { vpfId: "VPF000900", email: "admin@test.vpf", role: "admin" } },
+        context: { user: { userId: UNKNOWN_USER_ID, vpfId: "VPF000900", email: "admin@test.vpf", role: "admin" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)

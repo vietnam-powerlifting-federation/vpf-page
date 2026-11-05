@@ -83,7 +83,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<LoginResponse
   }
 
   // Query user again with public select for response
-  const userPublic = await findAthletePublic(user.vpfId)
+  const userPublic = await findAthletePublic(user.userId)
 
   if (!userPublic) {
     logger.error("Failed to fetch user public data after login", { vpfId: user.vpfId })
@@ -95,6 +95,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<LoginResponse
 
   // Generate JWT token
   const token = signToken({
+    userId: user.userId,
     vpfId: user.vpfId,
     email: user.email,
     role: user.role,

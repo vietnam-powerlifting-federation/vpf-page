@@ -5,8 +5,8 @@ import { competitionPurchaseMetadata, meetResults, meets, purchases } from "~/li
 import { createMockH3Event } from "../utils/h3-event"
 import { fixtureUsers, fixtureMeets } from "../fixtures/data"
 
-const user = { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } as const
-const admin = { vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } as const
+const user = { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } as const
+const admin = { userId: fixtureUsers[1].userId, vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } as const
 
 const SLUG_PREFIX = "admin-crud-"
 
@@ -142,7 +142,7 @@ describe("API: admin meet CRUD", () => {
       const created = await createMeet()
       await db.insert(meetResults).values({
         meetId: created.data!.meetId,
-        vpfId: fixtureUsers[0].vpfId,
+        userId: fixtureUsers[0].userId,
         sex: "male",
         weightClass: 83,
         division: "open",
@@ -225,7 +225,7 @@ describe("API: admin meet CRUD", () => {
       const created = await createMeet()
       const [purchase] = await db
         .insert(purchases)
-        .values({ vpfId: fixtureUsers[0].vpfId, type: ["competition"], refCode: "991001", amount: 1000, status: "active" })
+        .values({ userId: fixtureUsers[0].userId, type: ["competition"], refCode: "991001", amount: 1000, status: "active" })
         .returning()
       await db.insert(competitionPurchaseMetadata).values({
         purchaseId: purchase.purchaseId,

@@ -1,8 +1,9 @@
 <template>
   <section
     ref="container"
-    class="relative w-full overflow-hidden rounded-md bg-board"
-    :style="{ height: `${slideHeight}px` }"
+    class="relative w-full overflow-hidden bg-board"
+    :class="!flush && 'rounded-md'"
+    :style="{ height: frameHeight }"
     :aria-label="$t('athlete.bannerLabel')"
     aria-roledescription="carousel"
   >
@@ -73,6 +74,8 @@ const props = withDefaults(
     banners: string[]
     /** Tallest the slideshow may get. Narrow containers shrink below this to keep 24:9. */
     height?: number
+    /** Square corners, for a slideshow that runs edge to edge. */
+    flush?: boolean
   }>(),
   { height: 400 },
 )
@@ -97,6 +100,17 @@ const slideWidth = computed(() => {
   return Math.min(max, containerWidth.value * 0.92)
 })
 const slideHeight = computed(() => slideWidth.value / ASPECT)
+
+/*
+ * Until the container is measured (on the server, and before mount) the height
+ * comes from CSS. A flush slideshow spans the viewport, so 92vw at 24:9 is what
+ * the measurement will give; without that, a phone renders 400px of banner and
+ * then collapses it, shifting everything below.
+ */
+const frameHeight = computed(() => {
+  if (containerWidth.value) return `${slideHeight.value}px`
+  return props.flush ? `min(${props.height}px, ${(92 / ASPECT).toFixed(2)}vw)` : `${slideHeight.value}px`
+})
 
 let observer: ResizeObserver | null = null
 function updateWidth() {

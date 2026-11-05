@@ -11,12 +11,12 @@ import type { I18nMessage } from "~/server/utils/api-response"
 export { isInForce, outcomeForLevel } from "~/lib/domain/violations"
 
 /** Count an athlete's violations still in force for `referenceYear`. */
-export async function violationLevel(vpfId: string, referenceYear: number): Promise<number> {
+export async function violationLevel(userId: string, referenceYear: number): Promise<number> {
   const rows = await db
     .select({ id: userViolations.id })
     .from(userViolations)
     .where(and(
-      eq(userViolations.vpfId, vpfId),
+      eq(userViolations.userId, userId),
       or(isNull(userViolations.expireYear), sql`${userViolations.expireYear} >= ${referenceYear}`),
     ))
   return rows.length

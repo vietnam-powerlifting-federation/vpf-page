@@ -18,7 +18,8 @@ import type { PurchaseCreated } from "~/types/purchases"
 const CreatePurchaseSchema = z.object({
   plan: z.enum(["6months", "1year"]),
   type: z.enum(["vip", "vpf_membership", "competition"]).optional().default("vip"),
-  vpfId: z.string().optional(),
+  /** Admin only: raise the purchase for another athlete. */
+  userId: z.uuid().optional(),
   voucherCode: z.string().trim().min(1).optional(),
 })
 
@@ -32,11 +33,12 @@ export default defineApiHandler(async (event): Promise<ApiResponse<PurchaseCreat
     return fail(event, 400, MSG.invalidInput)
   }
 
-  const { plan, type, vpfId: targetVpfId, voucherCode } = validated.data
+  const { plan, type, userId: targetUserId, voucherCode } = validated.data
 
   // Determine the target athlete
+  let resolvedUserId = currentUser.userId
   let resolvedVpfId = currentUser.vpfId
-  if (targetVpfId && targetVpfId !== currentUser.vpfId) {
+  if (targetUserId && targetUserId !== currentUser.userId) {
     if (currentUser.role !== "admin") {
       return fail(event, 403, {
         en: "Only admins can create purchases for other athletes",
@@ -44,13 +46,14 @@ export default defineApiHandler(async (event): Promise<ApiResponse<PurchaseCreat
       })
     }
 
-    const targetUser = await findAthleteNameAndEmail(targetVpfId)
+    const targetUser = await findAthleteNameAndEmail(targetUserId)
 
     if (!targetUser) {
       return fail(event, 404, MSG.athleteNotFound)
     }
 
-    resolvedVpfId = targetVpfId
+    resolvedUserId = targetUser.userId
+    resolvedVpfId = targetUser.vpfId
   }
 
   const planConfig = VIP_MEMBERSHIP_PLANS[plan]
@@ -59,7 +62,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<PurchaseCreat
   const lineItems: LineItems = { [type]: planConfig.amount }
   const vouchers = await resolveVouchers({
     codes: voucherCode ? [voucherCode] : [],
-    vpfId: resolvedVpfId,
+    userId: resolvedUserId,
     purchaseTypes: [type],
     lineItems,
   })
@@ -73,7 +76,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<PurchaseCreat
   let created: { purchaseId: number; createdAt: string }
   try {
     created = await createVipPurchase({
-      vpfId: resolvedVpfId,
+      userId: resolvedUserId,
       type: [type],
       refCode,
       amount,

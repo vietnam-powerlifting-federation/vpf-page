@@ -6,6 +6,7 @@ import { db } from "~/lib/external/drizzle/drizzle"
 import { users, identityVerifications } from "~/lib/external/drizzle/migrations/schema"
 
 const TEMP_VPF_ID = "VPF000991"
+const TEMP_USER_ID = "00000000-0000-4000-8000-000000000990"
 const TEMP_EMAIL = "verify-temp@test.vpf"
 const admin = fixtureUsers[1] // role: admin
 
@@ -20,6 +21,7 @@ async function resetTempUser(fields: Partial<typeof users.$inferInsert>): Promis
   await db
     .insert(users)
     .values({
+      userId: TEMP_USER_ID,
       vpfId: TEMP_VPF_ID,
       fullName: "Temp Verify User",
       email: TEMP_EMAIL,
@@ -28,7 +30,7 @@ async function resetTempUser(fields: Partial<typeof users.$inferInsert>): Promis
       ...fields,
     })
     .onConflictDoUpdate({
-      target: users.vpfId,
+      target: users.userId,
       set: { emailVerified: false, identityVerified: false, emailVerificationCode: null, emailVerificationExpiresAt: null, ...fields },
     })
 }
@@ -39,10 +41,10 @@ beforeAll(async () => {
 
 afterAll(async () => {
   // Cascade removes any identity_verifications rows for the temp user.
-  await db.delete(users).where(eq(users.vpfId, TEMP_VPF_ID))
+  await db.delete(users).where(eq(users.userId, TEMP_USER_ID))
 })
 
-const tempCtx = { user: { vpfId: TEMP_VPF_ID, email: TEMP_EMAIL, role: "user" as const } }
+const tempCtx = { user: { userId: TEMP_USER_ID, vpfId: TEMP_VPF_ID, email: TEMP_EMAIL, role: "user" as const } }
 
 describe("API: POST /api/auth/verify-email", () => {
   it("returns 401 when not authenticated", async () => {
@@ -85,7 +87,7 @@ describe("API: POST /api/auth/verify-email", () => {
     expect(res.success).toBe(true)
     expect(res.data?.emailVerified).toBe(true)
 
-    const row = await db.select({ v: users.emailVerified, c: users.emailVerificationCode }).from(users).where(eq(users.vpfId, TEMP_VPF_ID)).then((r) => r[0])
+    const row = await db.select({ v: users.emailVerified, c: users.emailVerificationCode }).from(users).where(eq(users.userId, TEMP_USER_ID)).then((r) => r[0])
     expect(row?.v).toBe(true)
     expect(row?.c).toBeNull()
   })
@@ -133,7 +135,7 @@ describe("API: GET /api/verifications (admin list)", () => {
   it("returns an array for an admin", async () => {
     const handler = (await import("~/server/api/verifications/index.get")).default
     const event = createMockH3Event({
-      context: { user: { vpfId: admin.vpfId, email: admin.email, role: "admin" } },
+      context: { user: { userId: admin.userId, vpfId: admin.vpfId, email: admin.email, role: "admin" } },
     })
     const res = await handler(event)
     expect(res.success).toBe(true)
@@ -147,7 +149,7 @@ describe("API: PATCH /api/verifications/[id]/review", () => {
     const row = await db
       .insert(identityVerifications)
       .values({
-        vpfId: TEMP_VPF_ID,
+        userId: TEMP_USER_ID,
         fullName: "Verified Name",
         nationality: "VN",
         dob: 1998,
@@ -158,7 +160,7 @@ describe("API: PATCH /api/verifications/[id]/review", () => {
         status: "pending",
       })
       .onConflictDoUpdate({
-        target: identityVerifications.vpfId,
+        target: identityVerifications.userId,
         // idCardFrontUrl must be restored too: approval nulls it, and later cases start from a
         // pending row that still has its image.
         set: { status: "pending", reviewedBy: null, reviewedAt: null, fullName: "Verified Name", nationality: "VN", dob: 1998, idCardFrontUrl: "https://cdn.example.com/id.png" },
@@ -183,17 +185,17 @@ describe("API: PATCH /api/verifications/[id]/review", () => {
       method: "PATCH",
       params: { id: String(id) },
       body: { decision: "approved" },
-      context: { user: { vpfId: admin.vpfId, email: admin.email, role: "admin" } },
+      context: { user: { userId: admin.userId, vpfId: admin.vpfId, email: admin.email, role: "admin" } },
     })
     const res = await handler(event)
     expect(res.success).toBe(true)
     expect(res.data?.status).toBe("approved")
-    expect(res.data?.reviewedBy).toBe(admin.vpfId)
+    expect(res.data?.reviewedBy).toBe(admin.userId)
     expect(res.data?.reviewedAt).toBeTruthy()
     // The ID card image is dropped once its data has been copied onto the athlete's record.
     expect(res.data?.idCardFrontUrl).toBeNull()
 
-    const user = await db.select({ nationality: users.nationality, dob: users.dob, fullName: users.fullName, identityVerified: users.identityVerified }).from(users).where(eq(users.vpfId, TEMP_VPF_ID)).then((r) => r[0])
+    const user = await db.select({ nationality: users.nationality, dob: users.dob, fullName: users.fullName, identityVerified: users.identityVerified }).from(users).where(eq(users.userId, TEMP_USER_ID)).then((r) => r[0])
     expect(user?.nationality).toBe("VN")
     expect(user?.dob).toBe(1998)
     expect(user?.fullName).toBe("Verified Name")
@@ -203,13 +205,13 @@ describe("API: PATCH /api/verifications/[id]/review", () => {
   it("rejects with a review note and clears the identityVerified flag", async () => {
     const id = await seedVerification()
     // Simulate a previously-approved account so we can prove rejection clears the flag.
-    await db.update(users).set({ identityVerified: true }).where(eq(users.vpfId, TEMP_VPF_ID))
+    await db.update(users).set({ identityVerified: true }).where(eq(users.userId, TEMP_USER_ID))
     const handler = (await import("~/server/api/verifications/[id]/review.patch")).default
     const event = createMockH3Event({
       method: "PATCH",
       params: { id: String(id) },
       body: { decision: "rejected", reviewNote: "Blurry photo" },
-      context: { user: { vpfId: admin.vpfId, email: admin.email, role: "admin" } },
+      context: { user: { userId: admin.userId, vpfId: admin.vpfId, email: admin.email, role: "admin" } },
     })
     const res = await handler(event)
     expect(res.success).toBe(true)
@@ -218,7 +220,7 @@ describe("API: PATCH /api/verifications/[id]/review", () => {
     // Retained on rejection: the athlete may resubmit the form without re-uploading the photo.
     expect(res.data?.idCardFrontUrl).toBe("https://cdn.example.com/id.png")
 
-    const user = await db.select({ identityVerified: users.identityVerified }).from(users).where(eq(users.vpfId, TEMP_VPF_ID)).then((r) => r[0])
+    const user = await db.select({ identityVerified: users.identityVerified }).from(users).where(eq(users.userId, TEMP_USER_ID)).then((r) => r[0])
     expect(user?.identityVerified).toBe(false)
   })
 
@@ -229,7 +231,7 @@ describe("API: PATCH /api/verifications/[id]/review", () => {
       method: "PATCH",
       params: { id: String(id) },
       body: { decision: "approved" },
-      context: { user: { vpfId: admin.vpfId, email: admin.email, role: "admin" } },
+      context: { user: { userId: admin.userId, vpfId: admin.vpfId, email: admin.email, role: "admin" } },
     })
     await handler(event)
 

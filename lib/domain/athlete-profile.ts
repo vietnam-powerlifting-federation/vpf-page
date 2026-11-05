@@ -20,12 +20,3 @@ export function vipBanners(vip: VipBenefits | null): string[] {
   if (!vip) return []
   return [vip.bannerImageUrl1, vip.bannerImageUrl2, vip.bannerImageUrl3, vip.bannerImageUrl4, vip.bannerImageUrl5].filter((url): url is string => !!url)
 }
-
-/** Whether any social link or phone number is both set and chosen for display. */
-export function hasVisibleSocials(vip: VipBenefits | null): boolean {
-  if (!vip) return false
-  return Boolean(
-    (vip.displayFacebook && vip.facebook) || (vip.displayInstagram && vip.instagram) || (vip.displayTiktok && vip.tiktok)
-    || (vip.displayYoutube && vip.youtube) || (vip.displayMobilePhone && vip.vipPhoneNumber),
-  )
-}

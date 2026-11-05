@@ -43,9 +43,20 @@ export const fixtureMeets = [
   },
 ] as const
 
+/** Fixed primary keys, so tests can address fixture athletes without a lookup. */
+export const TEST_USER_IDS = {
+  VPF000901: "00000000-0000-4000-8000-000000000901",
+  VPF000902: "00000000-0000-4000-8000-000000000902",
+  VPF000903: "00000000-0000-4000-8000-000000000903",
+} as const
+
+/** A well-formed user id that belongs to nobody. */
+export const UNKNOWN_USER_ID = "00000000-0000-4000-8000-000000000999"
+
 /** Plain password for test user is "password123". Hashed in seed. */
 export const fixtureUsers = [
   {
+    userId: TEST_USER_IDS.VPF000901,
     vpfId: "VPF000901",
     fullName: "Test Athlete One",
     nationality: "VN",
@@ -66,6 +77,7 @@ export const fixtureUsers = [
     role: "user" as const,
   },
   {
+    userId: TEST_USER_IDS.VPF000902,
     vpfId: "VPF000902",
     fullName: "Test Admin",
     nationality: "VN",
@@ -86,6 +98,7 @@ export const fixtureUsers = [
     role: "admin" as const,
   },
   {
+    userId: TEST_USER_IDS.VPF000903,
     vpfId: "VPF000903",
     fullName: "Test Athlete Two",
     nationality: null,
@@ -110,7 +123,7 @@ export const fixtureUsers = [
 export const fixtureMeetResults = [
   {
     meetId: 9001,
-    vpfId: "VPF000901",
+    userId: TEST_USER_IDS.VPF000901,
     sex: "male" as const,
     weightClass: 83,
     division: "open" as const,
@@ -133,7 +146,7 @@ export const fixtureMeetResults = [
   },
   {
     meetId: 9001,
-    vpfId: "VPF000903",
+    userId: TEST_USER_IDS.VPF000903,
     sex: "female" as const,
     weightClass: 63,
     division: "open" as const,
@@ -159,7 +172,7 @@ export const fixtureMeetResults = [
 export const fixtureLegacyMeetResults = [
   {
     meetId: 9001,
-    vpfId: "VPF000902",
+    userId: TEST_USER_IDS.VPF000902,
     sex: "male" as const,
     weightClass: 93,
     division: "open" as const,

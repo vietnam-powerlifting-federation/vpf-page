@@ -93,7 +93,7 @@
       <Button type="submit" :label="$t('admin.common.save')" :loading="editor.saving" :disabled="editor.dopingChanged && !editor.drugViolateReason" />
     </form>
 
-    <AdminAthleteViolations :vpf-id="editor.vpfId" />
+    <AdminAthleteViolations v-if="editor.userId" :user-id="editor.userId" />
   </AdminPage>
 </template>
 

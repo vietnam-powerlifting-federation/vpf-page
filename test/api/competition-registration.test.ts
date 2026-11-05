@@ -15,7 +15,7 @@ import { createMockH3Event } from "../utils/h3-event"
 import { fixtureUsers } from "../fixtures/data"
 
 // VPF000901: dob 1995, unverified by default. Meet systemYear 2024 => age 29 => divisions [open].
-const user = { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } as const
+const user = { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } as const
 
 const OPEN_MEET_ID = 9101
 const OPEN_MEET_SLUG = "reg-open-meet"
@@ -63,7 +63,7 @@ async function seedVerification(status: "pending" | "approved" | "rejected" = "p
   await db
     .insert(identityVerifications)
     .values({
-      vpfId: user.vpfId,
+      userId: user.userId,
       fullName: "Test Athlete One",
       nationality: "VN",
       dob: 1995,
@@ -73,13 +73,13 @@ async function seedVerification(status: "pending" | "approved" | "rejected" = "p
       idCardFrontUrl: "https://cdn.example.com/id.png",
       status,
     })
-    .onConflictDoUpdate({ target: identityVerifications.vpfId, set: { status, dob: 1995 } })
+    .onConflictDoUpdate({ target: identityVerifications.userId, set: { status, dob: 1995 } })
 }
 
 async function resetAthleteState() {
-  await db.delete(purchases).where(eq(purchases.vpfId, user.vpfId))
-  await db.delete(userViolations).where(eq(userViolations.vpfId, user.vpfId))
-  await db.delete(competitionBanList).where(eq(competitionBanList.vpfId, user.vpfId))
+  await db.delete(purchases).where(eq(purchases.userId, user.userId))
+  await db.delete(userViolations).where(eq(userViolations.userId, user.userId))
+  await db.delete(competitionBanList).where(eq(competitionBanList.userId, user.userId))
   await db
     .update(users)
     .set({ vpfMembershipExpiresAt: null, identityVerified: false, drugViolate: false })
@@ -121,7 +121,7 @@ describe("API: competition registration", () => {
 
   afterAll(async () => {
     await resetAthleteState()
-    await db.delete(identityVerifications).where(eq(identityVerifications.vpfId, user.vpfId))
+    await db.delete(identityVerifications).where(eq(identityVerifications.userId, user.userId))
     await db.delete(meets).where(inArray(meets.meetId, [OPEN_MEET_ID, CLOSED_MEET_ID]))
   })
 
@@ -182,7 +182,7 @@ describe("API: competition registration", () => {
     })
 
     it("returns 403 when identity verification has not been submitted", async () => {
-      await db.delete(identityVerifications).where(eq(identityVerifications.vpfId, user.vpfId))
+      await db.delete(identityVerifications).where(eq(identityVerifications.userId, user.userId))
       const handler = await importRegister()
       const res = await handler(registerEvent(OPEN_MEET_SLUG, validMemberFields))
       expect(res.success).toBe(false)
@@ -244,7 +244,7 @@ describe("API: competition registration", () => {
     })
 
     it("registers a guest lifter with a guest division and no membership fee", async () => {
-      await db.delete(purchases).where(eq(purchases.vpfId, user.vpfId))
+      await db.delete(purchases).where(eq(purchases.userId, user.userId))
       const handler = await importRegister()
       const res = await handler(
         registerEvent(OPEN_MEET_SLUG, {
@@ -276,7 +276,7 @@ describe("API: competition registration", () => {
       const [row] = await db
         .insert(vouchers)
         .values({
-          vpfId: user.vpfId,
+          userId: user.userId,
           type: "competition",
           discountKind: "percent",
           discountValue: 50,
@@ -288,12 +288,12 @@ describe("API: competition registration", () => {
     }
 
     beforeEach(async () => {
-      await db.delete(purchases).where(eq(purchases.vpfId, user.vpfId))
-      await db.delete(vouchers).where(eq(vouchers.vpfId, user.vpfId))
+      await db.delete(purchases).where(eq(purchases.userId, user.userId))
+      await db.delete(vouchers).where(eq(vouchers.userId, user.userId))
     })
 
     afterAll(async () => {
-      await db.delete(vouchers).where(eq(vouchers.vpfId, user.vpfId))
+      await db.delete(vouchers).where(eq(vouchers.userId, user.userId))
       await resetAthleteState()
     })
 
@@ -371,12 +371,12 @@ describe("API: competition registration", () => {
     })
 
     it("rejects a voucher owned by another athlete as not found", async () => {
-      await issue({ code: "VPF-TEST-OTHER", vpfId: fixtureUsers[2].vpfId })
+      await issue({ code: "VPF-TEST-OTHER", userId: fixtureUsers[2].userId })
       const handler = await importRegister()
       const res = await handler(registerEvent(OPEN_MEET_SLUG, { ...validMemberFields, voucherCodes: "VPF-TEST-OTHER" }))
       expect(res.success).toBe(false)
       expect(res.message?.en).toMatch(/not found/i)
-      await db.delete(vouchers).where(eq(vouchers.vpfId, fixtureUsers[2].vpfId))
+      await db.delete(vouchers).where(eq(vouchers.userId, fixtureUsers[2].userId))
     })
 
     it("rejects an expired voucher", async () => {
@@ -461,7 +461,7 @@ describe("API: competition registration", () => {
 
   describe("POST /api/meets/[id]/registrations — ban gates (verified athletes)", () => {
     beforeAll(async () => {
-      await db.delete(purchases).where(eq(purchases.vpfId, user.vpfId))
+      await db.delete(purchases).where(eq(purchases.userId, user.userId))
       await db.update(users).set({ identityVerified: true }).where(eq(users.vpfId, user.vpfId))
     })
     afterAll(async () => {
@@ -469,25 +469,25 @@ describe("API: competition registration", () => {
     })
 
     it("blocks an athlete with two active violations (level 2)", async () => {
-      await db.delete(userViolations).where(eq(userViolations.vpfId, user.vpfId))
+      await db.delete(userViolations).where(eq(userViolations.userId, user.userId))
       await db.insert(userViolations).values([
-        { vpfId: user.vpfId, expireYear: 2024, note: "v1" },
-        { vpfId: user.vpfId, expireYear: 2025, note: "v2" },
+        { userId: user.userId, expireYear: 2024, note: "v1" },
+        { userId: user.userId, expireYear: 2025, note: "v2" },
       ])
       const handler = await importRegister()
       const res = await handler(registerEvent(OPEN_MEET_SLUG, validMemberFields))
       expect(res.success).toBe(false)
       expect(res.message?.en).toMatch(/violation/i)
-      await db.delete(userViolations).where(eq(userViolations.vpfId, user.vpfId))
+      await db.delete(userViolations).where(eq(userViolations.userId, user.userId))
     })
 
     it("blocks an athlete on the competition ban list and surfaces the reason", async () => {
-      await db.insert(competitionBanList).values({ meetId: OPEN_MEET_ID, vpfId: user.vpfId, reason: "đã giành HCV" })
+      await db.insert(competitionBanList).values({ meetId: OPEN_MEET_ID, userId: user.userId, reason: "đã giành HCV" })
       const handler = await importRegister()
       const res = await handler(registerEvent(OPEN_MEET_SLUG, validMemberFields))
       expect(res.success).toBe(false)
       expect(res.message?.en).toMatch(/đã giành HCV/)
-      await db.delete(competitionBanList).where(eq(competitionBanList.vpfId, user.vpfId))
+      await db.delete(competitionBanList).where(eq(competitionBanList.userId, user.userId))
     })
   })
 })

@@ -39,7 +39,7 @@ export const EntryBulkAssignSchema = z.object({
 
 /** An athlete who paid at the venue. The purchase is raised separately. */
 export const DoorEntrySchema = z.object({
-  vpfId: z.string().trim().min(1),
+  userId: z.uuid(),
   sex: z.enum(["male", "female"]),
   weightClass: z.number().int(),
   division: z.enum(["subjr", "jr", "open", "mas1", "mas2", "mas3", "mas4", "guest"]),

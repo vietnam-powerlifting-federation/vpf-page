@@ -13,8 +13,9 @@ export function useLoginForm() {
   const isLoading = ref(false)
   const errors = ref({ vpfIdOrEmail: "", password: "" })
 
-  // A value containing "VPF" is an athlete ID; anything else is an email.
-  const isVpfId = computed(() => vpfIdOrEmail.value.trim().toUpperCase().includes("VPF"))
+  // An email always has an "@" and a VPF ID never does. Testing for "VPF" instead
+  // sent addresses such as athlete@test.vpf to the server as IDs.
+  const isVpfId = computed(() => !vpfIdOrEmail.value.includes("@"))
 
   function validate(): boolean {
     errors.value = {

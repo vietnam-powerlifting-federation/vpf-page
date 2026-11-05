@@ -25,7 +25,7 @@
 import { formatDateDMY } from "~/lib/domain/date"
 
 /** An athlete's violations and what their level means for registering. */
-const props = defineProps<{ vpfId: string }>()
+const props = defineProps<{ userId: string }>()
 
-const athlete = useAthleteViolations(props.vpfId)
+const athlete = useAthleteViolations(props.userId)
 </script>

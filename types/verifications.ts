@@ -5,6 +5,7 @@ export type IdentityVerification = InferSelectModel<typeof identityVerifications
 
 /** Identity verification row plus the submitting athlete's identity, for the admin review list. */
 export type IdentityVerificationWithUser = IdentityVerification & {
+  vpfId: string
   userEmail: string | null
   userName: string
 }

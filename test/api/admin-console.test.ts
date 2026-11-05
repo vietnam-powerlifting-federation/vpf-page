@@ -9,11 +9,11 @@ import {
   vouchers,
 } from "~/lib/external/drizzle/migrations/schema"
 import { createMockH3Event } from "../utils/h3-event"
-import { fixtureUsers, fixtureMeets } from "../fixtures/data"
+import { fixtureUsers, fixtureMeets, UNKNOWN_USER_ID } from "../fixtures/data"
 
-const user = { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } as const
-const admin = { vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } as const
-const other = { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } as const
+const user = { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } as const
+const admin = { userId: fixtureUsers[1].userId, vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } as const
+const other = { userId: fixtureUsers[2].userId, vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } as const
 
 const MEET_ID = fixtureMeets[0].meetId
 const REF_CODE = "993001"
@@ -24,12 +24,12 @@ function adminEvent(extra: Record<string, unknown> = {}) {
 
 describe("API: admin console", () => {
   beforeEach(async () => {
-    await db.delete(userViolations).where(inArray(userViolations.vpfId, [user.vpfId, other.vpfId]))
+    await db.delete(userViolations).where(inArray(userViolations.userId, [user.userId, other.userId]))
     await db.delete(competitionBanList).where(eq(competitionBanList.meetId, MEET_ID))
   })
 
   afterAll(async () => {
-    await db.delete(userViolations).where(inArray(userViolations.vpfId, [user.vpfId, other.vpfId]))
+    await db.delete(userViolations).where(inArray(userViolations.userId, [user.userId, other.userId]))
     await db.delete(competitionBanList).where(eq(competitionBanList.meetId, MEET_ID))
     await db.delete(vouchers).where(like(vouchers.code, "VPF-CONSOLE%"))
     await db.delete(purchases).where(eq(purchases.refCode, REF_CODE))
@@ -50,7 +50,7 @@ describe("API: admin console", () => {
     })
 
     it("records a violation and reports the resulting level", async () => {
-      const res = await create({ vpfId: user.vpfId, note: "Missed weigh-in", expireYear: 2030 })
+      const res = await create({ userId: user.userId, note: "Missed weigh-in", expireYear: 2030 })
       expect(res.success).toBe(true)
       expect(res.data!.level).toBe(1)
       // Level 1 lets the athlete continue but requires a pledge and a fine.
@@ -58,33 +58,33 @@ describe("API: admin console", () => {
     })
 
     it("blocks at level 2 — the count of rows still in force is the level", async () => {
-      await create({ vpfId: user.vpfId, note: "First", expireYear: 2030 })
-      const second = await create({ vpfId: user.vpfId, note: "Second", expireYear: 2030 })
+      await create({ userId: user.userId, note: "First", expireYear: 2030 })
+      const second = await create({ userId: user.userId, note: "Second", expireYear: 2030 })
       expect(second.data!.level).toBe(2)
       expect(second.data!.outcome).toBe("blocked")
     })
 
     it("does not count a violation that has already expired", async () => {
-      await create({ vpfId: user.vpfId, note: "Old", expireYear: 2000 })
-      const current = await create({ vpfId: user.vpfId, note: "Current", expireYear: 2030 })
+      await create({ userId: user.userId, note: "Old", expireYear: 2000 })
+      const current = await create({ userId: user.userId, note: "Current", expireYear: 2030 })
       expect(current.data!.level).toBe(1)
     })
 
     it("requires explicit confirmation for a permanent sanction", async () => {
       // A blank expiry year means "never expires", which is not what blank usually
       // implies — so it cannot be reached by omission.
-      const res = await create({ vpfId: user.vpfId, note: "Permanent", expireYear: null })
+      const res = await create({ userId: user.userId, note: "Permanent", expireYear: null })
       expect(res.success).toBe(false)
 
       const confirmed = await create({
-        vpfId: user.vpfId, note: "Permanent", expireYear: null, confirmPermanent: true,
+        userId: user.userId, note: "Permanent", expireYear: null, confirmPermanent: true,
       })
       expect(confirmed.success).toBe(true)
       expect(confirmed.data!.expireYear).toBeNull()
     })
 
     it("requires a reason to lift a violation", async () => {
-      const created = await create({ vpfId: user.vpfId, note: "Recorded in error", expireYear: 2030 })
+      const created = await create({ userId: user.userId, note: "Recorded in error", expireYear: 2030 })
       const handler = (await import("~/server/api/violations/[id]/index.delete")).default
 
       const noReason = await handler(adminEvent({ method: "DELETE", params: { id: String(created.data!.id) } }))
@@ -96,7 +96,7 @@ describe("API: admin console", () => {
         query: { reason: "appeal upheld" },
       }))
       expect(withReason.success).toBe(true)
-      expect(await db.select().from(userViolations).where(eq(userViolations.vpfId, user.vpfId))).toHaveLength(0)
+      expect(await db.select().from(userViolations).where(eq(userViolations.userId, user.userId))).toHaveLength(0)
     })
   })
 
@@ -106,12 +106,12 @@ describe("API: admin console", () => {
       await handler(adminEvent({
         method: "POST",
         params: { id: String(MEET_ID) },
-        body: { vpfId: user.vpfId, reason: "đã giành HCV hạng cân 74 tại giải đấu X" },
+        body: { userId: user.userId, reason: "đã giành HCV hạng cân 74 tại giải đấu X" },
       }))
       const res = await handler(adminEvent({
         method: "POST",
         params: { id: String(MEET_ID) },
-        body: { vpfId: user.vpfId, reason: "lý do đã cập nhật" },
+        body: { userId: user.userId, reason: "lý do đã cập nhật" },
       }))
 
       expect(res.success).toBe(true)
@@ -125,7 +125,7 @@ describe("API: admin console", () => {
       await post(adminEvent({
         method: "POST",
         params: { id: String(MEET_ID) },
-        body: { vpfId: user.vpfId, reason: "test" },
+        body: { userId: user.userId, reason: "test" },
       }))
 
       const handler = (await import("~/server/api/meets/[id]/ban-list/index.get")).default
@@ -140,13 +140,13 @@ describe("API: admin console", () => {
       await post(adminEvent({
         method: "POST",
         params: { id: String(MEET_ID) },
-        body: { vpfId: user.vpfId, reason: "test" },
+        body: { userId: user.userId, reason: "test" },
       }))
 
-      const handler = (await import("~/server/api/meets/[id]/ban-list/[vpfId].delete")).default
+      const handler = (await import("~/server/api/meets/[id]/ban-list/[userId].delete")).default
       const res = await handler(adminEvent({
         method: "DELETE",
-        params: { id: String(MEET_ID), vpfId: user.vpfId },
+        params: { id: String(MEET_ID), userId: user.userId },
       }))
       expect(res.success).toBe(true)
       expect(await db.select().from(competitionBanList).where(eq(competitionBanList.meetId, MEET_ID))).toHaveLength(0)
@@ -219,7 +219,7 @@ describe("API: admin console", () => {
       await db.delete(purchases).where(eq(purchases.refCode, REF_CODE))
       await db
         .insert(purchases)
-        .values({ vpfId: user.vpfId, type: ["competition"], refCode: REF_CODE, amount: 500000, status: "pending" })
+        .values({ userId: user.userId, type: ["competition"], refCode: REF_CODE, amount: 500000, status: "pending" })
     })
 
     it("returns 403 for a non-admin", async () => {
@@ -250,7 +250,7 @@ describe("API: admin console", () => {
     it("edits an unredeemed voucher without losing its code", async () => {
       await db.insert(vouchers).values({
         code: "VPF-CONSOLE-EDIT",
-        vpfId: user.vpfId,
+        userId: user.userId,
         type: "competition",
         discountKind: "percent",
         discountValue: 20,
@@ -273,11 +273,11 @@ describe("API: admin console", () => {
     it("refuses to edit a redeemed voucher, so a settled price never moves", async () => {
       const [purchase] = await db
         .insert(purchases)
-        .values({ vpfId: user.vpfId, type: ["competition"], refCode: "993002", amount: 0, status: "active" })
+        .values({ userId: user.userId, type: ["competition"], refCode: "993002", amount: 0, status: "active" })
         .returning()
       await db.insert(vouchers).values({
         code: "VPF-CONSOLE-USED",
-        vpfId: user.vpfId,
+        userId: user.userId,
         type: "competition",
         discountKind: "percent",
         discountValue: 20,
@@ -305,7 +305,7 @@ describe("API: admin console", () => {
       const res = await handler(adminEvent({
         method: "POST",
         body: {
-          vpfIds: [user.vpfId, other.vpfId, "VPF999999"],
+          userIds: [user.userId, other.userId, UNKNOWN_USER_ID],
           type: "competition",
           discountKind: "fixed",
           discountValue: 50000,
@@ -316,7 +316,7 @@ describe("API: admin console", () => {
 
       expect(res.success).toBe(true)
       expect(res.data!.issued).toBe(2)
-      expect(res.data!.unknownVpfIds).toEqual(["VPF999999"])
+      expect(res.data!.unknownUserIds).toEqual([UNKNOWN_USER_ID])
       expect(new Set(res.data!.sampleCodes).size).toBe(2)
 
       const issued = await db

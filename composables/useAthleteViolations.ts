@@ -3,7 +3,7 @@ import type { ApiResponse } from "~/types/api"
 import type { UserViolationWithUser } from "~/types/violations"
 
 /** One athlete's violations, with the consequence of their current level spelled out. Loaded in the browser. */
-export function useAthleteViolations(vpfId: string) {
+export function useAthleteViolations(userId: string) {
   const { t } = useI18n()
 
   const violations = ref<UserViolationWithUser[]>([])
@@ -20,7 +20,7 @@ export function useAthleteViolations(vpfId: string) {
 
   onMounted(async () => {
     const res = await $fetch<ApiResponse<UserViolationWithUser[]>>("/api/violations", {
-      query: { vpfId },
+      query: { userId },
       credentials: "include",
       ignoreResponseError: true,
     })

@@ -13,6 +13,7 @@ import { users } from "~/lib/external/drizzle/migrations/schema"
  */
 
 export type LoginCandidate = {
+  userId: string
   vpfId: string
   email: string | null
   password: string
@@ -26,6 +27,7 @@ export async function findLoginCandidate(
 ): Promise<LoginCandidate | null> {
   return db
     .select({
+      userId: users.userId,
       vpfId: users.vpfId,
       email: users.email,
       password: users.password,
@@ -38,18 +40,18 @@ export async function findLoginCandidate(
     .then((rows) => rows[0] ?? null)
 }
 
-export async function findVpfIdByEmail(email: string): Promise<string | null> {
+export async function findUserIdByEmail(email: string): Promise<string | null> {
   return db
-    .select({ vpfId: users.vpfId })
+    .select({ userId: users.userId })
     .from(users)
     .where(eq(users.email, email))
     .limit(1)
-    .then((rows) => rows[0]?.vpfId ?? null)
+    .then((rows) => rows[0]?.userId ?? null)
 }
 
 export async function emailExists(email: string): Promise<boolean> {
   const row = await db
-    .select({ vpfId: users.vpfId })
+    .select({ userId: users.userId })
     .from(users)
     .where(eq(users.email, email))
     .limit(1)
@@ -61,14 +63,14 @@ export async function insertUser(values: typeof users.$inferInsert) {
   return db
     .insert(users)
     .values(values)
-    .returning({ vpfId: users.vpfId, role: users.role })
+    .returning({ userId: users.userId, vpfId: users.vpfId, role: users.role })
     .then((rows) => rows[0])
 }
 
 // --- password reset -------------------------------------------------------
 
 export type PasswordResetState = {
-  vpfId: string
+  userId: string
   resetCode: string | null
   resetExpiresAt: string | null
 }
@@ -76,7 +78,7 @@ export type PasswordResetState = {
 export async function findPasswordResetState(email: string): Promise<PasswordResetState | null> {
   return db
     .select({
-      vpfId: users.vpfId,
+      userId: users.userId,
       resetCode: users.passwordResetCode,
       resetExpiresAt: users.passwordResetExpiresAt,
     })
@@ -87,22 +89,22 @@ export async function findPasswordResetState(email: string): Promise<PasswordRes
 }
 
 export async function setPasswordResetCode(
-  vpfId: string,
+  userId: string,
   code: string,
   expiresAt: string,
 ): Promise<void> {
   await db
     .update(users)
     .set({ passwordResetCode: code, passwordResetExpiresAt: expiresAt })
-    .where(eq(users.vpfId, vpfId))
+    .where(eq(users.userId, userId))
 }
 
 /** Consumes the reset code in the same write that changes the password, so it cannot be replayed. */
-export async function setPasswordAndClearReset(vpfId: string, hashedPassword: string): Promise<void> {
+export async function setPasswordAndClearReset(userId: string, hashedPassword: string): Promise<void> {
   await db
     .update(users)
     .set({ password: hashedPassword, passwordResetCode: null, passwordResetExpiresAt: null })
-    .where(eq(users.vpfId, vpfId))
+    .where(eq(users.userId, userId))
 }
 
 // --- email verification ---------------------------------------------------
@@ -114,7 +116,7 @@ export type EmailVerificationState = {
   expiresAt: string | null
 }
 
-export async function findEmailVerificationState(vpfId: string): Promise<EmailVerificationState | null> {
+export async function findEmailVerificationState(userId: string): Promise<EmailVerificationState | null> {
   return db
     .select({
       email: users.email,
@@ -123,25 +125,25 @@ export async function findEmailVerificationState(vpfId: string): Promise<EmailVe
       expiresAt: users.emailVerificationExpiresAt,
     })
     .from(users)
-    .where(eq(users.vpfId, vpfId))
+    .where(eq(users.userId, userId))
     .limit(1)
     .then((rows) => rows[0] ?? null)
 }
 
 export async function setEmailVerificationCode(
-  vpfId: string,
+  userId: string,
   code: string,
   expiresAt: string,
 ): Promise<void> {
   await db
     .update(users)
     .set({ emailVerificationCode: code, emailVerificationExpiresAt: expiresAt })
-    .where(eq(users.vpfId, vpfId))
+    .where(eq(users.userId, userId))
 }
 
-export async function markEmailVerified(vpfId: string): Promise<void> {
+export async function markEmailVerified(userId: string): Promise<void> {
   await db
     .update(users)
     .set({ emailVerified: true, emailVerificationCode: null, emailVerificationExpiresAt: null })
-    .where(eq(users.vpfId, vpfId))
+    .where(eq(users.userId, userId))
 }

@@ -1,6 +1,7 @@
 import { toIsoDate } from "~/lib/domain/date"
 import type { ApiResponse } from "~/types/api"
 import type { PurchaseType, VoucherDiscountKind } from "~/types/union-types"
+import type { UserPrivate } from "~/types/users"
 import type { Voucher, VoucherRevoked, VoucherWithUser } from "~/types/vouchers"
 
 export type AdminVouchers = ReturnType<typeof createAdminVouchers>["vouchers"]
@@ -23,11 +24,11 @@ function createAdminVouchers() {
     { label: t("adminVouchers.filterAvailable"), value: "available" },
     { label: t("adminVouchers.filterUsed"), value: "used" },
   ])
-  const vpfIdFilter = ref("")
+  const athleteFilter = ref<UserPrivate[]>([])
 
   const query = computed(() => ({
     ...(statusFilter.value === "all" ? {} : { redeemed: statusFilter.value === "used" }),
-    ...(vpfIdFilter.value.trim() ? { vpfId: vpfIdFilter.value.trim() } : {}),
+    ...(athleteFilter.value[0] ? { userId: athleteFilter.value[0].userId } : {}),
   }))
 
   // Not awaited here (the screen awaits `ready`), so the state can be provided to its parts right away.
@@ -52,7 +53,8 @@ function createAdminVouchers() {
   const today = new Date()
 
   const form = reactive({
-    vpfId: "",
+    /** At most one: the picker's model is a list. */
+    athletes: [] as UserPrivate[],
     type: "competition" as PurchaseType,
     discountKind: "percent" as VoucherDiscountKind,
     discountValue: 20 as number | null,
@@ -69,7 +71,7 @@ function createAdminVouchers() {
     { label: t("adminVouchers.fixed"), value: "fixed" },
   ])
 
-  const canIssue = computed(() => Boolean(form.vpfId.trim()) && Boolean(form.expiresAt) && (form.discountValue ?? 0) > 0)
+  const canIssue = computed(() => Boolean(form.athletes[0]) && Boolean(form.expiresAt) && (form.discountValue ?? 0) > 0)
 
   const isIssuing = ref(false)
 
@@ -82,7 +84,7 @@ function createAdminVouchers() {
         credentials: "include",
         ignoreResponseError: true,
         body: {
-          vpfId: form.vpfId.trim(),
+          userId: form.athletes[0]?.userId,
           type: form.type,
           discountKind: form.discountKind,
           discountValue: form.discountValue,
@@ -111,7 +113,7 @@ function createAdminVouchers() {
   // per-athlete, and a shared code could be neither.
   const bulkMode = ref(false)
   const bulkAudience = ref<"list" | "active_members">("list")
-  const bulkIds = ref("")
+  const bulkAthletes = ref<UserPrivate[]>([])
 
   const audienceOptions = computed(() => [
     { label: t("adminVouchers.audienceList"), value: "list" },
@@ -122,21 +124,21 @@ function createAdminVouchers() {
     if (!form.expiresAt) return
     isIssuing.value = true
     try {
-      const vpfIds = bulkIds.value.split(/[\s,;]+/).map((id) => id.trim()).filter(Boolean)
+      const userIds = bulkAthletes.value.map((athlete) => athlete.userId)
 
       const res = (await $fetch("/api/vouchers/bulk", {
         method: "POST",
         credentials: "include",
         ignoreResponseError: true,
         body: {
-          ...(bulkAudience.value === "active_members" ? { audience: "active_members" } : { vpfIds }),
+          ...(bulkAudience.value === "active_members" ? { audience: "active_members" } : { userIds }),
           type: form.type,
           discountKind: form.discountKind,
           discountValue: form.discountValue,
           expiresAt: toIsoDate(form.expiresAt),
           note: form.note.trim() || undefined,
         },
-      })) as ApiResponse<{ issued: number; unknownVpfIds: string[] }>
+      })) as ApiResponse<{ issued: number; unknownUserIds: string[] }>
 
       toast.add({
         severity: res.success ? "success" : "error",
@@ -144,10 +146,15 @@ function createAdminVouchers() {
         detail: apiMessage(res),
         life: 6000,
       })
-      if (res.success && res.data.unknownVpfIds.length) {
-        toast.add({ severity: "warn", summary: t("adminVouchers.bulkSkipped"), detail: res.data.unknownVpfIds.join(", "), life: 8000 })
+      // Picked from search, so an unknown id means the account was deleted since.
+      if (res.success && res.data.unknownUserIds.length) {
+        const skipped = bulkAthletes.value.filter((athlete) => res.data.unknownUserIds.includes(athlete.userId))
+        toast.add({ severity: "warn", summary: t("adminVouchers.bulkSkipped"), detail: skipped.map((athlete) => athlete.vpfId).join(", "), life: 8000 })
       }
-      if (res.success) await list.refresh()
+      if (res.success) {
+        bulkAthletes.value = []
+        await refreshAll()
+      }
     } finally {
       isIssuing.value = false
     }
@@ -234,10 +241,10 @@ function createAdminVouchers() {
   }
 
   const vouchers = reactive({
-    statusFilter, statusOptions, vpfIdFilter, rows, pending: list.pending, refresh: () => list.refresh(),
+    statusFilter, statusOptions, athleteFilter, rows, pending: list.pending, refresh: () => list.refresh(),
     statTiles, hasStats: computed(() => stats.value !== null),
     today, form, typeOptions, discountKindOptions, canIssue, isIssuing, issue,
-    bulkMode, bulkAudience, bulkIds, audienceOptions, issueBulk,
+    bulkMode, bulkAudience, bulkAthletes, audienceOptions, issueBulk,
     editOpen, editTarget, editForm, isEditing, openEdit, saveEdit,
     revokeOpen, revokeTarget, actingCode, openRevoke, confirmRevoke,
   })

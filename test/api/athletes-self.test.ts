@@ -16,7 +16,7 @@ describe("API: athletes/[id] with id=me", () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
         params: { id: "me" },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
@@ -49,7 +49,7 @@ describe("API: athletes/[id] with id=me", () => {
         method: "PATCH",
         params: { id: fixtureUsers[0].vpfId },
         body: { nationality: "US" },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(false)
@@ -62,7 +62,7 @@ describe("API: athletes/[id] with id=me", () => {
         method: "PATCH",
         params: { id: "me" },
         body: { email: "not-an-email" },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(false)
@@ -75,7 +75,7 @@ describe("API: athletes/[id] with id=me", () => {
         method: "PATCH",
         params: { id: "me" },
         body: { nationality: "US" },
-        context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[2].userId, vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
@@ -91,7 +91,7 @@ describe("API: athletes/[id] with id=me", () => {
         method: "PATCH",
         params: { id: "me" },
         multipart: [{ name: "squatRackPin", data: Buffer.from("5") }],
-        context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[2].userId, vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
@@ -106,7 +106,7 @@ describe("API: athletes/[id] with id=me", () => {
         multipart: [
           { name: "competitionPhoto", data: Buffer.from("not-an-image"), filename: "photo.svg", type: "image/svg+xml" },
         ],
-        context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[2].userId, vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(false)
@@ -119,7 +119,7 @@ describe("API: athletes/[id] with id=me", () => {
         method: "PATCH",
         params: { id: "me" },
         multipart: [],
-        context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[2].userId, vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(false)

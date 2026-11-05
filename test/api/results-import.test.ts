@@ -6,8 +6,8 @@ import { createMockH3Event } from "../utils/h3-event"
 import { fixtureUsers } from "../fixtures/data"
 import { buildLiftingCastCsv, importUploadParts, withDerivedTotals } from "../utils/liftingcast"
 
-const user = { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } as const
-const admin = { vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } as const
+const user = { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } as const
+const admin = { userId: fixtureUsers[1].userId, vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } as const
 
 /** A meet of its own, so the fixture results seeded for meet 9001 stay untouched. */
 const MEET_ID = 9101
@@ -197,7 +197,7 @@ describe("API: LiftingCast results import", () => {
 
       const written = await db.select().from(meetResults).where(eq(meetResults.meetId, MEET_ID))
       expect(written).toHaveLength(2)
-      const first = written.find((row) => row.vpfId === fixtureUsers[0].vpfId)!
+      const first = written.find((row) => row.userId === fixtureUsers[0].userId)!
       expect(first.squat3).toBe(110)
       expect(first.bench3).toBe(90)
       expect(first.weightClass).toBe(83)
@@ -214,7 +214,7 @@ describe("API: LiftingCast results import", () => {
       const row = await db
         .select()
         .from(meetResults)
-        .where(and(eq(meetResults.meetId, MEET_ID), eq(meetResults.vpfId, fixtureUsers[2].vpfId)))
+        .where(and(eq(meetResults.meetId, MEET_ID), eq(meetResults.userId, fixtureUsers[2].userId)))
         .then((rows) => rows[0])!
 
       expect(row.squat3).toBe(-90)
@@ -255,7 +255,7 @@ describe("API: LiftingCast results import", () => {
       expect(res.data!.deleted).toBe(1)
 
       const written = await db.select().from(meetResults).where(eq(meetResults.meetId, MEET_ID))
-      expect(written.map((row) => row.vpfId)).toEqual([fixtureUsers[0].vpfId])
+      expect(written.map((row) => row.userId)).toEqual([fixtureUsers[0].userId])
     })
 
     it("preserves an admin's `ranked` decision across a re-import", async () => {
@@ -268,7 +268,7 @@ describe("API: LiftingCast results import", () => {
       await db
         .update(meetResults)
         .set({ ranked: false, showOnProfile: false })
-        .where(and(eq(meetResults.meetId, MEET_ID), eq(meetResults.vpfId, fixtureUsers[0].vpfId)))
+        .where(and(eq(meetResults.meetId, MEET_ID), eq(meetResults.userId, fixtureUsers[0].userId)))
 
       const second = await preview(csv)
       await handler(previewEvent(csv, { checksum: second.checksum }))
@@ -276,7 +276,7 @@ describe("API: LiftingCast results import", () => {
       const row = await db
         .select()
         .from(meetResults)
-        .where(and(eq(meetResults.meetId, MEET_ID), eq(meetResults.vpfId, fixtureUsers[0].vpfId)))
+        .where(and(eq(meetResults.meetId, MEET_ID), eq(meetResults.userId, fixtureUsers[0].userId)))
         .then((rows) => rows[0])!
 
       expect(row.ranked).toBe(false)
@@ -293,7 +293,7 @@ describe("API: LiftingCast results import", () => {
       const row = await db
         .select()
         .from(meetResults)
-        .where(and(eq(meetResults.meetId, MEET_ID), eq(meetResults.vpfId, fixtureUsers[0].vpfId)))
+        .where(and(eq(meetResults.meetId, MEET_ID), eq(meetResults.userId, fixtureUsers[0].userId)))
         .then((rows) => rows[0])!
 
       expect(row.division).toBe("guest")

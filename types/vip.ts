@@ -1,7 +1,8 @@
 import type { InferSelectModel } from "drizzle-orm"
 import type { vipBenefits } from "~/lib/external/drizzle/migrations/schema"
 
-export type VipBenefits = InferSelectModel<typeof vipBenefits>
+/** A `vip_benefits` row, plus the athlete's public VPF id joined from `users`. */
+export type VipBenefits = InferSelectModel<typeof vipBenefits> & { vpfId: string }
 
 /**
  * In-progress state of the VIP settings editor, shared by the page, the form and the
@@ -9,7 +10,7 @@ export type VipBenefits = InferSelectModel<typeof vipBenefits>
  * at all — pending local files are tracked separately as blob URLs.
  */
 export type VipSettingsFormState = Partial<
-  Omit<VipBenefits, "vpfId"> & {
+  Omit<VipBenefits, "userId" | "vpfId"> & {
     avatarImageUrl: string | null
     bannerImageUrl1: string | null
     bannerImageUrl2: string | null

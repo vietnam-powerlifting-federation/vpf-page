@@ -20,4 +20,4 @@ Enforced by convention (see [CLAUDE.md](../CLAUDE.md)):
 - `composables/` — Vue state and data fetching. No plain utility functions here.
 - `components/`, `pages/`, `layouts/` — UI, grouped by feature.
 
-"User" and "athlete" are the same entity: the `users` table, keyed by `vpfId`.
+"User" and "athlete" are the same entity: the `users` table, keyed by `userId` (a uuid). `vpfId` is the athlete's unique public number.

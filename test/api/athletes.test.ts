@@ -1,13 +1,16 @@
 import { describe, it, expect } from "vitest"
+import { eq } from "drizzle-orm"
+import { db } from "~/lib/external/drizzle/drizzle"
+import { users } from "~/lib/external/drizzle/migrations/schema"
 import { createMockH3Event } from "../utils/h3-event"
-import { fixtureUsers } from "../fixtures/data"
+import { fixtureUsers, UNKNOWN_USER_ID } from "../fixtures/data"
 
 describe("API: athletes", () => {
   describe("GET /api/athletes", () => {
     it("returns 200 and a page of active athletes when authenticated as user", async () => {
       const handler = (await import("~/server/api/athletes/index")).default
       const event = createMockH3Event({
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
@@ -24,7 +27,7 @@ describe("API: athletes", () => {
     it("returns 200 when authenticated as admin", async () => {
       const handler = (await import("~/server/api/athletes/index")).default
       const event = createMockH3Event({
-        context: { user: { vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } },
+        context: { user: { userId: fixtureUsers[1].userId, vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
@@ -36,7 +39,7 @@ describe("API: athletes", () => {
     it("searches by VPF id, name and email for admins", async () => {
       const handler = (await import("~/server/api/athletes/index")).default
       const event = createMockH3Event({
-        context: { user: { vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } },
+        context: { user: { userId: fixtureUsers[1].userId, vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } },
         query: { search: fixtureUsers[0].vpfId },
       })
       const res = await handler(event)
@@ -44,10 +47,24 @@ describe("API: athletes", () => {
       expect(res.data!.items.map((a: { vpfId: string }) => a.vpfId)).toEqual([fixtureUsers[0].vpfId])
     })
 
+    it("matches names regardless of Vietnamese diacritics, on either side", async () => {
+      const handler = (await import("~/server/api/athletes/index")).default
+      const admin = { userId: fixtureUsers[1].userId, vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" }
+      await db.update(users).set({ fullName: "Nguyễn Văn Đạt Test" }).where(eq(users.userId, fixtureUsers[2].userId))
+      try {
+        const plain = await handler(createMockH3Event({ context: { user: admin }, query: { search: "nguyen van dat", includeInactive: "true" } }))
+        const accented = await handler(createMockH3Event({ context: { user: admin }, query: { search: "NGUYỄN văn", includeInactive: "true" } }))
+        expect(plain.data!.items.map((a) => a.userId)).toEqual([fixtureUsers[2].userId])
+        expect(accented.data!.items.map((a) => a.userId)).toEqual([fixtureUsers[2].userId])
+      } finally {
+        await db.update(users).set({ fullName: fixtureUsers[2].fullName }).where(eq(users.userId, fixtureUsers[2].userId))
+      }
+    })
+
     it("ignores admin-only filters for a non-admin caller", async () => {
       const handler = (await import("~/server/api/athletes/index")).default
       const event = createMockH3Event({
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
         query: { search: fixtureUsers[1].vpfId, includeInactive: "true" },
       })
       const res = await handler(event)
@@ -59,7 +76,7 @@ describe("API: athletes", () => {
     it("paginates", async () => {
       const handler = (await import("~/server/api/athletes/index")).default
       const event = createMockH3Event({
-        context: { user: { vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } },
+        context: { user: { userId: fixtureUsers[1].userId, vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } },
         query: { page: "1", pageSize: "1" },
       })
       const res = await handler(event)
@@ -75,7 +92,7 @@ describe("API: athletes", () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
         params: {},
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(false)
@@ -85,7 +102,7 @@ describe("API: athletes", () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
         params: { id: "VPF999999" },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(false)
@@ -96,7 +113,7 @@ describe("API: athletes", () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
         params: { id: fixtureUsers[2].vpfId },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
@@ -111,7 +128,7 @@ describe("API: athletes", () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
         params: { id: fixtureUsers[0].vpfId },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "admin" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "admin" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
@@ -126,7 +143,7 @@ describe("API: athletes", () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
         params: { id: "me" },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
@@ -151,11 +168,11 @@ describe("API: athletes", () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const own = await handler(createMockH3Event({
         params: { id: "me" },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       }))
       const other = await handler(createMockH3Event({
         params: { id: fixtureUsers[2].vpfId },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       }))
       expect(own.data?.scope).toBe("private")
       expect(other.data?.scope).toBe("public")
@@ -165,7 +182,7 @@ describe("API: athletes", () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const res = await handler(createMockH3Event({
         params: { id: fixtureUsers[2].vpfId },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "admin" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "admin" } },
       }))
       expect(res.data?.scope).toBe("private")
       expect((res.data?.athlete as { email?: string })?.email).toBeDefined()
@@ -175,7 +192,7 @@ describe("API: athletes", () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
         params: { id: fixtureUsers[0].slug },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
@@ -186,7 +203,7 @@ describe("API: athletes", () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
         params: { id: "nonexistent-slug" },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(false)
@@ -196,7 +213,7 @@ describe("API: athletes", () => {
       const handler = (await import("~/server/api/athletes/[id]/index")).default
       const event = createMockH3Event({
         params: { id: fixtureUsers[2].vpfId },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
@@ -222,12 +239,24 @@ describe("API: athletes", () => {
       expect(res.data).toHaveProperty("vipSettings")
     })
 
+    it("accepts a user id, and still answers with the public VPF id", async () => {
+      const handler = (await import("~/server/api/athletes/[id]/profile.get")).default
+      const res = await handler(createMockH3Event({ params: { id: fixtureUsers[0].userId } }))
+      expect(res.success).toBe(true)
+      expect(res.data?.athlete?.userId).toBe(fixtureUsers[0].userId)
+      expect(res.data?.athlete?.vpfId).toBe(fixtureUsers[0].vpfId)
+      expect(res.data!.compHistory.every((result) => result.vpfId === fixtureUsers[0].vpfId)).toBe(true)
+
+      const unknown = await handler(createMockH3Event({ params: { id: UNKNOWN_USER_ID } }))
+      expect(unknown.success).toBe(false)
+    })
+
     it("accepts a slug and 'me' as the identifier, like every other athlete route", async () => {
       const handler = (await import("~/server/api/athletes/[id]/profile.get")).default
       const bySlug = await handler(createMockH3Event({ params: { id: fixtureUsers[0].slug } }))
       const byMe = await handler(createMockH3Event({
         params: { id: "me" },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       }))
       expect(bySlug.data?.athlete?.vpfId).toBe(fixtureUsers[0].vpfId)
       expect(byMe.data?.athlete?.vpfId).toBe(fixtureUsers[0].vpfId)

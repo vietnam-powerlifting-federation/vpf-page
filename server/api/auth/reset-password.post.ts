@@ -41,16 +41,16 @@ export default defineApiHandler(async (event): Promise<ApiResponse<null>> => {
   }
 
   if (!user.resetExpiresAt || new Date(user.resetExpiresAt).getTime() < Date.now()) {
-    logger.debug("Expired password reset code", { vpfId: user.vpfId })
+    logger.debug("Expired password reset code", { userId: user.userId })
     return fail(event, 400, INVALID_CODE)
   }
 
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
 
   // Clearing the code makes it single-use.
-  await setPasswordAndClearReset(user.vpfId, hashedPassword)
+  await setPasswordAndClearReset(user.userId, hashedPassword)
 
-  logger.info("Password reset successfully", { vpfId: user.vpfId })
+  logger.info("Password reset successfully", { userId: user.userId })
 
   return ok(null, { en: "Password reset successfully", vi: "Đặt lại mật khẩu thành công" })
 })

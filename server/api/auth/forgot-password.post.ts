@@ -1,6 +1,6 @@
 import { randomInt } from "node:crypto"
 import { z } from "zod"
-import { findVpfIdByEmail, setPasswordResetCode } from "~/server/repository/auth"
+import { findUserIdByEmail, setPasswordResetCode } from "~/server/repository/auth"
 import { logger } from "~/lib/logger/logger"
 import { sendPasswordResetCodeEmail } from "~/lib/external/email"
 import type { ApiResponse } from "~/types/api"
@@ -37,9 +37,9 @@ export default defineApiHandler(async (event): Promise<ApiResponse<null>> => {
 
   const { email } = validated.data
 
-  const vpfId = await findVpfIdByEmail(email)
+  const userId = await findUserIdByEmail(email)
 
-  if (!vpfId) {
+  if (!userId) {
     logger.debug("Password reset requested for unknown email", { email })
     return ok(null, SENT_MESSAGE)
   }
@@ -47,10 +47,10 @@ export default defineApiHandler(async (event): Promise<ApiResponse<null>> => {
   const code = generateResetCode()
   const expiresAt = new Date(Date.now() + RESET_CODE_TTL_MS).toISOString()
 
-  await setPasswordResetCode(vpfId, code, expiresAt)
+  await setPasswordResetCode(userId, code, expiresAt)
 
   await sendPasswordResetCodeEmail(email, code)
-  logger.info("Password reset code sent", { vpfId })
+  logger.info("Password reset code sent", { userId })
 
   return ok(null, SENT_MESSAGE)
 })

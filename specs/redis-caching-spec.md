@@ -41,9 +41,9 @@ vpf:<resource>:<id>:<query>
 | `vpf:meets:latest-national-year` | repository | most recent visible national meet year |
 | `vpf:records:dataset:<range>` | repository | national results for a year range |
 | `vpf:records:<year>` / `vpf:records:latest` | service | computed records standing that year |
-| `vpf:records:<vpfId>` | service | one athlete's records, holding or broken |
+| `vpf:records:<userId>` | service | one athlete's records, holding or broken |
 
-Years and vpfIds share the `vpf:records:` segment without colliding: a vpfId always starts with letters, a year never does.
+Years and user ids share the `vpf:records:` segment without colliding: a user id always contains dashes, a year never does.
 
 ### The results dataset is cached whole, not per filter
 

@@ -11,7 +11,7 @@ import type { Division, Sex, MeetType } from "~/types/union-types"
 
 type GetMeetsAndResultsAndAthletesOptions = {
   meetIds?: number[]
-  vpfIds?: string[]
+  userIds?: string[]
   division?: Division
   weightClass?: number
   sex?: Sex
@@ -32,7 +32,7 @@ export async function getMeetsAndResultsAndAthletes(
 }> {
   const {
     meetIds: optionMeetIds,
-    vpfIds,
+    userIds,
     division,
     weightClass,
     sex,
@@ -44,14 +44,14 @@ export async function getMeetsAndResultsAndAthletes(
     legacy,
   } = options
 
-  // When only vpfIds is provided (e.g. athlete profile), derive meetIds from results for performance
+  // When only userIds is provided (e.g. athlete profile), derive meetIds from results for performance
   let meetIds = optionMeetIds
-  if ((!meetIds || meetIds.length === 0) && vpfIds && vpfIds.length > 0) {
-    const vpfIdCondition = vpfIds.length === 1 ? eq(meetResults.vpfId, vpfIds[0]) : inArray(meetResults.vpfId, vpfIds)
-    const legacyVpfCondition = vpfIds.length === 1 ? eq(legacyMeetResults.vpfId, vpfIds[0]) : inArray(legacyMeetResults.vpfId, vpfIds)
+  if ((!meetIds || meetIds.length === 0) && userIds && userIds.length > 0) {
+    const userIdCondition = userIds.length === 1 ? eq(meetResults.userId, userIds[0]) : inArray(meetResults.userId, userIds)
+    const legacyUserCondition = userIds.length === 1 ? eq(legacyMeetResults.userId, userIds[0]) : inArray(legacyMeetResults.userId, userIds)
     const [modernRows, legacyRows] = await Promise.all([
-      db.select({ meetId: meetResults.meetId }).from(meetResults).where(vpfIdCondition),
-      db.select({ meetId: legacyMeetResults.meetId }).from(legacyMeetResults).where(legacyVpfCondition),
+      db.select({ meetId: meetResults.meetId }).from(meetResults).where(userIdCondition),
+      db.select({ meetId: legacyMeetResults.meetId }).from(legacyMeetResults).where(legacyUserCondition),
     ])
     const allMeetIds = [...new Set([...modernRows.map((r) => r.meetId), ...legacyRows.map((r) => r.meetId)])]
     if (allMeetIds.length === 0) {
@@ -134,11 +134,11 @@ export async function getMeetsAndResultsAndAthletes(
       return [eq(table.meetId, -1)]
     }
     
-    if (vpfIds && vpfIds.length > 0) {
-      if (vpfIds.length === 1) {
-        conditions.push(eq(table.vpfId, vpfIds[0]))
+    if (userIds && userIds.length > 0) {
+      if (userIds.length === 1) {
+        conditions.push(eq(table.userId, userIds[0]))
       } else {
-        conditions.push(inArray(table.vpfId, vpfIds))
+        conditions.push(inArray(table.userId, userIds))
       }
     }
     
@@ -167,7 +167,7 @@ export async function getMeetsAndResultsAndAthletes(
       })
       .from(meetResults)
       .innerJoin(meets, eq(meetResults.meetId, meets.meetId))
-      .innerJoin(users, eq(meetResults.vpfId, users.vpfId))
+      .innerJoin(users, eq(meetResults.userId, users.userId))
       .where(and(...buildResultConditions(meetResults)))
     : []
 
@@ -181,13 +181,13 @@ export async function getMeetsAndResultsAndAthletes(
       })
       .from(legacyMeetResults)
       .innerJoin(meets, eq(legacyMeetResults.meetId, meets.meetId))
-      .innerJoin(users, eq(legacyMeetResults.vpfId, users.vpfId))
+      .innerJoin(users, eq(legacyMeetResults.userId, users.userId))
       .where(and(...buildResultConditions(legacyMeetResults)))
     : []
 
   // Extract and transform results
-  const nonLegacyResults: ResultRaw[] = nonLegacyResultsWithUsers.map(r => r.result)
-  const legacyResults: LegacyResultRaw[] = legacyResultsWithUsers.map(r => r.result)
+  const nonLegacyResults: ResultRaw[] = nonLegacyResultsWithUsers.map(r => ({ ...r.result, vpfId: r.user.vpfId }))
+  const legacyResults: LegacyResultRaw[] = legacyResultsWithUsers.map(r => ({ ...r.result, vpfId: r.user.vpfId }))
   const allRawResults: (ResultRaw | LegacyResultRaw)[] = [...nonLegacyResults, ...legacyResults]
   let transformedResults = addMetadataToMeetResults(allRawResults)
 
@@ -199,7 +199,7 @@ export async function getMeetsAndResultsAndAthletes(
   // Extract unique athletes
   const athletesMap = new Map<string, UserPublicWithDecorators>()
   for (const { user } of [...nonLegacyResultsWithUsers, ...legacyResultsWithUsers]) {
-    athletesMap.set(user.vpfId, user)
+    athletesMap.set(user.userId, user)
   }
 
   return {

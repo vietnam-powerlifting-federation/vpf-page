@@ -11,6 +11,7 @@ import type { AppliedVoucher } from "~/types/vouchers"
  */
 export type AdminPurchase = {
   purchaseId: number
+  userId: string
   vpfId: string
   refCode: string
   /** What the bank transfer memo should read — the key to matching a transfer. */
@@ -21,6 +22,7 @@ export type AdminPurchase = {
   createdAt: string
   confirmedAt: string | null
   cancelledAt: string | null
+  /** The approving admin's VPF id. */
   approvedBy: string | null
   userName: string
   userEmail: string | null

@@ -28,11 +28,11 @@ export default defineApiHandler(async (event): Promise<ApiResponse<RegistrationE
   const meet = await resolveMeet(identifier)
   if (!meet || meet.hidden) return fail(event, 404, MEET_NOT_FOUND)
 
-  const account = await findRegistrationAccount(currentUser.vpfId)
+  const account = await findRegistrationAccount(currentUser.userId)
 
   if (!account) return fail(event, 404, MSG.userNotFound)
 
-  const verification = await findVerificationStatusAndDob(currentUser.vpfId)
+  const verification = await findVerificationStatusAndDob(currentUser.userId)
 
   const identityStatus: RegistrationIdentityState = verification?.status ?? "not_submitted"
 
@@ -41,10 +41,10 @@ export default defineApiHandler(async (event): Promise<ApiResponse<RegistrationE
   const age = effectiveDob != null ? computeCompetitionAge(effectiveDob, meet.systemYear) : null
 
   const bans = account.identityVerified
-    ? await evaluateBanGates(currentUser.vpfId, meet, account.drugViolate ?? false)
+    ? await evaluateBanGates(currentUser.userId, meet, account.drugViolate ?? false)
     : null
 
-  const alreadyRegistered = await hasExistingRegistration(currentUser.vpfId, meet.meetId)
+  const alreadyRegistered = await hasExistingRegistration(currentUser.userId, meet.meetId)
 
   const payload: RegistrationEligibility = {
     meet: {

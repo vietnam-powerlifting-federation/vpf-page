@@ -1,4 +1,4 @@
-import { insertEntries, listEnteredVpfIds, listPaidRegistrations } from "~/server/repository/entries"
+import { insertEntries, listEnteredUserIds, listPaidRegistrations } from "~/server/repository/entries"
 import { logger } from "~/lib/logger/logger"
 import { defineApiHandler } from "~/server/utils/api-handler"
 import { ok, fail } from "~/server/utils/api-response"
@@ -33,13 +33,13 @@ export default defineApiHandler(async (event): Promise<ApiResponse<EntryGenerati
 
   const paid = await listPaidRegistrations(meet.meetId)
 
-  const alreadyEntered = new Set(await listEnteredVpfIds(meet.meetId))
+  const alreadyEntered = new Set(await listEnteredUserIds(meet.meetId))
 
-  const toCreate = paid.filter((row) => !alreadyEntered.has(row.vpfId))
+  const toCreate = paid.filter((row) => !alreadyEntered.has(row.userId))
 
   await insertEntries(toCreate.map((row) => ({
     meetId: meet.meetId,
-    vpfId: row.vpfId,
+    userId: row.userId,
     purchaseId: row.purchaseId,
     sex: row.sex,
     weightClass: row.weightClass,

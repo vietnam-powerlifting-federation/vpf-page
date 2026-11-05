@@ -45,7 +45,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<VoucherRevoke
     })
   }
 
-  logger.info("Voucher revoked", { voucherId: voucher.voucherId, code, vpfId: voucher.vpfId })
+  logger.info("Voucher revoked", { voucherId: voucher.voucherId, code, userId: voucher.userId })
 
   return ok(
     { voucherId: voucher.voucherId, code: voucher.code },

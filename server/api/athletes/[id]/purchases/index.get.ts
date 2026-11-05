@@ -32,7 +32,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<PurchaseStatu
     })
   }
 
-  const rows = await listPurchasesForAthlete(resolved.vpfId)
+  const rows = await listPurchasesForAthlete(resolved.userId)
 
   return ok(
     rows.map((p) => ({

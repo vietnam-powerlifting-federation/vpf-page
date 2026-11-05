@@ -24,6 +24,7 @@ export async function fetchEntryRoster(meetId: number): Promise<MeetEntryWithAth
   const rows = await db
     .select({
       entry: meetEntries,
+      vpfId: users.vpfId,
       fullName: users.fullName,
       email: users.email,
       phoneNumber: users.phoneNumber,
@@ -45,19 +46,20 @@ export async function fetchEntryRoster(meetId: number): Promise<MeetEntryWithAth
       resultId: meetResults.resultId,
     })
     .from(meetEntries)
-    .innerJoin(users, eq(users.vpfId, meetEntries.vpfId))
+    .innerJoin(users, eq(users.userId, meetEntries.userId))
     .leftJoin(teams, eq(teams.teamId, meetEntries.teamId))
     .leftJoin(purchases, eq(purchases.purchaseId, meetEntries.purchaseId))
     .leftJoin(competitionPurchaseMetadata, eq(competitionPurchaseMetadata.purchaseId, meetEntries.purchaseId))
     .leftJoin(
       meetResults,
-      and(eq(meetResults.meetId, meetEntries.meetId), eq(meetResults.vpfId, meetEntries.vpfId)),
+      and(eq(meetResults.meetId, meetEntries.meetId), eq(meetResults.userId, meetEntries.userId)),
     )
     .where(eq(meetEntries.meetId, meetId))
     .orderBy(asc(meetEntries.session), asc(meetEntries.flight), asc(meetEntries.lot), asc(users.fullName))
 
   return rows.map((row) => ({
     ...row.entry,
+    vpfId: row.vpfId,
     fullName: row.fullName,
     email: row.email ?? null,
     phoneNumber: row.phoneNumber ?? null,
@@ -126,7 +128,7 @@ export async function insertEntry(values: typeof meetEntries.$inferInsert) {
   return db
     .insert(meetEntries)
     .values(values)
-    .onConflictDoNothing({ target: [meetEntries.meetId, meetEntries.vpfId] })
+    .onConflictDoNothing({ target: [meetEntries.meetId, meetEntries.userId] })
     .returning()
     .then((rows) => rows[0] ?? null)
 }
@@ -174,7 +176,7 @@ export async function updateEntryWithWithdrawal(
 }
 
 /** The eligibility inputs the registration wizard and the registration endpoint both read. */
-export async function findRegistrationAccount(vpfId: string) {
+export async function findRegistrationAccount(userId: string) {
   return db
     .select({
       dob: users.dob,
@@ -189,16 +191,16 @@ export async function findRegistrationAccount(vpfId: string) {
       identityVerified: users.identityVerified,
     })
     .from(users)
-    .where(eq(users.vpfId, vpfId))
+    .where(eq(users.userId, userId))
     .limit(1)
     .then((rows) => rows[0] ?? null)
 }
 
-export async function findVerificationStatusAndDob(vpfId: string) {
+export async function findVerificationStatusAndDob(userId: string) {
   return db
     .select({ status: identityVerifications.status, dob: identityVerifications.dob })
     .from(identityVerifications)
-    .where(eq(identityVerifications.vpfId, vpfId))
+    .where(eq(identityVerifications.userId, userId))
     .limit(1)
     .then((rows) => rows[0] ?? null)
 }
@@ -207,7 +209,7 @@ export async function findVerificationStatusAndDob(vpfId: string) {
 export async function listPaidRegistrations(meetId: number) {
   return db
     .select({
-      vpfId: purchases.vpfId,
+      userId: purchases.userId,
       purchaseId: purchases.purchaseId,
       sex: competitionPurchaseMetadata.sex,
       weightClass: competitionPurchaseMetadata.weightClass,
@@ -221,17 +223,17 @@ export async function listPaidRegistrations(meetId: number) {
     ))
 }
 
-export async function listEnteredVpfIds(meetId: number): Promise<string[]> {
+export async function listEnteredUserIds(meetId: number): Promise<string[]> {
   const rows = await db
-    .select({ vpfId: meetEntries.vpfId })
+    .select({ userId: meetEntries.userId })
     .from(meetEntries)
     .where(eq(meetEntries.meetId, meetId))
-  return rows.map((row) => row.vpfId)
+  return rows.map((row) => row.userId)
 }
 
 /**
  * Bulk-create entries, ignoring any that already exist. The unique constraint on
- * (meetId, vpfId) — not this filter — is the real guarantee that re-running
+ * (meetId, userId) — not this filter — is the real guarantee that re-running
  * generation never duplicates a lifter.
  */
 export async function insertEntries(rows: (typeof meetEntries.$inferInsert)[]): Promise<void> {
@@ -239,5 +241,5 @@ export async function insertEntries(rows: (typeof meetEntries.$inferInsert)[]): 
   await db
     .insert(meetEntries)
     .values(rows)
-    .onConflictDoNothing({ target: [meetEntries.meetId, meetEntries.vpfId] })
+    .onConflictDoNothing({ target: [meetEntries.meetId, meetEntries.userId] })
 }

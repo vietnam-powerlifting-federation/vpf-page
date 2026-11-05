@@ -4,8 +4,8 @@
       <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase">{{ $t("admin.violations.recordTitle") }}</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <AppField v-slot="f" :label="$t('admin.violations.athlete')">
-          <InputText :id="f.id" v-model="violations.form.vpfId" placeholder="VPF000123" required />
+        <AppField :label="$t('admin.violations.athlete')" group class="md:col-span-2">
+          <AdminAthletePicker v-model="violations.form.athletes" />
         </AppField>
 
         <AppField v-slot="f" :label="$t('admin.violations.expireYear')">
@@ -34,10 +34,8 @@
     </form>
 
     <div class="mb-4 flex flex-wrap gap-2 items-center">
-      <IconField>
-        <InputIcon><AppIcon name="lucide:search" class="size-4" /></InputIcon>
-        <InputText v-model="violations.filterVpfId" :placeholder="$t('admin.violations.filterAthlete')" class="w-56" />
-      </IconField>
+      <span class="text-sm text-muted-color">{{ $t("admin.violations.filterAthlete") }}</span>
+      <AdminAthletePicker v-model="violations.filterAthletes" />
       <div class="flex items-center gap-2">
         <Checkbox v-model="violations.inForceOnly" input-id="inForce" binary />
         <label for="inForce" class="text-sm text-muted-color">{{ $t("admin.violations.inForceOnly") }}</label>

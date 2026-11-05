@@ -10,30 +10,30 @@ import type { IdentityVerification } from "~/types/verifications"
  * pending submission side by side.
  */
 export async function findVerificationFlags(
-  vpfId: string,
+  userId: string,
 ): Promise<{ emailVerified: boolean; identityVerified: boolean } | null> {
   return db
     .select({ emailVerified: users.emailVerified, identityVerified: users.identityVerified })
     .from(users)
-    .where(eq(users.vpfId, vpfId))
+    .where(eq(users.userId, userId))
     .limit(1)
     .then((rows) => rows[0] ?? null)
 }
 
-export async function findVerificationSubmission(vpfId: string): Promise<IdentityVerification | null> {
+export async function findVerificationSubmission(userId: string): Promise<IdentityVerification | null> {
   return db
     .select()
     .from(identityVerifications)
-    .where(eq(identityVerifications.vpfId, vpfId))
+    .where(eq(identityVerifications.userId, userId))
     .limit(1)
     .then((rows) => rows[0] ?? null)
 }
 
-export async function findEmailVerified(vpfId: string): Promise<boolean | null> {
+export async function findEmailVerified(userId: string): Promise<boolean | null> {
   const row = await db
     .select({ emailVerified: users.emailVerified })
     .from(users)
-    .where(eq(users.vpfId, vpfId))
+    .where(eq(users.userId, userId))
     .limit(1)
     .then((rows) => rows[0])
   return row ? row.emailVerified : null
@@ -51,7 +51,7 @@ export async function upsertVerificationSubmission(
     .insert(identityVerifications)
     .values(values)
     .onConflictDoUpdate({
-      target: identityVerifications.vpfId,
+      target: identityVerifications.userId,
       set: {
         fullName: values.fullName,
         nationality: values.nationality,
@@ -75,11 +75,12 @@ export async function listVerifications(status?: IdentityVerification["status"])
   return db
     .select({
       verification: identityVerifications,
+      vpfId: users.vpfId,
       userEmail: users.email,
       userName: users.fullName,
     })
     .from(identityVerifications)
-    .innerJoin(users, eq(identityVerifications.vpfId, users.vpfId))
+    .innerJoin(users, eq(identityVerifications.userId, users.userId))
     .where(status ? eq(identityVerifications.status, status) : undefined)
     .orderBy(desc(identityVerifications.submittedAt))
 }
@@ -111,20 +112,20 @@ export async function updateVerification(
  * *current* submission is approved.
  */
 export async function applyVerificationToAthlete(
-  vpfId: string,
+  userId: string,
   approved: { fullName: string; nationality: string; dob: number; nationalId: string; address: string; phoneNumber: string } | null,
 ): Promise<void> {
   await db
     .update(users)
     .set(approved ? { ...approved, identityVerified: true } : { identityVerified: false })
-    .where(eq(users.vpfId, vpfId))
+    .where(eq(users.userId, userId))
 }
 
-export async function findAthleteEmail(vpfId: string): Promise<string | null> {
+export async function findAthleteEmail(userId: string): Promise<string | null> {
   return db
     .select({ email: users.email })
     .from(users)
-    .where(eq(users.vpfId, vpfId))
+    .where(eq(users.userId, userId))
     .limit(1)
     .then((rows) => rows[0]?.email ?? null)
 }

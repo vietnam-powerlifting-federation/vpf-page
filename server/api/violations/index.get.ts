@@ -9,7 +9,7 @@ import type { ApiResponse } from "~/types/api"
 import type { UserViolationWithUser } from "~/types/violations"
 
 const ViolationQuerySchema = z.object({
-  vpfId: z.string().trim().optional(),
+  userId: z.uuid().optional(),
   /** Levels are relative to a year; defaults to the current one. */
   year: z.coerce.number().int().min(1900).max(2200).optional(),
   inForceOnly: z.preprocess((v) => (typeof v === "string" ? v === "true" : v), z.boolean()).optional(),
@@ -21,23 +21,23 @@ export default defineApiHandler(async (event): Promise<ApiResponse<UserViolation
 
   const parsed = ViolationQuerySchema.safeParse(getQuery(event))
   if (!parsed.success) return fail(event, 400, MSG.invalidInput)
-  const { vpfId, inForceOnly } = parsed.data
+  const { userId, inForceOnly } = parsed.data
   const referenceYear = parsed.data.year ?? new Date().getFullYear()
 
-  const rows = await listViolations(vpfId)
+  const rows = await listViolations(userId)
 
   // Level is the count of an athlete's rows still in force, so it has to be
   // derived across the whole set rather than per row.
   const levelByAthlete = new Map<string, number>()
   for (const row of rows) {
     if (!isInForce(row.expireYear, referenceYear)) continue
-    levelByAthlete.set(row.vpfId, (levelByAthlete.get(row.vpfId) ?? 0) + 1)
+    levelByAthlete.set(row.userId, (levelByAthlete.get(row.userId) ?? 0) + 1)
   }
 
   const data: UserViolationWithUser[] = rows
     .filter((row) => !inForceOnly || isInForce(row.expireYear, referenceYear))
     .map((row) => {
-      const level = levelByAthlete.get(row.vpfId) ?? 0
+      const level = levelByAthlete.get(row.userId) ?? 0
       return { ...row, userEmail: row.userEmail ?? null, level, outcome: outcomeForLevel(level) }
     })
 

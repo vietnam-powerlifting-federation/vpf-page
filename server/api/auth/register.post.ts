@@ -83,7 +83,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<RegisterRespo
     }
 
     // Query the newly created user with public select
-    const userPublic = await findAthletePublic(insertResult.vpfId)
+    const userPublic = await findAthletePublic(insertResult.userId)
 
     if (!userPublic) {
       logger.error("Failed to fetch user public data after registration", { vpfId: insertResult.vpfId })
@@ -98,6 +98,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<RegisterRespo
 
     // Auto-login: issue a token so the athlete can proceed to email/identity verification.
     const token = signToken({
+      userId: insertResult.userId,
       vpfId: insertResult.vpfId,
       email,
       role: insertResult.role,

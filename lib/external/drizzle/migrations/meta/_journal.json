@@ -134,6 +134,13 @@
       "when": 1785402833194,
       "tag": "0018_meet_entries",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793852861961,
+      "tag": "0019_user_id_primary_key",
+      "breakpoints": true
     }
   ]
 }

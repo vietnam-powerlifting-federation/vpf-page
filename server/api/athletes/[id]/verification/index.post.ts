@@ -22,7 +22,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<IdentityVerif
   const currentUser = auth.user
 
   const idParam = getRouterParam(event, "id")
-  if (idParam !== "me" && idParam !== currentUser.vpfId) {
+  if (idParam !== "me" && idParam !== currentUser.vpfId && idParam !== currentUser.userId) {
     return fail(event, 403, {
       en: "You may only submit your own verification",
       vi: "Bạn chỉ có thể gửi hồ sơ xác minh của mình",
@@ -30,7 +30,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<IdentityVerif
   }
 
   // Email must be verified before an athlete can submit identity verification.
-  const emailVerified = await findEmailVerified(currentUser.vpfId)
+  const emailVerified = await findEmailVerified(currentUser.userId)
   if (emailVerified === null) {
     return fail(event, 404, MSG.userNotFound)
   }
@@ -42,7 +42,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<IdentityVerif
     })
   }
 
-  const existing = await findVerificationSubmission(currentUser.vpfId)
+  const existing = await findVerificationSubmission(currentUser.userId)
 
   // Once approved, the form is locked.
   if (existing?.status === "approved") {
@@ -96,7 +96,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<IdentityVerif
   let idCardFrontUrl = existing?.idCardFrontUrl ?? null
   let supersededUrl: string | null = null
   if (idCardFile) {
-    idCardFrontUrl = await uploadVipImage(currentUser.vpfId, "id-card-front", new Uint8Array(idCardFile.data), {
+    idCardFrontUrl = await uploadVipImage(currentUser.userId, "id-card-front", new Uint8Array(idCardFile.data), {
       filename: idCardFile.filename,
       mimeType: idCardFile.type,
       unguessable: true,
@@ -113,7 +113,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<IdentityVerif
 
   const nowIso = new Date().toISOString()
   const values = {
-    vpfId: currentUser.vpfId,
+    userId: currentUser.userId,
     ...parsed.data,
     idCardFrontUrl,
     // Any (re)submission resets the review state to pending.

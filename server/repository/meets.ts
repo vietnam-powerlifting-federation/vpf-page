@@ -103,34 +103,35 @@ export async function listBanList(meetId: number) {
     .select({
       id: competitionBanList.id,
       meetId: competitionBanList.meetId,
-      vpfId: competitionBanList.vpfId,
+      userId: competitionBanList.userId,
+      vpfId: users.vpfId,
       reason: competitionBanList.reason,
       createdAt: competitionBanList.createdAt,
       userName: users.fullName,
     })
     .from(competitionBanList)
-    .innerJoin(users, eq(users.vpfId, competitionBanList.vpfId))
+    .innerJoin(users, eq(users.userId, competitionBanList.userId))
     .where(eq(competitionBanList.meetId, meetId))
     .orderBy(desc(competitionBanList.createdAt))
 }
 
 /** Banning an already-banned athlete rewrites the reason rather than failing. */
-export async function upsertBanListEntry(meetId: number, vpfId: string, reason: string) {
+export async function upsertBanListEntry(meetId: number, userId: string, reason: string) {
   return db
     .insert(competitionBanList)
-    .values({ meetId, vpfId, reason })
+    .values({ meetId, userId, reason })
     .onConflictDoUpdate({
-      target: [competitionBanList.meetId, competitionBanList.vpfId],
+      target: [competitionBanList.meetId, competitionBanList.userId],
       set: { reason },
     })
     .returning()
     .then((rows) => rows[0])
 }
 
-export async function deleteBanListEntry(meetId: number, vpfId: string) {
+export async function deleteBanListEntry(meetId: number, userId: string) {
   return db
     .delete(competitionBanList)
-    .where(and(eq(competitionBanList.meetId, meetId), eq(competitionBanList.vpfId, vpfId)))
+    .where(and(eq(competitionBanList.meetId, meetId), eq(competitionBanList.userId, userId)))
     .returning({ id: competitionBanList.id })
     .then((rows) => rows[0] ?? null)
 }

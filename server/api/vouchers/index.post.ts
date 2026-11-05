@@ -23,9 +23,9 @@ export default defineApiHandler(async (event): Promise<ApiResponse<Voucher>> => 
 
   const validated = await readZodBody(event, CreateVoucherSchema)
   if (!validated.success) return fail(event, 400, MSG.invalidInput)
-  const { vpfId, type, discountKind, discountValue, expiresAt, note } = validated.data
+  const { userId, type, discountKind, discountValue, expiresAt, note } = validated.data
 
-  const targetUser = await findAthleteNameAndEmail(vpfId)
+  const targetUser = await findAthleteNameAndEmail(userId)
 
   if (!targetUser) return fail(event, 404, MSG.athleteNotFound)
 
@@ -40,24 +40,24 @@ export default defineApiHandler(async (event): Promise<ApiResponse<Voucher>> => 
 
   const inserted = await insertVoucher({
     code,
-    vpfId,
+    userId,
     type,
     discountKind,
     discountValue,
     expiresAt,
     note: note ?? null,
-    createdBy: currentUser.vpfId,
+    createdBy: currentUser.userId,
   })
 
   if (!inserted) {
-    logger.error("Failed to insert voucher", { vpfId, type })
+    logger.error("Failed to insert voucher", { vpfId: targetUser.vpfId, type })
     return fail(event, 500, { en: "Failed to create voucher", vi: "Không thể tạo voucher" })
   }
 
   logger.info("Voucher issued", {
     voucherId: inserted.voucherId,
     code,
-    vpfId,
+    vpfId: targetUser.vpfId,
     type,
     discountKind,
     discountValue,

@@ -16,26 +16,26 @@ export default defineApiHandler(async (event): Promise<ApiResponse<UserViolation
 
   const validated = await readZodBody(event, ViolationCreateSchema)
   if (!validated.success) return fail(event, 400, MSG.invalidInput)
-  const { vpfId, note, expireYear } = validated.data
+  const { userId, note, expireYear } = validated.data
 
-  const athlete = await findAthleteNameAndEmail(vpfId)
+  const athlete = await findAthleteNameAndEmail(userId)
   if (!athlete) return fail(event, 404, MSG.athleteNotFound)
 
-  const created = await insertViolation({ vpfId, note, expireYear })
+  const created = await insertViolation({ userId, note, expireYear })
 
   const referenceYear = new Date().getFullYear()
-  const level = await violationLevel(vpfId, referenceYear)
+  const level = await violationLevel(userId, referenceYear)
 
   logger.warn("Violation recorded", {
     violationId: created.id,
-    vpfId,
+    vpfId: athlete.vpfId,
     expireYear,
     level,
     recordedBy: auth.user.vpfId,
   })
 
   return ok(
-    { ...created, userName: athlete.fullName, userEmail: athlete.email ?? null, level, outcome: outcomeForLevel(level) },
+    { ...created, vpfId: athlete.vpfId, userName: athlete.fullName, userEmail: athlete.email ?? null, level, outcome: outcomeForLevel(level) },
     { en: "Violation recorded", vi: "Đã ghi nhận vi phạm" },
   )
 })

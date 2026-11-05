@@ -1,4 +1,4 @@
-import { athleteMetaLine, hasVisibleSocials, vipBanners } from "~/lib/domain/athlete-profile"
+import { athleteMetaLine, vipBanners } from "~/lib/domain/athlete-profile"
 import type { ApiResponse } from "~/types/api"
 import type { AthleteProfileData } from "~/types/users"
 
@@ -25,11 +25,10 @@ export async function useAthletePage(slug: string) {
 
   const metaLine = computed(() => athleteMetaLine(athlete.value, sex.value, t))
   const banners = computed(() => vipBanners(vip.value))
-  const hasSocials = computed(() => hasVisibleSocials(vip.value))
 
   // Only the athlete may attach a photo to their own certificates. Who is signed in
   // is read in the browser (see SiteHeader), so this never affects the shared HTML.
   const isOwner = computed(() => me.value?.athlete.vpfId === athlete.value.vpfId)
 
-  return reactive({ profile, athlete, vip, metaLine, banners, hasSocials, isOwner })
+  return reactive({ profile, athlete, vip, metaLine, banners, isOwner })
 }

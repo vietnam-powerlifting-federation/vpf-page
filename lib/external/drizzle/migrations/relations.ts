@@ -3,8 +3,8 @@ import { users, userViolations, competitionBanList, meets, legacyMeetResults, te
 
 export const userViolationsRelations = relations(userViolations, ({ one }) => ({
   user: one(users, {
-    fields: [userViolations.vpfId],
-    references: [users.vpfId]
+    fields: [userViolations.userId],
+    references: [users.userId]
   }),
 }))
 
@@ -14,8 +14,8 @@ export const competitionBanListRelations = relations(competitionBanList, ({ one 
     references: [meets.meetId]
   }),
   user: one(users, {
-    fields: [competitionBanList.vpfId],
-    references: [users.vpfId]
+    fields: [competitionBanList.userId],
+    references: [users.userId]
   }),
 }))
 
@@ -27,28 +27,28 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   meetResults: many(meetResults),
   purchases: many(purchases),
   identityVerification: one(identityVerifications, {
-    fields: [users.vpfId],
-    references: [identityVerifications.vpfId],
+    fields: [users.userId],
+    references: [identityVerifications.userId],
   }),
   reviewedIdentityVerifications: many(identityVerifications, { relationName: "reviewer" }),
 }))
 
 export const identityVerificationsRelations = relations(identityVerifications, ({ one }) => ({
   user: one(users, {
-    fields: [identityVerifications.vpfId],
-    references: [users.vpfId],
+    fields: [identityVerifications.userId],
+    references: [users.userId],
   }),
   reviewer: one(users, {
     fields: [identityVerifications.reviewedBy],
-    references: [users.vpfId],
+    references: [users.userId],
     relationName: "reviewer",
   }),
 }))
 
 export const vipBenefitsRelations = relations(vipBenefits, ({ one }) => ({
   user: one(users, {
-    fields: [vipBenefits.vpfId],
-    references: [users.vpfId]
+    fields: [vipBenefits.userId],
+    references: [users.userId]
   }),
 }))
 
@@ -62,8 +62,8 @@ export const legacyMeetResultsRelations = relations(legacyMeetResults, ({ one })
     references: [teams.teamId]
   }),
   user: one(users, {
-    fields: [legacyMeetResults.vpfId],
-    references: [users.vpfId]
+    fields: [legacyMeetResults.userId],
+    references: [users.userId]
   }),
 }))
 
@@ -89,19 +89,19 @@ export const meetResultsRelations = relations(meetResults, ({ one }) => ({
     references: [teams.teamId]
   }),
   user: one(users, {
-    fields: [meetResults.vpfId],
-    references: [users.vpfId]
+    fields: [meetResults.userId],
+    references: [users.userId]
   }),
 }))
 
 export const purchasesRelations = relations(purchases, ({ one }) => ({
   user: one(users, {
-    fields: [purchases.vpfId],
-    references: [users.vpfId]
+    fields: [purchases.userId],
+    references: [users.userId]
   }),
   approver: one(users, {
     fields: [purchases.approvedBy],
-    references: [users.vpfId],
+    references: [users.userId],
     relationName: "approver"
   }),
   vipMetadata: one(vipPurchaseMetadata),
