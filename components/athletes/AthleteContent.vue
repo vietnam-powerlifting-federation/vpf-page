@@ -1,10 +1,8 @@
 <template>
-  <PageSection class="grid gap-10">
-    <LazyBannerSlideshow v-if="banners.length" :banners="banners" />
-    <p v-if="vip?.displayProfileDescription && vip.profileDescription" class="max-w-prose text-lg whitespace-pre-line">
-      {{ vip.profileDescription }}
-    </p>
+  <PageSection class="grid grid-cols-1 gap-10">
     <AthletePbs :personal-best="profile.personalBest" :comp-history="profile.compHistory" />
+    <!-- A VIP profile keeps its original order: history before records. -->
+    <AthleteHistory v-if="vip" :comp-history="profile.compHistory" :meets="profile.meets" :name="profile.athlete.fullName" />
     <AthleteRecords
       v-if="profile.records.length"
       :records="profile.records"
@@ -13,17 +11,16 @@
       :athlete="profile.athlete"
       :can-attach="isOwner && !!vip"
     />
-    <AthleteHistory :comp-history="profile.compHistory" :meets="profile.meets" :name="profile.athlete.fullName" />
+    <AthleteHistory v-if="!vip" :comp-history="profile.compHistory" :meets="profile.meets" :name="profile.athlete.fullName" />
   </PageSection>
 </template>
 
 <script setup lang="ts">
 import type { AthleteProfileData } from "~/types/users"
 
-/** The body of an athlete's page: banners, description, personal bests, records and competition history. */
+/** The body of an athlete's page: personal bests, records and competition history. */
 const props = defineProps<{
   profile: AthleteProfileData
-  banners: string[]
   isOwner: boolean
 }>()
 

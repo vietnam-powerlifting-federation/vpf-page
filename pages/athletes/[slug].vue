@@ -1,12 +1,15 @@
 <template>
   <div v-if="athletePage.profile">
-    <AthleteHeader
-      :athlete="athletePage.athlete"
+    <AthleteVipHero
+      v-if="athletePage.vip"
+      :full-name="athletePage.athlete.fullName"
       :vip="athletePage.vip"
+      :avatar="athletePage.vip.avatarImageUrl"
+      :banners="athletePage.banners"
       :meta-line="athletePage.metaLine"
-      :has-socials="athletePage.hasSocials"
     />
-    <AthleteContent :profile="athletePage.profile" :banners="athletePage.banners" :is-owner="athletePage.isOwner" />
+    <AthleteHeader v-else :athlete="athletePage.athlete" :meta-line="athletePage.metaLine" />
+    <AthleteContent :profile="athletePage.profile" :is-owner="athletePage.isOwner" />
   </div>
 </template>
 
