@@ -56,21 +56,21 @@ export async function seedTestDatabase(): Promise<void> {
   await db
     .insert(users)
     .values(hashedUsers as unknown as typeof users.$inferInsert[])
-    .onConflictDoNothing({ target: users.vpfId })
+    .onConflictDoNothing({ target: users.userId })
   await db
     .insert(meetResults)
     .values(fixtureMeetResults as unknown as typeof meetResults.$inferInsert[])
-    .onConflictDoNothing({ target: [meetResults.meetId, meetResults.vpfId] })
+    .onConflictDoNothing({ target: [meetResults.meetId, meetResults.userId] })
   await db
     .insert(legacyMeetResults)
     .values(fixtureLegacyMeetResults as unknown as typeof legacyMeetResults.$inferInsert[])
-    .onConflictDoNothing({ target: [legacyMeetResults.meetId, legacyMeetResults.vpfId] })
+    .onConflictDoNothing({ target: [legacyMeetResults.meetId, legacyMeetResults.userId] })
 }
 
 export async function teardownTestDatabase(): Promise<void> {
   const meetIds = fixtureMeetResults.map((r) => r.meetId)
   const legacyMeetIds = fixtureLegacyMeetResults.map((r) => r.meetId)
-  const vpfIds = fixtureUsers.map((u) => u.vpfId)
+  const userIds = fixtureUsers.map((u) => u.userId)
   const teamIds = fixtureTeams.map((t) => t.teamId)
 
   const allMeetIds = [...new Set([...meetIds, ...legacyMeetIds, ...fixtureMeets.map((m) => m.meetId)])]
@@ -82,10 +82,10 @@ export async function teardownTestDatabase(): Promise<void> {
   // the next one.
   await db.delete(meetEntries).where(inArray(meetEntries.meetId, allMeetIds))
   await db.delete(competitionBanList).where(inArray(competitionBanList.meetId, allMeetIds))
-  await db.delete(userViolations).where(inArray(userViolations.vpfId, vpfIds))
-  await db.delete(vipBenefits).where(inArray(vipBenefits.vpfId, vpfIds))
-  await db.delete(purchases).where(inArray(purchases.vpfId, vpfIds))
-  await db.delete(users).where(inArray(users.vpfId, vpfIds))
+  await db.delete(userViolations).where(inArray(userViolations.userId, userIds))
+  await db.delete(vipBenefits).where(inArray(vipBenefits.userId, userIds))
+  await db.delete(purchases).where(inArray(purchases.userId, userIds))
+  await db.delete(users).where(inArray(users.userId, userIds))
   await db.delete(meets).where(inArray(meets.meetId, [...new Set([...meetIds, ...fixtureMeets.map((m) => m.meetId)])]))
   await db.delete(teams).where(inArray(teams.teamId, teamIds))
 }

@@ -98,11 +98,11 @@ export default defineApiHandler(async (event): Promise<ApiResponse<CompetitionRe
     })
   }
 
-  const account = await findRegistrationAccount(currentUser.vpfId)
+  const account = await findRegistrationAccount(currentUser.userId)
 
   if (!account) return fail(event, 404, MSG.userNotFound)
 
-  const verification = await findVerificationStatusAndDob(currentUser.vpfId)
+  const verification = await findVerificationStatusAndDob(currentUser.userId)
 
   // The identity form must have been submitted before registering (§1). Admin approval
   // is not required — an unapproved athlete lands in "submitted / pending review" (§7).
@@ -117,7 +117,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<CompetitionRe
 
   // Ban gates apply only to identity-verified athletes (§2). A hard block stops here.
   if (account.identityVerified) {
-    const bans = await evaluateBanGates(currentUser.vpfId, meet, account.drugViolate ?? false)
+    const bans = await evaluateBanGates(currentUser.userId, meet, account.drugViolate ?? false)
     if (bans.violationOutcome === "blocked") {
       return fail(event, 403, {
         en: "You are not allowed to register due to a standing violation.",
@@ -139,7 +139,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<CompetitionRe
     // violationOutcome === "pledge" (level 1) is allowed to continue; VPF handles the pledge/fine by email.
   }
 
-  if (await hasExistingRegistration(currentUser.vpfId, meet.meetId)) {
+  if (await hasExistingRegistration(currentUser.userId, meet.meetId)) {
     return fail(event, 409, {
       en: "You are already registered for this competition",
       vi: "Bạn đã đăng ký giải đấu này",
@@ -185,7 +185,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<CompetitionRe
   const lineItems: LineItems = { competition: entryFee, vpf_membership: membershipFee }
   const vouchers = await resolveVouchers({
     codes: data.voucherCodes,
-    vpfId: currentUser.vpfId,
+    userId: currentUser.userId,
     purchaseTypes: type,
     lineItems,
   })
@@ -199,7 +199,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<CompetitionRe
   let competitionPhotoUrl: string | null = null
   if (photoFile) {
     competitionPhotoUrl = await uploadVipImage(
-      currentUser.vpfId,
+      currentUser.userId,
       "competition-photo",
       new Uint8Array(photoFile.data),
       { filename: photoFile.filename, mimeType: photoFile.type },
@@ -218,7 +218,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<CompetitionRe
     if (data.benchFootBlock !== undefined) athletePatch.benchFootBlock = data.benchFootBlock
 
     created = await createCompetitionRegistration({
-      vpfId: currentUser.vpfId,
+      userId: currentUser.userId,
       type,
       refCode,
       amount,

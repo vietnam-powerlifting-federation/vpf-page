@@ -18,6 +18,7 @@ import { ok, fail } from "~/server/utils/api-response"
 import { MSG } from "~/server/utils/messages"
 import { requireUser } from "~/server/utils/auth-guard"
 import { readZodBody } from "~/server/utils/validate"
+import { resolveAthleteId } from "~/server/service/athletes"
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"]
 const PHOTO_FIELD = "competitionPhoto"
@@ -32,12 +33,12 @@ export default defineApiHandler(async (event): Promise<ApiResponse<UserPrivate>>
   const currentUser = auth.user
 
   return idParam === "me"
-    ? await patchSelf(event, currentUser.vpfId)
+    ? await patchSelf(event, currentUser.userId)
     : await patchAsAdmin(event, idParam, currentUser)
 })
 
 /** The athlete editing their own profile. Also accepts multipart, to replace the competition photo. */
-async function patchSelf(event: H3Event, vpfId: string): Promise<ApiResponse<UserPrivate>> {
+async function patchSelf(event: H3Event, userId: string): Promise<ApiResponse<UserPrivate>> {
   const contentType = getRequestHeader(event, "content-type") || ""
   let patch: Partial<typeof users.$inferInsert> = {}
 
@@ -75,7 +76,7 @@ async function patchSelf(event: H3Event, vpfId: string): Promise<ApiResponse<Use
 
     if (photoFile) {
       patch.competitionPhotoUrl = await uploadVipImage(
-        vpfId,
+        userId,
         "competition-photo",
         new Uint8Array(photoFile.data),
         { filename: photoFile.filename, mimeType: photoFile.type },
@@ -87,7 +88,7 @@ async function patchSelf(event: H3Event, vpfId: string): Promise<ApiResponse<Use
     patch = validated.data
   }
 
-  const currentUserData = await findAthletePrivate(vpfId)
+  const currentUserData = await findAthletePrivate(userId)
   if (!currentUserData) return fail(event, 404, MSG.athleteNotFound)
 
   // Required fields are validated against the merged record, so a patch cannot
@@ -100,9 +101,9 @@ async function patchSelf(event: H3Event, vpfId: string): Promise<ApiResponse<Use
     })
   }
 
-  await updateAthlete(vpfId, patch)
+  await updateAthlete(userId, patch)
 
-  const updatedUser = await findAthletePrivate(vpfId)
+  const updatedUser = await findAthletePrivate(userId)
   if (!updatedUser) {
     return fail(event, 404, {
       en: "Athlete not found after update",
@@ -119,7 +120,7 @@ async function patchSelf(event: H3Event, vpfId: string): Promise<ApiResponse<Use
  */
 async function patchAsAdmin(
   event: H3Event,
-  targetVpfId: string,
+  idParam: string,
   currentUser: JwtPayload,
 ): Promise<ApiResponse<UserPrivate>> {
   if (currentUser.role !== "admin") {
@@ -133,11 +134,15 @@ async function patchAsAdmin(
   if (!validated.success) return fail(event, 400, MSG.invalidInput)
   const { drugViolateReason, ...patch } = validated.data
 
-  const target = await findAthleteAdminSummary(targetVpfId)
+  const resolved = await resolveAthleteId(idParam, currentUser)
+  if (!resolved.ok) return fail(event, 404, MSG.athleteNotFound)
+  const targetUserId = resolved.userId
+
+  const target = await findAthleteAdminSummary(targetUserId)
   if (!target) return fail(event, 404, MSG.athleteNotFound)
 
   // Locking yourself out is not recoverable through the UI.
-  if (patch.role && patch.role !== "admin" && targetVpfId === currentUser.vpfId) {
+  if (patch.role && patch.role !== "admin" && targetUserId === currentUser.userId) {
     return fail(event, 400, {
       en: "You cannot remove your own admin role",
       vi: "Bạn không thể tự gỡ quyền quản trị của mình",
@@ -154,13 +159,13 @@ async function patchAsAdmin(
   }
 
   if (patch.email !== undefined && patch.email !== target.email) {
-    if (await isEmailTakenByOther(patch.email!, targetVpfId)) {
+    if (await isEmailTakenByOther(patch.email!, targetUserId)) {
       return fail(event, 409, MSG.emailAlreadyExists)
     }
   }
 
   if (patch.slug !== undefined && patch.slug !== null) {
-    if (await isSlugTakenByOther(patch.slug, targetVpfId)) {
+    if (await isSlugTakenByOther(patch.slug, targetUserId)) {
       return fail(event, 409, {
         en: "That profile URL is already used by another athlete",
         vi: "Đường dẫn hồ sơ này đã được dùng cho vận động viên khác",
@@ -173,23 +178,23 @@ async function patchAsAdmin(
   // for a mailbox nobody has confirmed.
   if (patch.email !== undefined && patch.email !== target.email) updates.emailVerified = false
 
-  await updateAthlete(targetVpfId, updates)
+  await updateAthlete(targetUserId, updates)
 
   if (togglingDoping) {
     logger.warn("Doping ban changed", {
-      vpfId: targetVpfId,
+      vpfId: target.vpfId,
       drugViolate: patch.drugViolate,
       reason: drugViolateReason,
       changedBy: currentUser.vpfId,
     })
   }
   logger.info("Athlete updated by admin", {
-    vpfId: targetVpfId,
+    vpfId: target.vpfId,
     updatedBy: currentUser.vpfId,
     fields: Object.keys(updates),
   })
 
-  const updatedUser = await findAthletePrivate(targetVpfId)
+  const updatedUser = await findAthletePrivate(targetUserId)
   if (!updatedUser) return fail(event, 404, MSG.athleteNotFound)
 
   return ok(updatedUser, { en: "Athlete updated", vi: "Đã cập nhật vận động viên" })

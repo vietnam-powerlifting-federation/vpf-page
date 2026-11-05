@@ -19,7 +19,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<null>> => {
   if (!auth.ok) return auth.error
   const currentUser = auth.user
 
-  const user = await findEmailVerificationState(currentUser.vpfId)
+  const user = await findEmailVerificationState(currentUser.userId)
 
   if (!user) {
     return fail(event, 404, MSG.userNotFound)
@@ -36,7 +36,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<null>> => {
   const code = generateVerificationCode()
   const expiresAt = new Date(Date.now() + VERIFICATION_CODE_TTL_MS).toISOString()
 
-  await setEmailVerificationCode(currentUser.vpfId, code, expiresAt)
+  await setEmailVerificationCode(currentUser.userId, code, expiresAt)
 
   await sendVerificationCodeEmail(user.email, code)
   logger.info("Verification code resent", { vpfId: currentUser.vpfId })

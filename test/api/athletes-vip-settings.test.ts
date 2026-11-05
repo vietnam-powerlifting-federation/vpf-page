@@ -23,7 +23,7 @@ describe("API: athletes/[id]/vip-settings", () => {
         method: "PATCH",
         params: { id: fixtureUsers[2].vpfId },
         body: { profileDescription: "Other" },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(false)
@@ -41,7 +41,7 @@ describe("API: athletes/[id]/vip-settings", () => {
           alias: "TestAlias",
           displayAlias: true,
         },
-        context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[2].userId, vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
@@ -62,7 +62,7 @@ describe("API: athletes/[id]/vip-settings", () => {
           profileDescription: "Updated description",
           displayProfileDescription: false,
         },
-        context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[2].userId, vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
@@ -76,7 +76,7 @@ describe("API: athletes/[id]/vip-settings", () => {
         method: "PATCH",
         params: { id: fixtureUsers[0].vpfId },
         body: { alias: "AdminSetAlias", displayAlias: true },
-        context: { user: { vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } },
+        context: { user: { userId: fixtureUsers[1].userId, vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)
@@ -91,7 +91,7 @@ describe("API: athletes/[id]/vip-settings", () => {
         method: "PATCH",
         params: { id: "me" },
         body: { displayProfileDescription: "not-a-boolean" },
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(false)
@@ -105,7 +105,7 @@ describe("API: athletes/[id]/vip-settings", () => {
         method: "PATCH",
         params: { id: "me" },
         body,
-        context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[2].userId, vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
       })
     }
 
@@ -155,7 +155,7 @@ describe("API: athletes/[id]/vip-settings", () => {
         method: "PATCH",
         params: { id: "me" },
         multipart: Object.entries(fields).map(([name, value]) => ({ name, data: Buffer.from(value) })),
-        context: { user: { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[2].userId, vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } },
       })
     }
 

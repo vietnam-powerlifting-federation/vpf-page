@@ -18,7 +18,7 @@ type GuardResult =
  */
 export function requireUser(event: H3Event): GuardResult {
   const user = event.context.user
-  if (!user?.vpfId) {
+  if (!user?.userId) {
     return { ok: false, error: fail(event, 401, MSG.unauthorized) }
   }
   return { ok: true, user }

@@ -19,7 +19,7 @@ import type { AdminPurchase } from "~/types/purchases"
 const AdminPurchaseQuerySchema = z.object({
   status: z.enum(["pending", "active", "expired", "cancelled"]).optional(),
   type: z.enum(["vip", "vpf_membership", "competition"]).optional(),
-  vpfId: z.string().trim().optional(),
+  userId: z.uuid().optional(),
   meetId: z.coerce.number().int().optional(),
   /** Ref code, athlete name or email. */
   search: z.string().trim().min(1).max(120).optional(),
@@ -58,6 +58,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<AdminPurchase
 
   const data: AdminPurchase[] = rows.map((row) => ({
     purchaseId: row.purchaseId,
+    userId: row.userId,
     vpfId: row.vpfId,
     refCode: row.refCode,
     /** The memo the athlete was told to put on the transfer. */

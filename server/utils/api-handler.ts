@@ -43,7 +43,7 @@ export function defineApiHandler<T>(handler: (event: H3Event) => Promise<ApiResp
         errorId,
         method: event.method,
         path: requestPath(event),
-        vpfId: event.context.user?.vpfId,
+        userId: event.context.user?.userId,
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       })

@@ -30,7 +30,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<AthleteRecord
   }
 
   const scope = scopeFor(resolved.isSelf, currentUser?.role === "admin")
-  const record = await getAthleteRecord(resolved.vpfId, scope)
+  const record = await getAthleteRecord(resolved.userId, scope)
   if (!record) return fail(event, 404, MSG.athleteNotFound)
 
   return ok(record, {

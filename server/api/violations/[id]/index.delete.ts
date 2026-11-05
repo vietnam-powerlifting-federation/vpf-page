@@ -36,7 +36,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<{ id: number 
 
   logger.warn("Violation lifted", {
     violationId: id,
-    vpfId: deleted.vpfId,
+    userId: deleted.userId,
     reason,
     liftedBy: auth.user.vpfId,
   })

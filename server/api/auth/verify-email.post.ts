@@ -19,7 +19,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<{ emailVerifi
     return fail(event, 400, { en: "Verification code is required", vi: "Mã xác minh là bắt buộc" })
   }
 
-  const user = await findEmailVerificationState(currentUser.vpfId)
+  const user = await findEmailVerificationState(currentUser.userId)
 
   if (!user) {
     return fail(event, 404, MSG.userNotFound)
@@ -38,7 +38,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<{ emailVerifi
     return fail(event, 400, { en: "Verification code has expired", vi: "Mã xác minh đã hết hạn" })
   }
 
-  await markEmailVerified(currentUser.vpfId)
+  await markEmailVerified(currentUser.userId)
 
   logger.info("Email verified", { vpfId: currentUser.vpfId })
 

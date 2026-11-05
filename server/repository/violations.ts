@@ -5,11 +5,12 @@ import { userViolations, users } from "~/lib/external/drizzle/migrations/schema"
 /** A violation row joined to the athlete it belongs to; the level is derived, not stored. */
 export type ViolationRow = Awaited<ReturnType<typeof listViolations>>[number]
 
-export async function listViolations(vpfId?: string) {
+export async function listViolations(userId?: string) {
   return db
     .select({
       id: userViolations.id,
-      vpfId: userViolations.vpfId,
+      userId: userViolations.userId,
+      vpfId: users.vpfId,
       createdAt: userViolations.createdAt,
       note: userViolations.note,
       expireYear: userViolations.expireYear,
@@ -17,16 +18,16 @@ export async function listViolations(vpfId?: string) {
       userEmail: users.email,
     })
     .from(userViolations)
-    .innerJoin(users, eq(users.vpfId, userViolations.vpfId))
-    .where(vpfId ? eq(userViolations.vpfId, vpfId) : undefined)
+    .innerJoin(users, eq(users.userId, userViolations.userId))
+    .where(userId ? eq(userViolations.userId, userId) : undefined)
     .orderBy(desc(userViolations.createdAt))
 }
 
-export async function findAthleteNameAndEmail(vpfId: string) {
+export async function findAthleteNameAndEmail(userId: string) {
   return db
-    .select({ vpfId: users.vpfId, fullName: users.fullName, email: users.email })
+    .select({ userId: users.userId, vpfId: users.vpfId, fullName: users.fullName, email: users.email })
     .from(users)
-    .where(eq(users.vpfId, vpfId))
+    .where(eq(users.userId, userId))
     .limit(1)
     .then((rows) => rows[0] ?? null)
 }
@@ -56,6 +57,6 @@ export async function deleteViolation(id: number) {
   return db
     .delete(userViolations)
     .where(eq(userViolations.id, id))
-    .returning({ id: userViolations.id, vpfId: userViolations.vpfId })
+    .returning({ id: userViolations.id, userId: userViolations.userId })
     .then((rows) => rows[0] ?? null)
 }

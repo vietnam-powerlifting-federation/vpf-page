@@ -2,11 +2,18 @@ import type { InferSelectModel } from "drizzle-orm"
 import type { Division, Sex } from "~/types/union-types"
 import type { meetResults, legacyMeetResults } from "~/lib/external/drizzle/migrations/schema"
 
+/**
+ * The athlete's public VPF id, joined from `users`. Result tables reference the
+ * athlete by `userId`; `vpfId` rides along because it is what the public pages
+ * link and label with.
+ */
+type WithVpfId = { vpfId: string }
+
 // contains lift1, lift2, lift3 etc.
-export type ResultRaw = InferSelectModel<typeof meetResults> 
+export type ResultRaw = InferSelectModel<typeof meetResults> & WithVpfId
 
 // contains best_lift instead
-export type LegacyResultRaw = InferSelectModel<typeof legacyMeetResults>
+export type LegacyResultRaw = InferSelectModel<typeof legacyMeetResults> & WithVpfId
 
 // contains all and total, gl and placement
 export type Result = ResultRaw & LegacyResultRaw & {

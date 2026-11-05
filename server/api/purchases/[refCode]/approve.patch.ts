@@ -19,7 +19,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<PurchaseAppro
     return fail(event, 400, MSG.refCodeRequired)
   }
 
-  const result = await approvePurchase(refCode, currentUser.vpfId)
+  const result = await approvePurchase(refCode, currentUser.userId)
 
   if (!result.success) {
     return fail(event, result.statusCode, result.message)

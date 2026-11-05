@@ -13,7 +13,7 @@ import type { ApiResponse } from "~/types/api"
 import type { CompetitionBanWithUser } from "~/types/violations"
 
 /**
- * Add or update a meet exclusion. `unique(meetId, vpfId)` means re-banning the
+ * Add or update a meet exclusion. `unique(meetId, userId)` means re-banning the
  * same athlete is an edit rather than a second row, so this upserts.
  */
 export default defineApiHandler(async (event): Promise<ApiResponse<CompetitionBanWithUser>> => {
@@ -28,22 +28,22 @@ export default defineApiHandler(async (event): Promise<ApiResponse<CompetitionBa
 
   const validated = await readZodBody(event, CompetitionBanSchema)
   if (!validated.success) return fail(event, 400, MSG.invalidInput)
-  const { vpfId, reason } = validated.data
+  const { userId, reason } = validated.data
 
-  const athlete = await findAthleteNameAndEmail(vpfId)
+  const athlete = await findAthleteNameAndEmail(userId)
 
   if (!athlete) return fail(event, 404, MSG.athleteNotFound)
 
-  const saved = await upsertBanListEntry(meet.meetId, vpfId, reason)
+  const saved = await upsertBanListEntry(meet.meetId, userId, reason)
 
   logger.info("Competition ban saved", {
     meetId: meet.meetId,
-    vpfId,
+    vpfId: athlete.vpfId,
     savedBy: auth.user.vpfId,
   })
 
   return ok(
-    { ...saved, userName: athlete.fullName, meetName: meet.meetName },
+    { ...saved, vpfId: athlete.vpfId, userName: athlete.fullName, meetName: meet.meetName },
     { en: "Athlete added to the ban list", vi: "Đã thêm vận động viên vào danh sách hạn chế" },
   )
 })

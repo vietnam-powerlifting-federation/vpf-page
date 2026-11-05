@@ -7,7 +7,7 @@ import { z } from "zod"
  */
 export const CreateVoucherSchema = z
   .object({
-    vpfId: z.string().min(1),
+    userId: z.uuid(),
     type: z.enum(["vip", "vpf_membership", "competition"]),
     discountKind: z.enum(["fixed", "percent"]),
     discountValue: z.coerce.number().int().positive(),
@@ -24,7 +24,7 @@ export type CreateVoucher = z.infer<typeof CreateVoucherSchema>
 /**
  * Editing an issued voucher (admin tools spec §8).
  *
- * Only the terms move: `code`, `vpfId` and `type` are what the athlete was told
+ * Only the terms move: `code`, `userId` and `type` are what the athlete was told
  * and what the redemption constraints key on, and a redeemed voucher is frozen
  * outright — `discount_applied` fixed the VND at redemption precisely so editing
  * a voucher later never rewrites the price of a purchase already made.
@@ -51,8 +51,8 @@ export const UpdateVoucherSchema = z
  */
 export const BulkVoucherSchema = z
   .object({
-    vpfIds: z.array(z.string().trim().min(1)).min(1).max(1000).optional(),
-    /** Mutually exclusive with `vpfIds`. */
+    userIds: z.array(z.uuid()).min(1).max(1000).optional(),
+    /** Mutually exclusive with `userIds`. */
     audience: z.enum(["active_members"]).optional(),
     type: z.enum(["vip", "vpf_membership", "competition"]),
     discountKind: z.enum(["fixed", "percent"]),
@@ -60,9 +60,9 @@ export const BulkVoucherSchema = z
     expiresAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     note: z.string().trim().max(500).optional(),
   })
-  .refine((v) => Boolean(v.vpfIds) !== Boolean(v.audience), {
+  .refine((v) => Boolean(v.userIds) !== Boolean(v.audience), {
     message: "Provide either a list of athletes or an audience, not both",
-    path: ["vpfIds"],
+    path: ["userIds"],
   })
   .refine((v) => v.discountKind !== "percent" || v.discountValue <= 100, {
     message: "percent discount must be between 1 and 100",
@@ -70,15 +70,15 @@ export const BulkVoucherSchema = z
   })
 
 /**
- * Query params for GET /api/vouchers. `vpfId` and `redeemed` are admin-only —
- * a non-admin passing a `vpfId` other than their own is rejected by the handler.
+ * Query params for GET /api/vouchers. `userId` and `redeemed` are admin-only —
+ * a non-admin passing a `userId` other than their own is rejected by the handler.
  */
 export const VoucherListQuerySchema = z.object({
   type: z.enum(["vip", "vpf_membership", "competition"]).optional(),
   available: z
     .preprocess((v) => (typeof v === "string" ? v === "true" : v), z.boolean())
     .optional(),
-  vpfId: z.string().optional(),
+  userId: z.uuid().optional(),
   redeemed: z
     .preprocess((v) => (typeof v === "string" ? v === "true" : v), z.boolean())
     .optional(),

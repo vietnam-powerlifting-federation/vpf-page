@@ -3,15 +3,15 @@ import { eq, inArray } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { purchases, vouchers } from "~/lib/external/drizzle/migrations/schema"
 import { createMockH3Event } from "../utils/h3-event"
-import { fixtureUsers } from "../fixtures/data"
+import { fixtureUsers, UNKNOWN_USER_ID } from "../fixtures/data"
 
-const user = { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } as const
-const admin = { vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } as const
-const user2 = { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } as const
+const user = { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } as const
+const admin = { userId: fixtureUsers[1].userId, vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } as const
+const user2 = { userId: fixtureUsers[2].userId, vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } as const
 
 const FUTURE_DATE = "2099-12-31"
 const PAST_DATE = "2020-01-01"
-const OWNERS = [user.vpfId, user2.vpfId]
+const OWNERS = [user.userId, user2.userId]
 
 async function importList() {
   return (await import("~/server/api/vouchers/index.get")).default
@@ -27,7 +27,7 @@ async function issue(values: Partial<typeof vouchers.$inferInsert> & { code: str
   const [row] = await db
     .insert(vouchers)
     .values({
-      vpfId: user.vpfId,
+      userId: user.userId,
       type: "competition",
       discountKind: "percent",
       discountValue: 20,
@@ -40,12 +40,12 @@ async function issue(values: Partial<typeof vouchers.$inferInsert> & { code: str
 
 describe("API: vouchers", () => {
   beforeEach(async () => {
-    await db.delete(vouchers).where(inArray(vouchers.vpfId, OWNERS))
+    await db.delete(vouchers).where(inArray(vouchers.userId, OWNERS))
   })
 
   afterAll(async () => {
-    await db.delete(vouchers).where(inArray(vouchers.vpfId, OWNERS))
-    await db.delete(purchases).where(inArray(purchases.vpfId, OWNERS))
+    await db.delete(vouchers).where(inArray(vouchers.userId, OWNERS))
+    await db.delete(purchases).where(inArray(purchases.userId, OWNERS))
   })
 
   describe("GET /api/vouchers", () => {
@@ -57,7 +57,7 @@ describe("API: vouchers", () => {
 
     it("returns only the athlete's own vouchers", async () => {
       await issue({ code: "VPF-LIST-MINE" })
-      await issue({ code: "VPF-LIST-THEIRS", vpfId: user2.vpfId })
+      await issue({ code: "VPF-LIST-THEIRS", userId: user2.userId })
       const handler = await importList()
       const res = await handler(createMockH3Event({ context: { user } }))
       expect(res.success).toBe(true)
@@ -67,7 +67,7 @@ describe("API: vouchers", () => {
     it("derives status: used wins over expired", async () => {
       const [purchase] = await db
         .insert(purchases)
-        .values({ vpfId: user.vpfId, type: ["competition"], refCode: "999001", amount: 0, status: "active" })
+        .values({ userId: user.userId, type: ["competition"], refCode: "999001", amount: 0, status: "active" })
         .returning()
       await issue({
         code: "VPF-LIST-USED",
@@ -104,17 +104,17 @@ describe("API: vouchers", () => {
       expect(res.data?.map((v) => v.code)).toEqual(["VPF-T-VIP"])
     })
 
-    it("rejects a non-admin querying another athlete's vpfId", async () => {
+    it("rejects a non-admin querying another athlete's userId", async () => {
       const handler = await importList()
       const res = await handler(
-        createMockH3Event({ context: { user }, query: { vpfId: user2.vpfId } }),
+        createMockH3Event({ context: { user }, query: { userId: user2.userId } }),
       )
       expect(res.success).toBe(false)
     })
 
     it("returns every athlete's vouchers with owner identity when called by an admin", async () => {
       await issue({ code: "VPF-ALL-1" })
-      await issue({ code: "VPF-ALL-2", vpfId: user2.vpfId })
+      await issue({ code: "VPF-ALL-2", userId: user2.userId })
       const handler = await importList()
       const res = await handler(createMockH3Event({ context: { user: admin } }))
       expect(res.success).toBe(true)
@@ -124,18 +124,18 @@ describe("API: vouchers", () => {
       expect(res.data!.find((v) => v.code === "VPF-ALL-2")?.userName).toBe(fixtureUsers[2].fullName)
     })
 
-    it("lets an admin filter by vpfId to view a single athlete's vouchers", async () => {
+    it("lets an admin filter by userId to view a single athlete's vouchers", async () => {
       await issue({ code: "VPF-ALL-3" })
-      await issue({ code: "VPF-ALL-4", vpfId: user2.vpfId })
+      await issue({ code: "VPF-ALL-4", userId: user2.userId })
       const handler = await importList()
-      const res = await handler(createMockH3Event({ context: { user: admin }, query: { vpfId: user2.vpfId } }))
+      const res = await handler(createMockH3Event({ context: { user: admin }, query: { userId: user2.userId } }))
       expect(res.data?.map((v) => v.code)).toEqual(["VPF-ALL-4"])
     })
   })
 
   describe("POST /api/vouchers", () => {
     const body = {
-      vpfId: user.vpfId,
+      userId: user.userId,
       type: "competition",
       discountKind: "percent",
       discountValue: 20,
@@ -163,14 +163,14 @@ describe("API: vouchers", () => {
         .from(vouchers)
         .where(eq(vouchers.voucherId, res.data!.voucherId))
         .then((r) => r[0])
-      expect(row.createdBy).toBe(admin.vpfId)
-      expect(row.vpfId).toBe(user.vpfId)
+      expect(row.createdBy).toBe(admin.userId)
+      expect(row.userId).toBe(user.userId)
     })
 
     it("returns 404 for an unknown athlete", async () => {
       const handler = await importCreate()
       const res = await handler(
-        createMockH3Event({ method: "POST", body: { ...body, vpfId: "VPF999999" }, context: { user: admin } }),
+        createMockH3Event({ method: "POST", body: { ...body, userId: UNKNOWN_USER_ID }, context: { user: admin } }),
       )
       expect(res.success).toBe(false)
     })
@@ -238,7 +238,7 @@ describe("API: vouchers", () => {
     it("refuses to revoke a redeemed voucher — it is price history", async () => {
       const [purchase] = await db
         .insert(purchases)
-        .values({ vpfId: user.vpfId, type: ["competition"], refCode: "999002", amount: 0, status: "active" })
+        .values({ userId: user.userId, type: ["competition"], refCode: "999002", amount: 0, status: "active" })
         .returning()
       const issued = await issue({
         code: "VPF-DEL-USED",

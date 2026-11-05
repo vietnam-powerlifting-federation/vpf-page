@@ -6,9 +6,9 @@
     <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase">{{ $t("adminVouchers.issueTitle") }}</h2>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="flex flex-col gap-1">
-        <label for="vpfId" class="text-sm text-muted-color">{{ $t("adminVouchers.athlete") }}</label>
-        <InputText id="vpfId" v-model="vouchers.form.vpfId" placeholder="VPF000123" required />
+      <div v-if="!vouchers.bulkMode" class="flex flex-col gap-1">
+        <span class="text-sm text-muted-color">{{ $t("adminVouchers.athlete") }}</span>
+        <AdminAthletePicker v-model="vouchers.form.athletes" />
         <small class="text-muted-color">{{ $t("adminVouchers.athleteHint") }}</small>
       </div>
 
@@ -71,8 +71,8 @@
           option-value="value"
         />
       </AppField>
-      <AppField v-if="vouchers.bulkAudience === 'list'" v-slot="f" :label="$t('adminVouchers.bulkIds')">
-        <Textarea :id="f.id" v-model="vouchers.bulkIds" rows="3" :placeholder="$t('adminVouchers.bulkIdsHint')" />
+      <AppField v-if="vouchers.bulkAudience === 'list'" :label="$t('adminVouchers.bulkIds')" :hint="$t('adminVouchers.bulkIdsHint')" group>
+        <AdminAthletePicker v-model="vouchers.bulkAthletes" multiple />
       </AppField>
     </div>
 
@@ -81,6 +81,7 @@
       type="button"
       :label="$t('adminVouchers.bulkIssue')"
       :loading="vouchers.isIssuing"
+      :disabled="vouchers.bulkAudience === 'list' && !vouchers.bulkAthletes.length"
       @click="vouchers.issueBulk"
     />
     <Button v-else type="submit" :label="$t('adminVouchers.issue')" :loading="vouchers.isIssuing" :disabled="!vouchers.canIssue" />
@@ -88,6 +89,6 @@
 </template>
 
 <script setup lang="ts">
-/** Issue a voucher to one athlete, or to many at once (a list of IDs, or every active member). */
+/** Issue a voucher to one athlete, or to many at once (athletes picked from search, or every active member). */
 const vouchers = useAdminVouchers()
 </script>

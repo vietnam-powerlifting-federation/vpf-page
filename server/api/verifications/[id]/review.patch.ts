@@ -46,7 +46,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<IdentityVerif
 
   const updated = await updateVerification(id, {
     status: decision,
-    reviewedBy: currentUser.vpfId,
+    reviewedBy: currentUser.userId,
     reviewedAt: nowIso,
     reviewNote: reviewNote ?? null,
     updatedAt: nowIso,
@@ -68,7 +68,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<IdentityVerif
     } catch (error) {
       logger.error("Failed to delete ID card image after approval", {
         id,
-        vpfId: verification.vpfId,
+        userId: verification.userId,
         url: verification.idCardFrontUrl,
         error: (error as Error).message,
       })
@@ -79,7 +79,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<IdentityVerif
   // flip the denormalized identityVerified flag. Rejection clears the flag so it always
   // mirrors whether the athlete's current verification is approved.
   await applyVerificationToAthlete(
-    verification.vpfId,
+    verification.userId,
     decision === "approved"
       ? {
         fullName: verification.fullName,
@@ -93,7 +93,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<IdentityVerif
   )
 
   // Notify the athlete of the decision.
-  const recipientEmail = await findAthleteEmail(verification.vpfId)
+  const recipientEmail = await findAthleteEmail(verification.userId)
 
   if (recipientEmail) {
     if (decision === "approved") {

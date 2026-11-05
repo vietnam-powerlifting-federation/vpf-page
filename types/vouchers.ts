@@ -26,6 +26,7 @@ export type Voucher = {
 
 /** A voucher plus its owner's identity, for the admin management list. */
 export type VoucherWithUser = Voucher & {
+  userId: string
   vpfId: string
   userName: string
   userEmail: string | null

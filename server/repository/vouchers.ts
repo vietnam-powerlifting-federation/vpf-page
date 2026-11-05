@@ -5,7 +5,7 @@ import type { VoucherType } from "~/types/vouchers"
 
 export type VoucherListFilters = {
   /** Restricts to one athlete. Undefined means every athlete, which only an admin reaches. */
-  vpfId?: string
+  userId?: string
   type?: VoucherType
   /** What a purchase form should offer: unredeemed and unexpired. */
   available?: boolean
@@ -19,7 +19,8 @@ export async function listVouchers(filters: VoucherListFilters, today: string) {
     .select({
       voucherId: vouchers.voucherId,
       code: vouchers.code,
-      vpfId: vouchers.vpfId,
+      userId: vouchers.userId,
+      vpfId: users.vpfId,
       type: vouchers.type,
       discountKind: vouchers.discountKind,
       discountValue: vouchers.discountValue,
@@ -34,11 +35,11 @@ export async function listVouchers(filters: VoucherListFilters, today: string) {
       userEmail: users.email,
     })
     .from(vouchers)
-    .innerJoin(users, eq(users.vpfId, vouchers.vpfId))
+    .innerJoin(users, eq(users.userId, vouchers.userId))
     .leftJoin(purchases, eq(purchases.purchaseId, vouchers.redeemedPurchaseId))
     .where(
       and(
-        filters.vpfId ? eq(vouchers.vpfId, filters.vpfId) : undefined,
+        filters.userId ? eq(vouchers.userId, filters.userId) : undefined,
         filters.type ? eq(vouchers.type, filters.type) : undefined,
         filters.available ? isNull(vouchers.redeemedPurchaseId) : undefined,
         filters.available ? gte(vouchers.expiresAt, today) : undefined,
@@ -54,7 +55,7 @@ export async function findVoucherByCode(code: string) {
     .select({
       voucherId: vouchers.voucherId,
       code: vouchers.code,
-      vpfId: vouchers.vpfId,
+      userId: vouchers.userId,
       redeemedPurchaseId: vouchers.redeemedPurchaseId,
     })
     .from(vouchers)

@@ -1,6 +1,6 @@
 # Auth and guards
 
-Authentication is a JWT ([lib/utils/jwt.ts](../lib/utils/jwt.ts), payload `{ vpfId, email, role }`) delivered as an **httpOnly cookie named `auth-token`**, and also accepted as an `Authorization: Bearer` header.
+Authentication is a JWT ([lib/utils/jwt.ts](../lib/utils/jwt.ts), payload `{ userId, vpfId, email, role }`; `verifyToken` treats a token without `userId`, issued before the uuid key, as signed out) delivered as an **httpOnly cookie named `auth-token`**, and also accepted as an `Authorization: Bearer` header.
 
 ## Server side
 

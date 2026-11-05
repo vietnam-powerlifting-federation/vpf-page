@@ -9,9 +9,9 @@ import type { ApiResponse } from "~/types/api"
 import type { VoucherWithUser } from "~/types/vouchers"
 
 /**
- * An athlete's own vouchers by default. An admin may also pass `vpfId` to view
+ * An athlete's own vouchers by default. An admin may also pass `userId` to view
  * any single athlete's vouchers, or omit it to list every athlete's — the
- * admin management page uses the latter. A non-admin passing a `vpfId` other
+ * admin management page uses the latter. A non-admin passing a `userId` other
  * than their own is rejected outright, never silently ignored.
  */
 export default defineApiHandler(async (event): Promise<ApiResponse<VoucherWithUser[]>> => {
@@ -22,21 +22,21 @@ export default defineApiHandler(async (event): Promise<ApiResponse<VoucherWithUs
 
   const parsed = VoucherListQuerySchema.safeParse(getQuery(event))
   if (!parsed.success) return fail(event, 400, MSG.invalidInput)
-  const { type, available, vpfId, redeemed } = parsed.data
+  const { type, available, userId, redeemed } = parsed.data
 
-  if (vpfId && !isAdmin && vpfId !== currentUser.vpfId) {
+  if (userId && !isAdmin && userId !== currentUser.userId) {
     return fail(event, 403, {
       en: "You may only view your own vouchers",
       vi: "Bạn chỉ có thể xem voucher của mình",
     })
   }
 
-  // Non-admins are always scoped to themselves; an admin with no vpfId sees everyone's.
-  const scopedVpfId = isAdmin ? vpfId : currentUser.vpfId
+  // Non-admins are always scoped to themselves; an admin with no userId sees everyone's.
+  const scopedUserId = isAdmin ? userId : currentUser.userId
 
   const today = todayIso()
 
-  const rows = await listVouchers({ vpfId: scopedVpfId, type, available, redeemed }, today)
+  const rows = await listVouchers({ userId: scopedUserId, type, available, redeemed }, today)
 
   const data: VoucherWithUser[] = rows.map((row) => ({
     ...row,

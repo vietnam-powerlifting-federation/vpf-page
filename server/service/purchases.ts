@@ -35,7 +35,7 @@ export async function approvePurchase(refCode: string, approvedBy: string | null
   const purchase = await db
     .select({
       purchaseId: purchases.purchaseId,
-      vpfId: purchases.vpfId,
+      userId: purchases.userId,
       status: purchases.status,
       refCode: purchases.refCode,
       type: purchases.type,
@@ -63,7 +63,7 @@ export async function approvePurchase(refCode: string, approvedBy: string | null
       vpfMembershipExpiresAt: users.vpfMembershipExpiresAt,
     })
     .from(users)
-    .where(eq(users.vpfId, purchase.vpfId))
+    .where(eq(users.userId, purchase.userId))
     .limit(1)
     .then((rows) => rows[0])
 
@@ -127,7 +127,7 @@ export async function approvePurchase(refCode: string, approvedBy: string | null
     .where(and(eq(purchases.refCode, refCode), eq(purchases.status, "pending")))
 
   if (Object.keys(userUpdate).length > 0) {
-    await db.update(users).set(userUpdate).where(eq(users.vpfId, purchase.vpfId))
+    await db.update(users).set(userUpdate).where(eq(users.userId, purchase.userId))
   }
 
   logger.info("Purchase approved", {

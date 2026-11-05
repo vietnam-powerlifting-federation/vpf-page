@@ -5,11 +5,15 @@ import type { AthleteRecordData, UserPrivate } from "~/types/users"
 
 /**
  * An athlete's record as staff edit it: identity, membership dates, rack settings and sanctions.
- * Call with `await`; the record is loaded before the screen renders.
+ * `id` is whatever the route carries — a VPF id, a user id or a slug. Call with `await`; the
+ * record is loaded before the screen renders.
  */
-export async function useAdminAthleteEditor(vpfId: string) {
+export async function useAdminAthleteEditor(id: string) {
   const { t } = useI18n()
   const notify = useNotify()
+  // Forwards the session cookie when the page is rendered on the server; a bare
+  // $fetch there goes out anonymously, gets the public record and leaves the form blank.
+  const requestFetch = useRequestFetch()
 
   const form = reactive({
     fullName: "",
@@ -41,7 +45,10 @@ export async function useAdminAthleteEditor(vpfId: string) {
     { label: t("admin.athletes.roleAdmin"), value: "admin" },
   ])
 
-  const detail = await $fetch<ApiResponse<AthleteRecordData>>(`/api/athletes/${vpfId}`, {
+  const userId = ref("")
+  const vpfId = ref(id)
+
+  const detail = await requestFetch<ApiResponse<AthleteRecordData>>(`/api/athletes/${id}`, {
     credentials: "include",
     ignoreResponseError: true,
   })
@@ -54,6 +61,8 @@ export async function useAdminAthleteEditor(vpfId: string) {
    */
   if (detail.success && detail.data.scope === "private") {
     const athlete = detail.data.athlete
+    userId.value = athlete.userId
+    vpfId.value = athlete.vpfId
     Object.assign(form, {
       fullName: athlete.fullName,
       dob: athlete.dob,
@@ -85,7 +94,7 @@ export async function useAdminAthleteEditor(vpfId: string) {
   async function save() {
     saving.value = true
     try {
-      const res = await $fetch<ApiResponse<UserPrivate>>(`/api/athletes/${vpfId}`, {
+      const res = await $fetch<ApiResponse<UserPrivate>>(`/api/athletes/${userId.value || id}`, {
         method: "PATCH",
         credentials: "include",
         ignoreResponseError: true,
@@ -109,7 +118,7 @@ export async function useAdminAthleteEditor(vpfId: string) {
   }
 
   return reactive({
-    vpfId, form, vpfExpiry, vipExpiry, drugViolateReason, roleOptions,
+    userId, vpfId, form, vpfExpiry, vipExpiry, drugViolateReason, roleOptions,
     emailChanged, slugChanged, dopingChanged, saving, save,
   })
 }

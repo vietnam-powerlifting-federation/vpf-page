@@ -14,7 +14,7 @@ import type { ApiResponse } from "~/types/api"
 type BulkResult = {
   issued: number
   /** Athletes named in the request that do not exist; skipped rather than failing the batch. */
-  unknownVpfIds: string[]
+  unknownUserIds: string[]
   sampleCodes: string[]
 }
 
@@ -33,7 +33,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<BulkResult>> 
 
   const validated = await readZodBody(event, BulkVoucherSchema)
   if (!validated.success) return fail(event, 400, MSG.invalidInput)
-  const { vpfIds, audience, type, discountKind, discountValue, expiresAt, note } = validated.data
+  const { userIds, audience, type, discountKind, discountValue, expiresAt, note } = validated.data
 
   if (expiresAt < todayIso()) {
     return fail(event, 400, {
@@ -42,10 +42,10 @@ export default defineApiHandler(async (event): Promise<ApiResponse<BulkResult>> 
     })
   }
 
-  const recipients = await findVoucherRecipients(audience, vpfIds ?? [])
+  const recipients = await findVoucherRecipients(audience, userIds ?? [])
 
   const found = new Set(recipients)
-  const unknownVpfIds = (vpfIds ?? []).filter((vpfId) => !found.has(vpfId))
+  const unknownUserIds = (userIds ?? []).filter((userId) => !found.has(userId))
 
   if (recipients.length === 0) {
     return fail(event, 400, {
@@ -60,13 +60,13 @@ export default defineApiHandler(async (event): Promise<ApiResponse<BulkResult>> 
   for (const recipient of recipients) {
     rows.push({
       code: await generateUniqueVoucherCode(),
-      vpfId: recipient,
+      userId: recipient,
       type,
       discountKind,
       discountValue,
       expiresAt,
       note: note ?? null,
-      createdBy: auth.user.vpfId,
+      createdBy: auth.user.userId,
     })
   }
 
@@ -82,7 +82,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<BulkResult>> 
   return ok(
     {
       issued: inserted.length,
-      unknownVpfIds,
+      unknownUserIds,
       sampleCodes: inserted.slice(0, 5).map((row) => row.code),
     },
     {

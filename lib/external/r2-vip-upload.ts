@@ -36,25 +36,26 @@ function createClient(): S3Client {
  * Upload a VIP image to Cloudflare R2 (S3-compatible). Requires Cloudflare R2 to be configured.
  *
  * The bucket is publicly readable, so the key determines who can reach the object. The default
- * key is deterministic ({vpfId}/{type}.{ext}, e.g. VPF000901/avatar.png), which is what we want
- * for images that are public anyway and should be overwritten in place.
+ * key is deterministic ({userId}/{type}.{ext}), which is what we want for images that are public
+ * anyway and should be overwritten in place. Objects uploaded before accounts were keyed by
+ * `userId` live under {vpfId}/; their URLs are stored, so they keep resolving.
  *
- * Pass `unguessable` for images that must not be enumerable: vpfId is sequential (VPF000001,
- * VPF000002, ...) and the extension has only a few possible values, so a deterministic key can be
- * guessed by anyone. The random component makes the URL the only way to reach the object. Callers
+ * Pass `unguessable` for images that must not be enumerable: anyone who has seen one of the
+ * athlete's public image URLs knows the folder, and the extension has only a few possible values,
+ * so a deterministic key can be guessed. The random component makes the URL the only way to reach the object. Callers
  * using this are responsible for deleting the previous object, since the key no longer repeats.
  *
  * @returns Public URL of the uploaded object.
  */
 export async function uploadVipImage(
-  vpfId: string,
+  userId: string,
   type: string,
   data: Uint8Array,
   options: { filename?: string; mimeType?: string; unguessable?: boolean },
 ): Promise<string> {
   const ext = getExt(options.filename ?? "", options.mimeType ?? "")
   const name = options.unguessable ? `${type}-${randomUUID()}` : type
-  const key = `${vpfId}/${name}${ext}`
+  const key = `${userId}/${name}${ext}`
 
   await createClient().send(
     new PutObjectCommand({

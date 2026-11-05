@@ -4,16 +4,18 @@
     <h2 class="font-display text-lg font-bold tracking-[0.04em] uppercase">{{ $t("admin.banList.title") }}</h2>
     <p class="text-sm text-muted-color mb-4">{{ $t("admin.banList.subtitle") }}</p>
 
-    <div class="grid grid-cols-1 md:grid-cols-[200px_1fr_auto] gap-3 items-end mb-4">
+    <div class="mb-4 space-y-3">
       <div class="flex flex-col gap-1">
-        <label for="banVpfId" class="text-sm text-muted-color">{{ $t("admin.banList.athlete") }}</label>
-        <InputText id="banVpfId" v-model="editor.bans.form.vpfId" placeholder="VPF000123" />
+        <span class="text-sm text-muted-color">{{ $t("admin.banList.athlete") }}</span>
+        <AdminAthletePicker v-model="editor.bans.form.athletes" multiple />
       </div>
-      <div class="flex flex-col gap-1">
-        <label for="banReason" class="text-sm text-muted-color">{{ $t("admin.banList.reason") }}</label>
-        <InputText id="banReason" v-model="editor.bans.form.reason" :placeholder="$t('admin.banList.reasonPlaceholder')" />
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
+        <div class="flex flex-col gap-1">
+          <label for="banReason" class="text-sm text-muted-color">{{ $t("admin.banList.reason") }}</label>
+          <InputText id="banReason" v-model="editor.bans.form.reason" :placeholder="$t('admin.banList.reasonPlaceholder')" />
+        </div>
+        <Button :label="$t('admin.banList.add')" :loading="editor.bans.saving" :disabled="!editor.bans.canAdd" @click="editor.bans.add" />
       </div>
-      <Button :label="$t('admin.banList.add')" :loading="editor.bans.saving" @click="editor.bans.add" />
     </div>
 
     <!--
@@ -35,7 +37,7 @@
       <Column :header="$t('admin.banList.reason')" field="reason" />
       <Column>
         <template #body="{ data }">
-          <Button size="small" text severity="danger" :label="$t('admin.banList.remove')" @click="editor.bans.remove(data.vpfId)" />
+          <Button size="small" text severity="danger" :label="$t('admin.banList.remove')" @click="editor.bans.remove(data.userId)" />
         </template>
       </Column>
     </DataTable>

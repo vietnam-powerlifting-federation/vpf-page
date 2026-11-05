@@ -43,7 +43,11 @@ export const teams = pgTable("teams", {
 ])
 
 export const users = pgTable("users", {
-  vpfId: text("vpf_id").default(sql`(\'VPF\'::text || lpad((nextval(\'vpf_seq\'::regclass))::text, 6, \'0\'::text))`).primaryKey().notNull(),
+  userId: uuid("user_id").defaultRandom().primaryKey().notNull(),
+  // The public athlete number: printed on results, typed at login and written into
+  // the LiftingCast "Member #" field. Unique, but no longer the key other tables
+  // reference — that is `userId`.
+  vpfId: text("vpf_id").default(sql`(\'VPF\'::text || lpad((nextval(\'vpf_seq\'::regclass))::text, 6, \'0\'::text))`).notNull(),
   fullName: text("full_name").notNull(),
   nationality: text(),
   dob: smallint(),
@@ -72,6 +76,7 @@ export const users = pgTable("users", {
   passwordResetExpiresAt: timestamp("password_reset_expires_at", { withTimezone: true, mode: "string" }),
 
 }, (table) => [
+  unique("users_vpf_id_key").on(table.vpfId),
   unique("members_slug_key").on(table.slug),
   unique("users_email_key").on(table.email),
   check("members_dob_check", sql`(dob >= 1900) AND ((dob)::numeric <= EXTRACT(year FROM CURRENT_DATE))`),
@@ -79,7 +84,7 @@ export const users = pgTable("users", {
 
 export const identityVerifications = pgTable("identity_verifications", {
   id: serial().primaryKey().notNull(),
-  vpfId: text("vpf_id").notNull(),
+  userId: uuid("user_id").notNull(),
   fullName: text("full_name").notNull(),
   nationality: text().notNull(),
   dob: smallint().notNull(),
@@ -90,27 +95,27 @@ export const identityVerifications = pgTable("identity_verifications", {
   // only the extracted fields above are retained.
   idCardFrontUrl: text("id_card_front_url"),
   status: identityVerificationStatus().default("pending").notNull(),
-  reviewedBy: text("reviewed_by"),
+  reviewedBy: uuid("reviewed_by"),
   reviewedAt: timestamp("reviewed_at", { withTimezone: true, mode: "string" }),
   reviewNote: text("review_note"),
   submittedAt: timestamp("submitted_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
 }, (table) => [
-  unique("identity_verifications_vpf_id_key").on(table.vpfId),
+  unique("identity_verifications_user_id_key").on(table.userId),
   foreignKey({
-    columns: [table.vpfId],
-    foreignColumns: [users.vpfId],
-    name: "identity_verifications_vpf_id_fkey"
+    columns: [table.userId],
+    foreignColumns: [users.userId],
+    name: "identity_verifications_user_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
   foreignKey({
     columns: [table.reviewedBy],
-    foreignColumns: [users.vpfId],
+    foreignColumns: [users.userId],
     name: "identity_verifications_reviewed_by_fkey"
   }).onUpdate("cascade").onDelete("set null"),
 ])
 
 export const vipBenefits = pgTable("vip_benefits", {
-  vpfId: text("vpf_id").primaryKey().notNull(),
+  userId: uuid("user_id").primaryKey().notNull(),
   avatarImageUrl: text("avatar_image_url"),
   bannerImageUrl1: text("banner_image_url_1"),
   bannerImageUrl2: text("banner_image_url_2"),
@@ -135,50 +140,50 @@ export const vipBenefits = pgTable("vip_benefits", {
   decorator2: text("decorator2"),
 }, (table) => [
   foreignKey({
-    columns: [table.vpfId],
-    foreignColumns: [users.vpfId],
-    name: "vip_benefits_vpf_id_fkey"
+    columns: [table.userId],
+    foreignColumns: [users.userId],
+    name: "vip_benefits_user_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
 ])
 
 export const userViolations = pgTable("user_violations", {
   id: serial().primaryKey().notNull(),
-  vpfId: text("vpf_id").notNull(),
+  userId: uuid("user_id").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
   note: text(),
   expireYear: smallint("expire_year"),
 }, (table) => [
   foreignKey({
-    columns: [table.vpfId],
-    foreignColumns: [users.vpfId],
-    name: "user_violations_vpf_id_fkey"
+    columns: [table.userId],
+    foreignColumns: [users.userId],
+    name: "user_violations_user_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
 ])
 
 export const competitionBanList = pgTable("competition_ban_list", {
   id: serial().primaryKey().notNull(),
   meetId: integer("meet_id").notNull(),
-  vpfId: text("vpf_id").notNull(),
+  userId: uuid("user_id").notNull(),
   reason: text().notNull(),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
 }, (table) => [
-  unique("competition_ban_list_meet_vpf_key").on(table.meetId, table.vpfId),
+  unique("competition_ban_list_meet_user_key").on(table.meetId, table.userId),
   foreignKey({
     columns: [table.meetId],
     foreignColumns: [meets.meetId],
     name: "competition_ban_list_meet_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
   foreignKey({
-    columns: [table.vpfId],
-    foreignColumns: [users.vpfId],
-    name: "competition_ban_list_vpf_id_fkey"
+    columns: [table.userId],
+    foreignColumns: [users.userId],
+    name: "competition_ban_list_user_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
 ])
 
 export const legacyMeetResults = pgTable("legacy_meet_results", {
   legacyResultId: uuid("legacy_result_id").defaultRandom().primaryKey().notNull(),
   meetId: integer("meet_id").notNull(),
-  vpfId: text("vpf_id").notNull(),
+  userId: uuid("user_id").notNull(),
   sex: sexes().notNull(),
   weightClass: integer("weight_class").notNull(),
   division: division().notNull(),
@@ -205,18 +210,18 @@ export const legacyMeetResults = pgTable("legacy_meet_results", {
     name: "legacy_meet_result_team_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
   foreignKey({
-    columns: [table.vpfId],
-    foreignColumns: [users.vpfId],
-    name: "legacy_meet_result_vpf_id_fkey"
+    columns: [table.userId],
+    foreignColumns: [users.userId],
+    name: "legacy_meet_result_user_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
-  unique("legacy_meet_result_meet_vpf_key").on(table.meetId, table.vpfId),
+  unique("legacy_meet_result_meet_user_key").on(table.meetId, table.userId),
   check("chk_weight_class_sex", sql`((sex = 'male'::sexes) AND (weight_class = ANY (ARRAY[53, 59, 66, 74, 83, 93, 105, 120, 999]))) OR ((sex = 'female'::sexes) AND (weight_class = ANY (ARRAY[43, 47, 52, 57, 63, 69, 76, 84, 999]))) OR (sex IS NULL)`),
 ])
 
 export const meetResults = pgTable("meet_results", {
   resultId: uuid("result_id").defaultRandom().primaryKey().notNull(),
   meetId: integer("meet_id").notNull(),
-  vpfId: text("vpf_id").notNull(),
+  userId: uuid("user_id").notNull(),
   sex: sexes().notNull(),
   weightClass: integer("weight_class").notNull(),
   division: division().notNull(),
@@ -249,17 +254,17 @@ export const meetResults = pgTable("meet_results", {
     name: "meet_result_team_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
   foreignKey({
-    columns: [table.vpfId],
-    foreignColumns: [users.vpfId],
-    name: "meet_result_vpf_id_fkey"
+    columns: [table.userId],
+    foreignColumns: [users.userId],
+    name: "meet_result_user_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
-  unique("meet_result_meet_vpf_key").on(table.meetId, table.vpfId),
+  unique("meet_result_meet_user_key").on(table.meetId, table.userId),
   check("chk_weight_class_sex", sql`((sex = 'male'::sexes) AND (weight_class = ANY (ARRAY[53, 59, 66, 74, 83, 93, 105, 120, 999]))) OR ((sex = 'female'::sexes) AND (weight_class = ANY (ARRAY[43, 47, 52, 57, 63, 69, 76, 84, 999]))) OR (sex IS NULL)`),
 ])
 
 export const purchases = pgTable("purchases", {
   purchaseId: serial("purchase_id").primaryKey().notNull(),
-  vpfId: text("vpf_id").notNull(),
+  userId: uuid("user_id").notNull(),
   type: purchaseType().array().notNull(),
   refCode: text("ref_code").notNull(),
   amount: integer("amount").notNull(),
@@ -267,17 +272,17 @@ export const purchases = pgTable("purchases", {
   createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
   confirmedAt: timestamp("confirmed_at", { withTimezone: true, mode: "string" }),
   cancelledAt: timestamp("cancelled_at", { withTimezone: true, mode: "string" }),
-  approvedBy: text("approved_by"),
+  approvedBy: uuid("approved_by"),
 }, (table) => [
   unique("purchases_ref_code_key").on(table.refCode),
   foreignKey({
-    columns: [table.vpfId],
-    foreignColumns: [users.vpfId],
-    name: "purchases_vpf_id_fkey"
+    columns: [table.userId],
+    foreignColumns: [users.userId],
+    name: "purchases_user_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
   foreignKey({
     columns: [table.approvedBy],
-    foreignColumns: [users.vpfId],
+    foreignColumns: [users.userId],
     name: "purchases_approved_by_fkey"
   }).onUpdate("cascade").onDelete("cascade")
 ])
@@ -340,7 +345,7 @@ export const competitionPurchaseMetadata = pgTable("competition_purchase_metadat
 export const meetEntries = pgTable("meet_entries", {
   entryId: serial("entry_id").primaryKey().notNull(),
   meetId: integer("meet_id").notNull(),
-  vpfId: text("vpf_id").notNull(),
+  userId: uuid("user_id").notNull(),
   /** Null for a door entry taken at the venue before its purchase was raised. */
   purchaseId: integer("purchase_id"),
   teamId: integer("team_id"),
@@ -367,16 +372,16 @@ export const meetEntries = pgTable("meet_entries", {
   createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
 }, (table) => [
-  unique("meet_entries_meet_vpf_key").on(table.meetId, table.vpfId),
+  unique("meet_entries_meet_user_key").on(table.meetId, table.userId),
   foreignKey({
     columns: [table.meetId],
     foreignColumns: [meets.meetId],
     name: "meet_entries_meet_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
   foreignKey({
-    columns: [table.vpfId],
-    foreignColumns: [users.vpfId],
-    name: "meet_entries_vpf_id_fkey"
+    columns: [table.userId],
+    foreignColumns: [users.userId],
+    name: "meet_entries_user_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
   foreignKey({
     columns: [table.purchaseId],
@@ -403,7 +408,7 @@ export const meetEntries = pgTable("meet_entries", {
 export const vouchers = pgTable("vouchers", {
   voucherId: serial("voucher_id").primaryKey().notNull(),
   code: text().notNull(),
-  vpfId: text("vpf_id").notNull(),
+  userId: uuid("user_id").notNull(),
   type: purchaseType().notNull(),
   discountKind: voucherDiscountKind("discount_kind").notNull(),
   discountValue: integer("discount_value").notNull(),
@@ -413,17 +418,17 @@ export const vouchers = pgTable("vouchers", {
   discountApplied: integer("discount_applied"),
   note: text(),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
-  createdBy: text("created_by"),
+  createdBy: uuid("created_by"),
 }, (table) => [
   unique("vouchers_code_key").on(table.code),
   // "One voucher per type per purchase", enforced by the database. Postgres treats
   // NULLs as distinct here, so unredeemed vouchers never collide with each other.
   unique("vouchers_purchase_type_key").on(table.redeemedPurchaseId, table.type),
-  index("vouchers_vpf_id_idx").on(table.vpfId),
+  index("vouchers_user_id_idx").on(table.userId),
   foreignKey({
-    columns: [table.vpfId],
-    foreignColumns: [users.vpfId],
-    name: "vouchers_vpf_id_fkey"
+    columns: [table.userId],
+    foreignColumns: [users.userId],
+    name: "vouchers_user_id_fkey"
   }).onUpdate("cascade").onDelete("cascade"),
   foreignKey({
     columns: [table.redeemedPurchaseId],
@@ -432,7 +437,7 @@ export const vouchers = pgTable("vouchers", {
   }).onUpdate("cascade").onDelete("cascade"),
   foreignKey({
     columns: [table.createdBy],
-    foreignColumns: [users.vpfId],
+    foreignColumns: [users.userId],
     name: "vouchers_created_by_fkey"
   }).onUpdate("cascade").onDelete("set null"),
   check("chk_voucher_discount_value", sql`((discount_kind = 'percent'::voucher_discount_kind) AND (discount_value BETWEEN 1 AND 100)) OR ((discount_kind = 'fixed'::voucher_discount_kind) AND (discount_value > 0))`),

@@ -54,6 +54,7 @@ type StoredValues = Pick<typeof meetResults.$inferInsert, StoredField>
 /** One resolved row, ready to write. `lineNumber` ties it back to its CSV line. */
 export type ImportWrite = {
   lineNumber: number
+  userId: string
   vpfId: string
   values: StoredValues
   ranked: boolean
@@ -67,7 +68,7 @@ export type ImportContext = {
   preview: ImportPreview
   /** Ready for `applyImport`; rows with a blocking error or an explicit skip are absent. */
   writes: ImportWrite[]
-  /** VPF ids whose existing `meet_results` row the CSV omits, and which will be deleted. */
+  /** User ids whose existing `meet_results` row the CSV omits, and which will be deleted. */
   deletions: string[]
   teamsToCreate: string[]
 }
@@ -114,7 +115,7 @@ function normalizeName(name: string): string {
 }
 
 /**
- * Match a CSV row to exactly one athlete (`meet_results` is unique on meetId+vpfId).
+ * Match a CSV row to exactly one athlete (`meet_results` is unique on meetId+userId).
  *
  * `Member #` first — the entries export writes `vpfId` into that field precisely
  * so results come home unambiguously. Name + birth year is the fallback, and a
@@ -256,14 +257,17 @@ export async function buildImportContext(
   const athleteRows = vpfIds.length === 0 && names.length === 0
     ? []
     : await db
-      .select({ vpfId: users.vpfId, fullName: users.fullName, dob: users.dob })
+      .select({ userId: users.userId, vpfId: users.vpfId, fullName: users.fullName, dob: users.dob })
       .from(users)
       .where(or(
         vpfIds.length > 0 ? inArray(users.vpfId, vpfIds) : undefined,
         names.length > 0 ? inArray(normalizedFullName, names) : undefined,
       ))
 
-  const byVpfId = new Map<string, MatchCandidate>(athleteRows.map((athlete) => [athlete.vpfId, athlete]))
+  const byVpfId = new Map<string, MatchCandidate>(
+    athleteRows.map(({ vpfId, fullName, dob }) => [vpfId, { vpfId, fullName, dob }]),
+  )
+  const userIdByVpfId = new Map(athleteRows.map((athlete) => [athlete.vpfId, athlete.userId]))
   const byName = new Map<string, MatchCandidate[]>()
   for (const athlete of athleteRows) {
     const key = normalizeName(athlete.fullName)
@@ -276,8 +280,12 @@ export async function buildImportContext(
     : await db.select().from(teams).where(inArray(teams.teamName, teamNames))
   const teamIdByName = new Map(teamRows.map((team) => [team.teamName, team.teamId]))
 
-  const existingRows = await db.select().from(meetResults).where(eq(meetResults.meetId, meet.meetId))
-  const existingByVpfId = new Map(existingRows.map((row) => [row.vpfId, row]))
+  const existingRows = await db
+    .select({ result: meetResults, vpfId: users.vpfId, fullName: users.fullName })
+    .from(meetResults)
+    .innerJoin(users, eq(users.userId, meetResults.userId))
+    .where(eq(meetResults.meetId, meet.meetId))
+  const existingByVpfId = new Map(existingRows.map((row) => [row.vpfId, row.result]))
 
   // ---- Resolve each row. ----
   const previews: ImportRowPreview[] = []
@@ -379,9 +387,11 @@ export async function buildImportContext(
       createsTeam,
     })
 
-    if (values && match.vpfId) {
+    const userId = match.vpfId ? userIdByVpfId.get(match.vpfId) : undefined
+    if (values && match.vpfId && userId) {
       writes.push({
         lineNumber: row.lineNumber,
+        userId,
         vpfId: match.vpfId,
         values,
         ranked,
@@ -398,21 +408,14 @@ export async function buildImportContext(
 
   // Rows already in meet_results and absent from the CSV must actually disappear:
   // a withdrawn lifter is gone, not stale (§3.5).
-  const keptVpfIds = new Set(writes.map((write) => write.vpfId))
-  const deletionRows = existingRows.filter((row) => !keptVpfIds.has(row.vpfId))
-  const deletionNames = deletionRows.length === 0
-    ? []
-    : await db
-      .select({ vpfId: users.vpfId, fullName: users.fullName })
-      .from(users)
-      .where(inArray(users.vpfId, deletionRows.map((row) => row.vpfId)))
-  const nameByVpfId = new Map(deletionNames.map((row) => [row.vpfId, row.fullName]))
+  const keptUserIds = new Set(writes.map((write) => write.userId))
+  const deletionRows = existingRows.filter((row) => !keptUserIds.has(row.result.userId))
 
   const deletions: ImportDeletion[] = deletionRows.map((row) => ({
     vpfId: row.vpfId,
-    fullName: nameByVpfId.get(row.vpfId) ?? row.vpfId,
-    division: row.division,
-    weightClass: row.weightClass,
+    fullName: row.fullName,
+    division: row.result.division,
+    weightClass: row.result.weightClass,
   }))
 
   const errors = previews.reduce((n, p) => n + p.row.issues.filter((i) => i.severity === "error").length, 0)
@@ -439,7 +442,7 @@ export async function buildImportContext(
       issues: [],
     },
     writes,
-    deletions: deletionRows.map((row) => row.vpfId),
+    deletions: deletionRows.map((row) => row.result.userId),
     teamsToCreate: [...teamsToCreate],
   }
 }
@@ -455,6 +458,7 @@ function attachDerived(meet: MeetRow, previews: ImportRowPreview[], writes: Impo
   const rawResults = writes.map((write): ResultRaw => ({
     resultId: `preview-${write.lineNumber}`,
     meetId: meet.meetId,
+    userId: write.userId,
     vpfId: write.vpfId,
     ...write.values,
     bodyWeight: write.values.bodyWeight ?? null,
@@ -505,7 +509,7 @@ function attachDerived(meet: MeetRow, previews: ImportRowPreview[], writes: Impo
 }
 
 /**
- * Commit a context: upsert on `(meetId, vpfId)` plus a delete of the rows the CSV
+ * Commit a context: upsert on `(meetId, userId)` plus a delete of the rows the CSV
  * omitted, in one transaction.
  *
  * That makes the import a **declarative replace** of the meet's results, which is
@@ -544,13 +548,13 @@ export async function applyImport(meet: MeetRow, context: ImportContext): Promis
         .insert(meetResults)
         .values({
           meetId: meet.meetId,
-          vpfId: write.vpfId,
+          userId: write.userId,
           ...values,
           ranked: write.ranked,
           showOnProfile: write.showOnProfile,
         })
         .onConflictDoUpdate({
-          target: [meetResults.meetId, meetResults.vpfId],
+          target: [meetResults.meetId, meetResults.userId],
           // `ranked` and `showOnProfile` are deliberately absent from the update:
           // they have no CSV source, and resetting them would undo an admin's
           // deliberate un-ranking on every re-import.
@@ -563,7 +567,7 @@ export async function applyImport(meet: MeetRow, context: ImportContext): Promis
     if (deletions.length > 0) {
       await tx
         .delete(meetResults)
-        .where(and(eq(meetResults.meetId, meet.meetId), inArray(meetResults.vpfId, deletions)))
+        .where(and(eq(meetResults.meetId, meet.meetId), inArray(meetResults.userId, deletions)))
     }
 
     return {

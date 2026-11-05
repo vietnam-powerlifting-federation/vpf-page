@@ -23,6 +23,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<IdentityVerif
 
   const data: IdentityVerificationWithUser[] = rows.map((r) => ({
     ...r.verification,
+    vpfId: r.vpfId,
     userEmail: r.userEmail,
     userName: r.userName,
   }))

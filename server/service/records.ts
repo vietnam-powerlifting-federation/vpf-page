@@ -14,9 +14,9 @@ import type { UserPublic, UserPublicWithDecorators } from "~/types/users"
  * in the repository, and why an import clears all of them at once — a lift in one
  * year changes which records were standing in every later year.
  *
- * Keys are `vpf:records:<year>`, `vpf:records:latest` and `vpf:records:<vpfId>`.
- * They share one segment without colliding because a vpfId is always prefixed
- * with letters and a year never is.
+ * Keys are `vpf:records:<year>`, `vpf:records:latest` and `vpf:records:<userId>`.
+ * They share one segment without colliding because a userId always contains
+ * dashes and a year never does.
  */
 
 export type RecordsForYear = {
@@ -132,11 +132,11 @@ async function computeRecordsForYear(maxYear: number | null): Promise<RecordsFor
 }
 
 /** Every record one athlete has ever set, each marked as still holding or since broken. */
-export async function getAthleteRecordStatus(vpfId: string): Promise<LiftRecord[]> {
-  return redisRemember(cacheKey("records", vpfId), () => computeAthleteRecordStatus(vpfId))
+export async function getAthleteRecordStatus(userId: string): Promise<LiftRecord[]> {
+  return redisRemember(cacheKey("records", userId), () => computeAthleteRecordStatus(userId))
 }
 
-async function computeAthleteRecordStatus(targetVpfId: string): Promise<LiftRecord[]> {
+async function computeAthleteRecordStatus(targetUserId: string): Promise<LiftRecord[]> {
   const { meets: allMeets, results, athletes } = await getNationalResultsDataset({
     minYear: RECORD_START_YEAR,
   })
@@ -160,7 +160,7 @@ async function computeAthleteRecordStatus(targetVpfId: string): Promise<LiftReco
 
   // Walking the attempts in chronological order means every record is created as
   // "holding" and demoted to "broken" the moment a later attempt passes it.
-  type RecordEntry = LiftRecord & { vpfId: string }
+  type RecordEntry = LiftRecord & { userId: string }
   const groupBest = new Map<string, { weight: number; entry: RecordEntry }>()
   const allRecords: RecordEntry[] = []
   const processed = new Set<string>()
@@ -192,7 +192,7 @@ async function computeAthleteRecordStatus(targetVpfId: string): Promise<LiftReco
         recordWeight: weight,
         recordDivision: division,
         status: "holding",
-        vpfId: result.vpfId,
+        userId: result.userId,
       }
       groupBest.set(key, { weight, entry })
       allRecords.push(entry)
@@ -200,8 +200,8 @@ async function computeAthleteRecordStatus(targetVpfId: string): Promise<LiftReco
   }
 
   return allRecords
-    .filter((record) => record.vpfId === targetVpfId)
-    .map(({ vpfId: _vpfId, ...record }) => record)
+    .filter((record) => record.userId === targetUserId)
+    .map(({ userId: _userId, ...record }) => record)
 }
 
 /**

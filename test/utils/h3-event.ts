@@ -6,7 +6,7 @@ export type MockH3EventOptions = {
   body?: unknown
   params?: Record<string, string>
   query?: Record<string, string>
-  context?: { user?: { vpfId: string; email: string | null; role: string } }
+  context?: { user?: { userId: string; vpfId: string; email: string | null; role: string } }
   method?: string
   /** When set, the event is treated as multipart and readMultipartFormData returns these parts. */
   multipart?: MockMultipartPart[]

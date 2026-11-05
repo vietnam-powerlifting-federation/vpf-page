@@ -18,7 +18,7 @@ const HexColor = z
 export const VipSettingsPatchSchema = createSelectSchema(vipBenefits)
   .partial()
   .omit({
-    vpfId: true,
+    userId: true,
   })
   .extend({
     decorator1: HexColor.optional(),

@@ -13,6 +13,7 @@ export type MeetEntry = InferSelectModel<typeof meetEntries>
  * so payment state has to be carried alongside rather than read off the entry.
  */
 export type MeetEntryWithAthlete = MeetEntry & {
+  vpfId: string
   fullName: string
   email: string | null
   phoneNumber: string | null

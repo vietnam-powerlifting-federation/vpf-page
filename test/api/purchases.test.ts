@@ -3,11 +3,11 @@ import { eq, inArray } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { purchases, users, vouchers } from "~/lib/external/drizzle/migrations/schema"
 import { createMockH3Event } from "../utils/h3-event"
-import { fixtureUsers } from "../fixtures/data"
+import { fixtureUsers, UNKNOWN_USER_ID } from "../fixtures/data"
 
-const user = { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } as const
-const admin = { vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } as const
-const user2 = { vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } as const
+const user = { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } as const
+const admin = { userId: fixtureUsers[1].userId, vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } as const
+const user2 = { userId: fixtureUsers[2].userId, vpfId: fixtureUsers[2].vpfId, email: fixtureUsers[2].email, role: "user" } as const
 
 describe("API: purchases", () => {
   describe("POST /api/purchases", () => {
@@ -29,17 +29,17 @@ describe("API: purchases", () => {
     it("returns 403 when user tries to create for another athlete", async () => {
       const handler = (await import("~/server/api/purchases/index.post")).default
       const event = createMockH3Event({
-        body: { plan: "6months", vpfId: user2.vpfId },
+        body: { plan: "6months", userId: user2.userId },
         context: { user },
       })
       const res = await handler(event)
       expect(res.success).toBe(false)
     })
 
-    it("returns 404 when admin provides non-existent vpfId", async () => {
+    it("returns 404 when admin provides non-existent userId", async () => {
       const handler = (await import("~/server/api/purchases/index.post")).default
       const event = createMockH3Event({
-        body: { plan: "6months", vpfId: "VPF999999" },
+        body: { plan: "6months", userId: UNKNOWN_USER_ID },
         context: { user: admin },
       })
       const res = await handler(event)
@@ -71,7 +71,7 @@ describe("API: purchases", () => {
     it("returns purchase when admin creates for another athlete", async () => {
       const handler = (await import("~/server/api/purchases/index.post")).default
       const event = createMockH3Event({
-        body: { plan: "6months", vpfId: user2.vpfId },
+        body: { plan: "6months", userId: user2.userId },
         context: { user: admin },
       })
       const res = await handler(event)
@@ -85,7 +85,7 @@ describe("API: purchases", () => {
       const [row] = await db
         .insert(vouchers)
         .values({
-          vpfId: user.vpfId,
+          userId: user.userId,
           type: "vip",
           discountKind: "percent",
           discountValue: 20,
@@ -97,18 +97,18 @@ describe("API: purchases", () => {
     }
 
     beforeEach(async () => {
-      await db.delete(vouchers).where(inArray(vouchers.vpfId, [user.vpfId, user2.vpfId]))
+      await db.delete(vouchers).where(inArray(vouchers.userId, [user.userId, user2.userId]))
     })
 
     afterAll(async () => {
-      await db.delete(vouchers).where(inArray(vouchers.vpfId, [user.vpfId, user2.vpfId]))
+      await db.delete(vouchers).where(inArray(vouchers.userId, [user.userId, user2.userId]))
       // The 100%-voucher case activates a VIP purchase; later suites assume the
       // athlete has no active membership, so hand the fixture back as we found it.
       await db
         .update(users)
         .set({ vipMembershipExpiresAt: null })
         .where(inArray(users.vpfId, [user.vpfId, user2.vpfId]))
-      await db.delete(purchases).where(inArray(purchases.vpfId, [user.vpfId, user2.vpfId]))
+      await db.delete(purchases).where(inArray(purchases.userId, [user.userId, user2.userId]))
     })
 
     it("discounts the plan price and reports the applied voucher", async () => {
@@ -157,11 +157,11 @@ describe("API: purchases", () => {
     })
 
     it("resolves an admin's voucher against the target athlete, not the admin", async () => {
-      await issueVoucher({ code: "VPF-VIP-TARGET", vpfId: user2.vpfId })
+      await issueVoucher({ code: "VPF-VIP-TARGET", userId: user2.userId })
       const handler = (await import("~/server/api/purchases/index.post")).default
       const res = await handler(
         createMockH3Event({
-          body: { plan: "1year", vpfId: user2.vpfId, voucherCode: "VPF-VIP-TARGET" },
+          body: { plan: "1year", userId: user2.userId, voucherCode: "VPF-VIP-TARGET" },
           context: { user: admin },
         }),
       )
@@ -170,7 +170,7 @@ describe("API: purchases", () => {
     })
 
     it("rejects a voucher belonging to someone else as not found", async () => {
-      await issueVoucher({ code: "VPF-VIP-OTHER", vpfId: user2.vpfId })
+      await issueVoucher({ code: "VPF-VIP-OTHER", userId: user2.userId })
       const handler = (await import("~/server/api/purchases/index.post")).default
       const res = await handler(
         createMockH3Event({ body: { plan: "1year", voucherCode: "VPF-VIP-OTHER" }, context: { user } }),
@@ -191,7 +191,7 @@ describe("API: purchases", () => {
   })
 
   describe("GET /api/purchases/[refCode]", () => {
-    async function createPendingPurchase(forUser: typeof user) {
+    async function createPendingPurchase(forUser: typeof user | typeof user2) {
       const createHandler = (await import("~/server/api/purchases/index.post")).default
       const event = createMockH3Event({ body: { plan: "1year" }, context: { user: forUser } })
       const res = await createHandler(event)

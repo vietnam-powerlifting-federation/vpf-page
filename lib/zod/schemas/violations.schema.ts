@@ -10,7 +10,7 @@ import { z } from "zod"
  * from an omitted key.
  */
 export const ViolationCreateSchema = z.object({
-  vpfId: z.string().trim().min(1),
+  userId: z.uuid(),
   note: z.string().trim().min(1).max(1000),
   expireYear: z.number().int().min(1900).max(2200).nullable(),
   /** Must be true when `expireYear` is null, so a permanent ban is never an accident. */
@@ -36,6 +36,6 @@ export const ViolationPatchSchema = z.object({
  * discipline.
  */
 export const CompetitionBanSchema = z.object({
-  vpfId: z.string().trim().min(1),
+  userId: z.uuid(),
   reason: z.string().trim().min(1).max(500),
 })

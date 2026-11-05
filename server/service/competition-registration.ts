@@ -36,13 +36,13 @@ export function isRegistrationOpen(meet: MeetRow, today = new Date()): boolean {
  * Violation level = count of the athlete's `user_violations` rows still in force
  * relative to the meet's system year (a null expire year never expires).
  */
-export async function evaluateBanGates(vpfId: string, meet: MeetRow, drugViolate: boolean): Promise<BanGate> {
+export async function evaluateBanGates(userId: string, meet: MeetRow, drugViolate: boolean): Promise<BanGate> {
   const violationRows = await db
     .select({ id: userViolations.id })
     .from(userViolations)
     .where(
       and(
-        eq(userViolations.vpfId, vpfId),
+        eq(userViolations.userId, userId),
         or(isNull(userViolations.expireYear), sql`${userViolations.expireYear} >= ${meet.systemYear}`),
       ),
     )
@@ -55,7 +55,7 @@ export async function evaluateBanGates(vpfId: string, meet: MeetRow, drugViolate
   const ban = await db
     .select({ reason: competitionBanList.reason })
     .from(competitionBanList)
-    .where(and(eq(competitionBanList.meetId, meet.meetId), eq(competitionBanList.vpfId, vpfId)))
+    .where(and(eq(competitionBanList.meetId, meet.meetId), eq(competitionBanList.userId, userId)))
     .limit(1)
     .then((rows) => rows[0] ?? null)
 
@@ -72,7 +72,7 @@ export async function evaluateBanGates(vpfId: string, meet: MeetRow, drugViolate
 }
 
 /** Whether the athlete already has a live (pending/active) entry for this meet. */
-export async function hasExistingRegistration(vpfId: string, meetId: number): Promise<boolean> {
+export async function hasExistingRegistration(userId: string, meetId: number): Promise<boolean> {
   const row = await db
     .select({ purchaseId: competitionPurchaseMetadata.purchaseId })
     .from(competitionPurchaseMetadata)
@@ -80,7 +80,7 @@ export async function hasExistingRegistration(vpfId: string, meetId: number): Pr
     .where(
       and(
         eq(competitionPurchaseMetadata.meetId, meetId),
-        eq(purchases.vpfId, vpfId),
+        eq(purchases.userId, userId),
         inArray(purchases.status, ["pending", "active"]),
       ),
     )

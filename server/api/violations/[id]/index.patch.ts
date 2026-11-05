@@ -32,17 +32,19 @@ export default defineApiHandler(async (event): Promise<ApiResponse<UserViolation
   const updated = await updateViolation(id, patch)
   if (!updated) return fail(event, 404, VIOLATION_NOT_FOUND)
 
-  const athlete = await findAthleteNameAndEmail(updated.vpfId)
+  const athlete = await findAthleteNameAndEmail(updated.userId)
+  if (!athlete) return fail(event, 404, MSG.athleteNotFound)
 
-  const level = await violationLevel(updated.vpfId, new Date().getFullYear())
+  const level = await violationLevel(updated.userId, new Date().getFullYear())
 
   logger.info("Violation updated", { violationId: id, updatedBy: auth.user.vpfId, fields: Object.keys(patch) })
 
   return ok(
     {
       ...updated,
-      userName: athlete?.fullName ?? updated.vpfId,
-      userEmail: athlete?.email ?? null,
+      vpfId: athlete.vpfId,
+      userName: athlete.fullName,
+      userEmail: athlete.email ?? null,
       level,
       outcome: outcomeForLevel(level),
     },

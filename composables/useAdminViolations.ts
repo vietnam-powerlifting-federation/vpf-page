@@ -1,5 +1,6 @@
-import { isInForce, outcomeForLevel } from "~/lib/domain/violations"
+import { outcomeForLevel } from "~/lib/domain/violations"
 import type { ApiResponse } from "~/types/api"
+import type { UserPrivate } from "~/types/users"
 import type { UserViolationWithUser } from "~/types/violations"
 
 /**
@@ -13,17 +14,18 @@ export async function useAdminViolations() {
   const currentYear = new Date().getFullYear()
 
   const form = reactive({
-    vpfId: "",
+    /** At most one: the picker's model is a list. */
+    athletes: [] as UserPrivate[],
     note: "",
     expireYear: currentYear + 1 as number | null,
     confirmPermanent: false,
   })
 
-  const filterVpfId = ref("")
+  const filterAthletes = ref<UserPrivate[]>([])
   const inForceOnly = ref(true)
 
   const query = computed(() => ({
-    ...(filterVpfId.value.trim() ? { vpfId: filterVpfId.value.trim() } : {}),
+    ...(filterAthletes.value[0] ? { userId: filterAthletes.value[0].userId } : {}),
     ...(inForceOnly.value ? { inForceOnly: "true" } : {}),
   }))
 
@@ -36,18 +38,41 @@ export async function useAdminViolations() {
   const rows = computed(() => (response.value?.success ? response.value.data : []))
 
   /**
+   * The chosen athlete's current level, asked of the server for that athlete
+   * alone. It used to be counted from the list on screen, which is filtered — to
+   * another athlete, or to rows in force — so the preview could undercount.
+   */
+  const targetLevel = ref<number | null>(null)
+
+  async function loadTargetLevel() {
+    const userId = form.athletes[0]?.userId
+    if (!userId) {
+      targetLevel.value = null
+      return
+    }
+    const res = await $fetch<ApiResponse<UserViolationWithUser[]>>("/api/violations", {
+      query: { userId, inForceOnly: "true" },
+      credentials: "include",
+      ignoreResponseError: true,
+    })
+    // A slower answer for an athlete no longer chosen must not overwrite the current one.
+    if (form.athletes[0]?.userId !== userId) return
+    targetLevel.value = res.success ? (res.data[0]?.level ?? 0) : null
+  }
+
+  watch(() => form.athletes[0]?.userId, loadTargetLevel)
+
+  /**
    * The athlete's level is the count of rows still in force, so recording another
    * one moves them up a step. Say what that step means before it is taken.
    *
-   * `isInForce` and `outcomeForLevel` come from the shared domain module rather
-   * than being restated here — this preview and the registration endpoint that
-   * enforces the ban have to agree, and they cannot if each keeps its own copy.
+   * The level is computed by the server and `outcomeForLevel` comes from the shared
+   * domain module — this preview and the registration endpoint that enforces the
+   * ban have to agree, and they cannot if each keeps its own copy.
    */
   const impact = computed(() => {
-    const vpfId = form.vpfId.trim()
-    if (!vpfId) return null
-    const current = rows.value.filter((row) => row.vpfId === vpfId && isInForce(row.expireYear, currentYear)).length
-    const projected = current + 1
+    if (targetLevel.value === null) return null
+    const projected = targetLevel.value + 1
     if (outcomeForLevel(projected) === "blocked") {
       return {
         severity: "error" as const,
@@ -58,7 +83,7 @@ export async function useAdminViolations() {
   })
 
   const canRecord = computed(() =>
-    Boolean(form.vpfId.trim()) && Boolean(form.note.trim()) && (form.expireYear !== null || form.confirmPermanent))
+    Boolean(form.athletes[0]) && Boolean(form.note.trim()) && (form.expireYear !== null || form.confirmPermanent))
 
   const saving = ref(false)
 
@@ -70,7 +95,7 @@ export async function useAdminViolations() {
         credentials: "include",
         ignoreResponseError: true,
         body: {
-          vpfId: form.vpfId.trim(),
+          userId: form.athletes[0]?.userId,
           note: form.note.trim(),
           expireYear: form.expireYear,
           confirmPermanent: form.confirmPermanent,
@@ -80,7 +105,7 @@ export async function useAdminViolations() {
       if (res.success) {
         form.note = ""
         form.confirmPermanent = false
-        await refresh()
+        await Promise.all([refresh(), loadTargetLevel()])
       }
     } finally {
       saving.value = false
@@ -109,7 +134,7 @@ export async function useAdminViolations() {
         query: { reason: liftReason.value },
       })
       notify.result(res)
-      if (res.success) await refresh()
+      if (res.success) await Promise.all([refresh(), loadTargetLevel()])
     } finally {
       lifting.value = false
       liftOpen.value = false
@@ -118,7 +143,7 @@ export async function useAdminViolations() {
 
   return reactive({
     form, impact, canRecord, saving, record,
-    filterVpfId, inForceOnly, rows, pending, refresh: () => refresh(),
+    filterAthletes, inForceOnly, rows, pending, refresh: () => refresh(),
     liftOpen, liftReason, lifting, openLift, lift,
   })
 }

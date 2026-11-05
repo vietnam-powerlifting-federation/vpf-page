@@ -12,10 +12,10 @@ import { ENTRY_EXPORT_COLUMNS } from "~/lib/domain/liftingcast-export"
 import { parseCsvText } from "~/lib/domain/liftingcast-csv"
 import { parseDivision, parseSex, parseWeightClass } from "~/lib/domain/liftingcast-mapping"
 import { createMockH3Event } from "../utils/h3-event"
-import { fixtureUsers } from "../fixtures/data"
+import { fixtureUsers, UNKNOWN_USER_ID } from "../fixtures/data"
 
-const user = { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } as const
-const admin = { vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } as const
+const user = { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } as const
+const admin = { userId: fixtureUsers[1].userId, vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } as const
 
 const MEET_ID = 9201
 const REF_CODES = ["992001", "992002"]
@@ -41,10 +41,10 @@ function adminEvent(extra: Record<string, unknown> = {}) {
 }
 
 /** A paid registration: a purchase with 'competition' in its type, plus its metadata row. */
-async function registerAndPay(vpfId: string, refCode: string, overrides: Record<string, unknown> = {}) {
+async function registerAndPay(userId: string, refCode: string, overrides: Record<string, unknown> = {}) {
   const [purchase] = await db
     .insert(purchases)
-    .values({ vpfId, type: ["competition"], refCode, amount: 500000, status: "active" })
+    .values({ userId, type: ["competition"], refCode, amount: 500000, status: "active" })
     .returning()
   await db.insert(competitionPurchaseMetadata).values({
     purchaseId: purchase.purchaseId,
@@ -91,7 +91,7 @@ describe("API: meet entries and the LiftingCast export", () => {
     })
 
     it("creates one entry per paid registration, seeded from the purchase", async () => {
-      await registerAndPay(fixtureUsers[0].vpfId, REF_CODES[0], { weightClass: 93, division: "mas1" })
+      await registerAndPay(fixtureUsers[0].userId, REF_CODES[0], { weightClass: 93, division: "mas1" })
 
       const handler = await importGenerate()
       const res = await handler(adminEvent({ method: "POST" }))
@@ -100,7 +100,7 @@ describe("API: meet entries and the LiftingCast export", () => {
       expect(res.data!.created).toBe(1)
 
       const [entry] = await db.select().from(meetEntries).where(eq(meetEntries.meetId, MEET_ID))
-      expect(entry.vpfId).toBe(fixtureUsers[0].vpfId)
+      expect(entry.userId).toBe(fixtureUsers[0].userId)
       expect(entry.weightClass).toBe(93)
       expect(entry.division).toBe("mas1")
       expect(entry.rawOrEquipped).toBe("Raw")
@@ -110,7 +110,7 @@ describe("API: meet entries and the LiftingCast export", () => {
     it("ignores registrations that have not been paid", async () => {
       const [pending] = await db
         .insert(purchases)
-        .values({ vpfId: fixtureUsers[0].vpfId, type: ["competition"], refCode: REF_CODES[0], amount: 1, status: "pending" })
+        .values({ userId: fixtureUsers[0].userId, type: ["competition"], refCode: REF_CODES[0], amount: 1, status: "pending" })
         .returning()
       await db.insert(competitionPurchaseMetadata).values({
         purchaseId: pending.purchaseId,
@@ -126,13 +126,13 @@ describe("API: meet entries and the LiftingCast export", () => {
     })
 
     it("is idempotent: re-running adds the newly paid without disturbing assignments", async () => {
-      await registerAndPay(fixtureUsers[0].vpfId, REF_CODES[0])
+      await registerAndPay(fixtureUsers[0].userId, REF_CODES[0])
       const handler = await importGenerate()
       await handler(adminEvent({ method: "POST" }))
 
       // The meet director assigns a session, then another athlete pays.
       await db.update(meetEntries).set({ session: "2", flight: "B", lot: 42 }).where(eq(meetEntries.meetId, MEET_ID))
-      await registerAndPay(fixtureUsers[2].vpfId, REF_CODES[1])
+      await registerAndPay(fixtureUsers[2].userId, REF_CODES[1])
 
       const res = await handler(adminEvent({ method: "POST" }))
       expect(res.data!.created).toBe(1)
@@ -140,7 +140,7 @@ describe("API: meet entries and the LiftingCast export", () => {
 
       const rows = await db.select().from(meetEntries).where(eq(meetEntries.meetId, MEET_ID))
       expect(rows).toHaveLength(2)
-      const assigned = rows.find((row) => row.vpfId === fixtureUsers[0].vpfId)!
+      const assigned = rows.find((row) => row.userId === fixtureUsers[0].userId)!
       expect(assigned.session).toBe("2")
       expect(assigned.flight).toBe("B")
       expect(assigned.lot).toBe(42)
@@ -149,7 +149,7 @@ describe("API: meet entries and the LiftingCast export", () => {
 
   describe("GET /api/meets/[id]/entries", () => {
     it("returns the roster with payment state and counts", async () => {
-      await registerAndPay(fixtureUsers[0].vpfId, REF_CODES[0])
+      await registerAndPay(fixtureUsers[0].userId, REF_CODES[0])
       await (await importGenerate())(adminEvent({ method: "POST" }))
 
       const res = await (await importRoster())(adminEvent())
@@ -158,13 +158,37 @@ describe("API: meet entries and the LiftingCast export", () => {
       expect(res.data!.counts.paid).toBe(1)
       expect(res.data!.resultsImported).toBe(false)
       expect(res.data!.entries[0].fullName).toBe(fixtureUsers[0].fullName)
+      expect(res.data!.entries[0].vpfId).toBe(fixtureUsers[0].vpfId)
       expect(res.data!.entries[0].purchaseStatus).toBe("active")
+    })
+  })
+
+  describe("POST /api/meets/[id]/entries", () => {
+    const doorEntry = { sex: "female", weightClass: 63, division: "open" }
+
+    it("adds a door entry by user id and answers with the athlete's VPF id", async () => {
+      const handler = (await import("~/server/api/meets/[id]/entries/index.post")).default
+      const res = await handler(adminEvent({ method: "POST", body: { ...doorEntry, userId: fixtureUsers[2].userId } }))
+      expect(res.success).toBe(true)
+      expect(res.data!.userId).toBe(fixtureUsers[2].userId)
+      expect(res.data!.vpfId).toBe(fixtureUsers[2].vpfId)
+
+      const duplicate = await handler(adminEvent({ method: "POST", body: { ...doorEntry, userId: fixtureUsers[2].userId } }))
+      expect(duplicate.success).toBe(false)
+    })
+
+    it("rejects a VPF id where a user id is expected, and an unknown user id", async () => {
+      const handler = (await import("~/server/api/meets/[id]/entries/index.post")).default
+      const byVpfId = await handler(adminEvent({ method: "POST", body: { ...doorEntry, userId: fixtureUsers[2].vpfId } }))
+      const unknown = await handler(adminEvent({ method: "POST", body: { ...doorEntry, userId: UNKNOWN_USER_ID } }))
+      expect(byVpfId.success).toBe(false)
+      expect(unknown.success).toBe(false)
     })
   })
 
   describe("PATCH /api/meets/[id]/entries/[entryId]", () => {
     async function seedEntry() {
-      await registerAndPay(fixtureUsers[0].vpfId, REF_CODES[0])
+      await registerAndPay(fixtureUsers[0].userId, REF_CODES[0])
       await (await importGenerate())(adminEvent({ method: "POST" }))
       const [entry] = await db.select().from(meetEntries).where(eq(meetEntries.meetId, MEET_ID))
       return entry
@@ -203,7 +227,7 @@ describe("API: meet entries and the LiftingCast export", () => {
       const entry = await seedEntry()
       await db.insert(vouchers).values({
         code: "VPF-ENTRY-TEST",
-        vpfId: fixtureUsers[0].vpfId,
+        userId: fixtureUsers[0].userId,
         type: "competition",
         discountKind: "percent",
         discountValue: 20,
@@ -234,8 +258,8 @@ describe("API: meet entries and the LiftingCast export", () => {
 
   describe("PATCH /api/meets/[id]/entries", () => {
     it("bulk-sets session and flight across a selection", async () => {
-      await registerAndPay(fixtureUsers[0].vpfId, REF_CODES[0])
-      await registerAndPay(fixtureUsers[2].vpfId, REF_CODES[1])
+      await registerAndPay(fixtureUsers[0].userId, REF_CODES[0])
+      await registerAndPay(fixtureUsers[2].userId, REF_CODES[1])
       await (await importGenerate())(adminEvent({ method: "POST" }))
       const rows = await db.select().from(meetEntries).where(eq(meetEntries.meetId, MEET_ID))
 
@@ -252,7 +276,7 @@ describe("API: meet entries and the LiftingCast export", () => {
 
   describe("GET /api/meets/[id]/entries/csv", () => {
     it("emits the 29 columns in order, with vpfId as the member number", async () => {
-      await registerAndPay(fixtureUsers[0].vpfId, REF_CODES[0])
+      await registerAndPay(fixtureUsers[0].userId, REF_CODES[0])
       await (await importGenerate())(adminEvent({ method: "POST" }))
 
       const csv = await (await importExport())(adminEvent()) as string
@@ -278,7 +302,7 @@ describe("API: meet entries and the LiftingCast export", () => {
     it("round-trips: what the export writes, the importer reads back", async () => {
       // The reverse-mapping rule (§6.3). If these two directions drift, a meet
       // exports fine and fails to import days later with the results in hand.
-      await registerAndPay(fixtureUsers[0].vpfId, REF_CODES[0], { weightClass: 999, division: "mas2" })
+      await registerAndPay(fixtureUsers[0].userId, REF_CODES[0], { weightClass: 999, division: "mas2" })
       await (await importGenerate())(adminEvent({ method: "POST" }))
 
       const csv = await (await importExport())(adminEvent()) as string
@@ -292,20 +316,20 @@ describe("API: meet entries and the LiftingCast export", () => {
     })
 
     it("excludes withdrawn entries", async () => {
-      await registerAndPay(fixtureUsers[0].vpfId, REF_CODES[0])
-      await registerAndPay(fixtureUsers[2].vpfId, REF_CODES[1])
+      await registerAndPay(fixtureUsers[0].userId, REF_CODES[0])
+      await registerAndPay(fixtureUsers[2].userId, REF_CODES[1])
       await (await importGenerate())(adminEvent({ method: "POST" }))
       await db
         .update(meetEntries)
         .set({ withdrawn: true })
-        .where(eq(meetEntries.vpfId, fixtureUsers[2].vpfId))
+        .where(eq(meetEntries.userId, fixtureUsers[2].userId))
 
       const csv = await (await importExport())(adminEvent()) as string
       expect(parseCsvText(csv)).toHaveLength(2)
     })
 
     it("folds the rack settings LiftingCast has no column for into additionalItems", async () => {
-      await registerAndPay(fixtureUsers[0].vpfId, REF_CODES[0])
+      await registerAndPay(fixtureUsers[0].userId, REF_CODES[0])
       await (await importGenerate())(adminEvent({ method: "POST" }))
       const { users } = await import("~/lib/external/drizzle/migrations/schema")
       await db

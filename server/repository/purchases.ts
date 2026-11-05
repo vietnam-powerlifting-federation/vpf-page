@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, gte, ilike, inArray, lte, sql } from "drizzle-orm"
+import { alias } from "drizzle-orm/pg-core"
 import { db } from "~/lib/external/drizzle/drizzle"
 import { redeemVouchers, releaseVouchers, type VoucherRedemption } from "~/server/service/vouchers"
 import {
@@ -14,7 +15,7 @@ import {
 /** The columns a purchase is summarised by; the metadata tables are joined in separately. */
 const purchaseSummarySelect = {
   purchaseId: purchases.purchaseId,
-  vpfId: purchases.vpfId,
+  userId: purchases.userId,
   type: purchases.type,
   refCode: purchases.refCode,
   amount: purchases.amount,
@@ -27,11 +28,11 @@ const purchaseSummarySelect = {
 export type PurchaseSummary = Awaited<ReturnType<typeof listPurchasesForAthlete>>[number]
 
 /** One athlete's purchase history, oldest first. */
-export async function listPurchasesForAthlete(vpfId: string) {
+export async function listPurchasesForAthlete(userId: string) {
   return db
     .select(purchaseSummarySelect)
     .from(purchases)
-    .where(eq(purchases.vpfId, vpfId))
+    .where(eq(purchases.userId, userId))
     .orderBy(purchases.createdAt)
 }
 
@@ -47,7 +48,7 @@ export async function findPurchaseByRefCode(refCode: string) {
 export type AdminPurchaseFilters = {
   status?: string
   type?: string
-  vpfId?: string
+  userId?: string
   meetId?: number
   createdFrom?: string
   createdTo?: string
@@ -62,10 +63,13 @@ export type AdminPurchaseFilters = {
  * the `= ANY(...)` rather than an equality test.
  */
 export async function listPurchasesForAdmin(filters: AdminPurchaseFilters) {
+  // `approvedBy` is a user id; the screen shows the approving admin's VPF id.
+  const approver = alias(users, "approver")
   return db
     .select({
       ...purchaseSummarySelect,
-      approvedBy: purchases.approvedBy,
+      vpfId: users.vpfId,
+      approvedBy: approver.vpfId,
       userName: users.fullName,
       userEmail: users.email,
       meetId: competitionPurchaseMetadata.meetId,
@@ -78,7 +82,8 @@ export async function listPurchasesForAdmin(filters: AdminPurchaseFilters) {
       membershipYear: vpfMembershipPurchaseMetadata.membershipYear,
     })
     .from(purchases)
-    .innerJoin(users, eq(users.vpfId, purchases.vpfId))
+    .innerJoin(users, eq(users.userId, purchases.userId))
+    .leftJoin(approver, eq(approver.userId, purchases.approvedBy))
     .leftJoin(competitionPurchaseMetadata, eq(competitionPurchaseMetadata.purchaseId, purchases.purchaseId))
     .leftJoin(meets, eq(meets.meetId, competitionPurchaseMetadata.meetId))
     .leftJoin(vipPurchaseMetadata, eq(vipPurchaseMetadata.purchaseId, purchases.purchaseId))
@@ -86,7 +91,7 @@ export async function listPurchasesForAdmin(filters: AdminPurchaseFilters) {
     .where(and(
       filters.status ? eq(purchases.status, filters.status as never) : undefined,
       filters.type ? sql`${filters.type} = ANY(${purchases.type})` : undefined,
-      filters.vpfId ? eq(purchases.vpfId, filters.vpfId) : undefined,
+      filters.userId ? eq(purchases.userId, filters.userId) : undefined,
       filters.meetId ? eq(competitionPurchaseMetadata.meetId, filters.meetId) : undefined,
       filters.createdFrom ? gte(purchases.createdAt, sql`${filters.createdFrom}::timestamptz`) : undefined,
       filters.createdTo ? lte(purchases.createdAt, sql`(${filters.createdTo}::date + 1)::timestamptz`) : undefined,
@@ -147,7 +152,7 @@ export async function cancelPendingPurchase(
  * a discounted QR against an already-spent voucher would undercharge.
  */
 export async function createCompetitionRegistration(params: {
-  vpfId: string
+  userId: string
   type: string[]
   refCode: string
   amount: number
@@ -160,7 +165,7 @@ export async function createCompetitionRegistration(params: {
     const [inserted] = await tx
       .insert(purchases)
       .values({
-        vpfId: params.vpfId,
+        userId: params.userId,
         type: params.type as never,
         refCode: params.refCode,
         amount: params.amount,
@@ -181,7 +186,7 @@ export async function createCompetitionRegistration(params: {
     }
 
     if (Object.keys(params.athletePatch).length > 0) {
-      await tx.update(users).set(params.athletePatch).where(eq(users.vpfId, params.vpfId))
+      await tx.update(users).set(params.athletePatch).where(eq(users.userId, params.userId))
     }
 
     if (!(await redeemVouchers(tx, params.redemptions, inserted.purchaseId))) {
@@ -194,7 +199,7 @@ export async function createCompetitionRegistration(params: {
 
 /** The VIP/membership equivalent of the above; same rollback-on-lost-race rule. */
 export async function createVipPurchase(params: {
-  vpfId: string
+  userId: string
   type: string[]
   refCode: string
   amount: number
@@ -205,7 +210,7 @@ export async function createVipPurchase(params: {
     const [inserted] = await tx
       .insert(purchases)
       .values({
-        vpfId: params.vpfId,
+        userId: params.userId,
         type: params.type as never,
         refCode: params.refCode,
         amount: params.amount,

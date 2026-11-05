@@ -47,7 +47,7 @@
             <span v-if="data.match.method"> · {{ $t(`admin.import.matchedBy.${data.match.method}`) }}</span>
           </div>
 
-          <!-- Unmatched rows get a search box to bind a VPF id, or a skip. -->
+          <!-- Unmatched rows get the likely candidates, a search for anyone else, or a skip. -->
           <div v-if="!data.match.vpfId && data.action !== 'skip'" class="mt-2 flex flex-wrap gap-1 items-center">
             <Select
               v-if="data.match.candidates.length"
@@ -60,13 +60,10 @@
               :placeholder="$t('admin.import.pickAthlete')"
               @update:model-value="(value: string) => importer.bind(data.row.lineNumber, value)"
             />
-            <InputText
-              v-else
-              size="small"
-              class="w-40 font-mono"
-              placeholder="VPF000123"
-              @change="(event: Event) => importer.bind(data.row.lineNumber, (event.target as HTMLInputElement).value)"
-            />
+            <Button size="small" outlined @click="bindingLine = data.row.lineNumber">
+              <AppIcon name="lucide:search" class="size-4" />
+              {{ $t("admin.athleteSearch.find") }}
+            </Button>
             <Button size="small" text :label="$t('admin.import.skipRow')" @click="importer.skip(data.row.lineNumber)" />
           </div>
           <Button
@@ -158,6 +155,13 @@
         </li>
       </ul>
     </div>
+
+    <!-- The CSV identifies athletes by VPF id (its Member # column), so that is what a binding stores. -->
+    <AdminAthleteSearchDialog
+      :visible="bindingLine !== null"
+      @update:visible="(open: boolean) => { if (!open) bindingLine = null }"
+      @select="(athletes) => bindingLine !== null && athletes[0] && importer.bind(bindingLine, athletes[0].vpfId)"
+    />
   </section>
 </template>
 
@@ -166,6 +170,9 @@ import type { FieldChange } from "~/types/attempts"
 
 /** Step 2: what the file would change, row by row, before anything is written. Unmatched rows can be bound to an athlete or skipped. */
 const importer = useAdminResultsImport()
+
+/** The CSV line whose athlete is being searched for, while the search dialog is open. */
+const bindingLine = ref<number | null>(null)
 
 function rowClass(row: { row: { issues: { severity: string }[] } }) {
   return row.row.issues.some((issue) => issue.severity === "error") ? "!bg-red-50 dark:!bg-red-950/30" : ""

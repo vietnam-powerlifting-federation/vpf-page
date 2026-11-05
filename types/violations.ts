@@ -14,6 +14,7 @@ export type UserViolation = InferSelectModel<typeof userViolations>
  * that rule is not obvious from a list of rows.
  */
 export type UserViolationWithUser = UserViolation & {
+  vpfId: string
   userName: string
   userEmail: string | null
   level: number
@@ -22,6 +23,7 @@ export type UserViolationWithUser = UserViolation & {
 
 /** What setting a violation would do, previewed live as the admin types (§5.1). */
 export type ViolationImpact = {
+  userId: string
   vpfId: string
   userName: string
   referenceYear: number
@@ -43,6 +45,7 @@ export type CompetitionBan = InferSelectModel<typeof competitionBanList>
  * uses — duplicating the sentence on the server would let the two drift.
  */
 export type CompetitionBanWithUser = CompetitionBan & {
+  vpfId: string
   userName: string
   meetName: string
 }

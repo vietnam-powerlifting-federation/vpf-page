@@ -29,7 +29,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<VipBenefits>>
       ? fail(event, 401, MSG.unauthorized)
       : fail(event, 404, MSG.athleteNotFound)
   }
-  const { vpfId } = resolved
+  const { userId } = resolved
 
   const isAdmin = currentUser.role === "admin"
   if (!resolved.isSelf && !isAdmin) {
@@ -40,7 +40,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<VipBenefits>>
   }
 
   const contentType = getRequestHeader(event, "content-type") || ""
-  let patch: Partial<Omit<VipBenefits, "vpfId">> = {}
+  let patch: Partial<Omit<VipBenefits, "userId" | "vpfId">> = {}
 
   if (contentType.includes("multipart/form-data")) {
     const form = await readMultipartFormData(event)
@@ -110,7 +110,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<VipBenefits>>
 
     for (const f of files) {
       const fieldLower = f.field.toLowerCase()
-      const url = await uploadVipImage(vpfId, f.field, new Uint8Array(f.data), {
+      const url = await uploadVipImage(userId, f.field, new Uint8Array(f.data), {
         filename: f.filename,
         mimeType: f.type,
       })
@@ -134,7 +134,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<VipBenefits>>
   }
 
   if (Object.keys(patch).length === 0) {
-    const existing = await findVipBenefits(vpfId)
+    const existing = await findVipBenefits(userId)
     if (existing) {
       return ok(existing, {
         en: "VIP settings unchanged",
@@ -147,7 +147,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<VipBenefits>>
     })
   }
 
-  const updated = await upsertVipBenefits(vpfId, patch)
+  const updated = await upsertVipBenefits(userId, patch)
   if (!updated) {
     return fail(event, 500, {
       en: "Failed to save VIP settings",

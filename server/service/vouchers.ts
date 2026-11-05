@@ -73,12 +73,12 @@ export async function generateUniqueVoucherCode(): Promise<string> {
  */
 export async function resolveVouchers(params: {
   codes: string[]
-  vpfId: string
+  userId: string
   purchaseTypes: PurchaseType[]
   lineItems: LineItems
   today?: string
 }): Promise<VoucherResolution> {
-  const { codes, vpfId, purchaseTypes, lineItems } = params
+  const { codes, userId, purchaseTypes, lineItems } = params
   const today = params.today ?? todayIso()
 
   if (codes.length === 0) return { ok: true, vouchers: [] }
@@ -87,7 +87,7 @@ export async function resolveVouchers(params: {
     .select({
       voucherId: vouchers.voucherId,
       code: vouchers.code,
-      vpfId: vouchers.vpfId,
+      userId: vouchers.userId,
       type: vouchers.type,
       discountKind: vouchers.discountKind,
       discountValue: vouchers.discountValue,
@@ -104,7 +104,7 @@ export async function resolveVouchers(params: {
     const voucher = rows.find((r) => r.code === code)
 
     // 1. Exists + 2. Owned — same message and status, on purpose.
-    if (!voucher || voucher.vpfId !== vpfId) {
+    if (!voucher || voucher.userId !== userId) {
       return { ok: false, statusCode: 404, message: VOUCHER_NOT_FOUND }
     }
 

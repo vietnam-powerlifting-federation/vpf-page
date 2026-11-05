@@ -7,7 +7,7 @@ describe("API: vip-settings", () => {
     it("returns 200 with array of vip decorator settings", async () => {
       const handler = (await import("~/server/api/vip-settings/index")).default
       const event = createMockH3Event({
-        context: { user: { vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
+        context: { user: { userId: fixtureUsers[0].userId, vpfId: fixtureUsers[0].vpfId, email: fixtureUsers[0].email, role: "user" } },
       })
       const res = await handler(event)
       expect(res.success).toBe(true)

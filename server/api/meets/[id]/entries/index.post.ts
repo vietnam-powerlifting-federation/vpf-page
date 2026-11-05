@@ -17,10 +17,10 @@ import type { MeetEntry } from "~/types/entries"
  * A door entry: an athlete who turned up and paid at the venue (§6.5).
  *
  * The purchase is raised separately — `POST /api/purchases` already lets an admin
- * create one against another athlete's `vpfId` — and linked here via `purchaseId`.
+ * create one against another athlete's `userId` — and linked here via `purchaseId`.
  * Leaving it null is allowed so the roster is not blocked on the paperwork.
  */
-export default defineApiHandler(async (event): Promise<ApiResponse<MeetEntry>> => {
+export default defineApiHandler(async (event): Promise<ApiResponse<MeetEntry & { vpfId: string }>> => {
   const auth = requireAdmin(event, ENTRIES_FORBIDDEN)
   if (!auth.ok) return auth.error
 
@@ -32,7 +32,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<MeetEntry>> =
 
   const validated = await readZodBody(event, DoorEntrySchema)
   if (!validated.success) return fail(event, 400, MSG.invalidInput)
-  const { vpfId, sex, weightClass, division, purchaseId } = validated.data
+  const { userId, sex, weightClass, division, purchaseId } = validated.data
 
   const validClasses = sex === "male" ? WEIGHT_CLASS_MALE : WEIGHT_CLASS_FEMALE
   if (!validClasses.includes(weightClass)) {
@@ -42,7 +42,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<MeetEntry>> =
     })
   }
 
-  const athlete = await findAthleteNameAndEmail(vpfId)
+  const athlete = await findAthleteNameAndEmail(userId)
 
   if (!athlete) return fail(event, 404, MSG.athleteNotFound)
 
@@ -50,7 +50,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<MeetEntry>> =
   // athlete already has an entry, which is the 409 below.
   const created = await insertEntry({
     meetId: meet.meetId,
-    vpfId,
+    userId,
     purchaseId: purchaseId ?? null,
     sex,
     weightClass,
@@ -64,7 +64,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<MeetEntry>> =
     })
   }
 
-  logger.info("Door entry created", { meetId: meet.meetId, vpfId, createdBy: auth.user.vpfId })
+  logger.info("Door entry created", { meetId: meet.meetId, vpfId: athlete.vpfId, createdBy: auth.user.vpfId })
 
-  return ok(created, { en: "Entry added", vi: "Đã thêm lượt đăng ký" })
+  return ok({ ...created, vpfId: athlete.vpfId }, { en: "Entry added", vi: "Đã thêm lượt đăng ký" })
 })

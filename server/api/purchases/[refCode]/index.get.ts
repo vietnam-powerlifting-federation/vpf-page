@@ -23,7 +23,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<PurchaseStatu
     return fail(event, 404, MSG.purchaseNotFound)
   }
 
-  if (currentUser.role !== "admin" && purchase.vpfId !== currentUser.vpfId) {
+  if (currentUser.role !== "admin" && purchase.userId !== currentUser.userId) {
     return fail(event, 403, {
       en: "You are not allowed to view this purchase",
       vi: "Bạn không có quyền xem giao dịch này",

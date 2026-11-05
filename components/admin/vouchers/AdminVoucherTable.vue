@@ -8,7 +8,8 @@
       option-value="value"
       :allow-empty="false"
     />
-    <InputText v-model="vouchers.vpfIdFilter" :placeholder="$t('adminVouchers.filterAthlete')" class="w-48" />
+    <span class="text-sm text-muted-color">{{ $t("adminVouchers.filterAthlete") }}</span>
+    <AdminAthletePicker v-model="vouchers.athleteFilter" />
     <Button outlined @click="vouchers.refresh"><AppIcon name="lucide:refresh-cw" class="size-4" />{{ $t('adminVouchers.refresh') }}</Button>
   </div>
 

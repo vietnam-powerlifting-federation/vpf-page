@@ -13,7 +13,7 @@ function redisMockTtls(): Map<string, number | undefined> {
   return globalThis.__vpfRedisMockTtls
 }
 
-const admin = { vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } as const
+const admin = { userId: fixtureUsers[1].userId, vpfId: fixtureUsers[1].vpfId, email: fixtureUsers[1].email, role: "admin" } as const
 
 const SLUG_PREFIX = "cache-inv-"
 const SLUG = `${SLUG_PREFIX}meet`

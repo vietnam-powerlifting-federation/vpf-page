@@ -18,19 +18,19 @@ export default defineApiHandler(async (event): Promise<ApiResponse<SelfVerificat
   const currentUser = auth.user
 
   const idParam = getRouterParam(event, "id")
-  if (idParam !== "me" && idParam !== currentUser.vpfId) {
+  if (idParam !== "me" && idParam !== currentUser.vpfId && idParam !== currentUser.userId) {
     return fail(event, 403, {
       en: "You may only view your own verification status",
       vi: "Bạn chỉ có thể xem trạng thái xác minh của mình",
     })
   }
 
-  const account = await findVerificationFlags(currentUser.vpfId)
+  const account = await findVerificationFlags(currentUser.userId)
   if (!account) {
     return fail(event, 404, MSG.userNotFound)
   }
 
-  const verification = await findVerificationSubmission(currentUser.vpfId)
+  const verification = await findVerificationSubmission(currentUser.userId)
 
   return ok(
     { emailVerified: account.emailVerified, identityVerified: account.identityVerified, verification },

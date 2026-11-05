@@ -25,7 +25,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<AthleteProfil
       : fail(event, 404, MSG.athleteNotFound)
   }
 
-  const profile = await getAthleteProfile(resolved.vpfId)
+  const profile = await getAthleteProfile(resolved.userId)
   if (!profile) return fail(event, 404, MSG.athleteNotFound)
 
   return ok(profile, {

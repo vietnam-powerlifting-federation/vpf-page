@@ -44,6 +44,7 @@ export default defineEventHandler(async (event) => {
     logger.debug("JWT verified successfully", {
       method,
       path,
+      userId: payload.userId,
       vpfId: payload.vpfId,
       ip,
     })

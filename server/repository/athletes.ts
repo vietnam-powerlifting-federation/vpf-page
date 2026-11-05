@@ -1,5 +1,6 @@
-import { and, asc, count, eq, gte, ilike, inArray, isNull, lt, ne, or, sql } from "drizzle-orm"
+import { and, asc, count, eq, getTableColumns, gte, ilike, inArray, isNull, lt, ne, or, sql } from "drizzle-orm"
 import { db } from "~/lib/external/drizzle/drizzle"
+import { foldForSearch } from "~/lib/domain/format"
 import { users, vipBenefits } from "~/lib/external/drizzle/migrations/schema"
 import type { UserPrivate, UserPublic } from "~/types/users"
 import type { VipBenefits } from "~/types/vip"
@@ -15,6 +16,7 @@ import type { VipBenefits } from "~/types/vip"
  */
 
 export const userPrivateSelect = {
+  userId: users.userId,
   vpfId: users.vpfId,
   fullName: users.fullName,
   nationality: users.nationality,
@@ -38,6 +40,7 @@ export const userPrivateSelect = {
 } satisfies Record<keyof UserPrivate, unknown>
 
 export const userPublicSelect = {
+  userId: users.userId,
   vpfId: users.vpfId,
   fullName: users.fullName,
   nationality: users.nationality,
@@ -56,40 +59,47 @@ const membershipExpired = and(
   lt(users.vpfMembershipExpiresAt, sql`CURRENT_DATE`),
 )
 
-export async function findVpfIdBySlug(slug: string): Promise<string | null> {
+/** Resolve a user id, VPF id or profile slug to the account's primary key, or null when no such athlete exists. */
+export async function findUserIdByHandle(
+  handle: { userId: string } | { vpfId: string } | { slug: string },
+): Promise<string | null> {
+  const where = "userId" in handle
+    ? eq(users.userId, handle.userId)
+    : "vpfId" in handle ? eq(users.vpfId, handle.vpfId) : eq(users.slug, handle.slug)
   const row = await db
-    .select({ vpfId: users.vpfId })
+    .select({ userId: users.userId })
     .from(users)
-    .where(eq(users.slug, slug))
+    .where(where)
     .limit(1)
     .then((rows) => rows[0])
-  return row?.vpfId ?? null
+  return row?.userId ?? null
 }
 
-export async function findAthletePrivate(vpfId: string): Promise<UserPrivate | null> {
+export async function findAthletePrivate(userId: string): Promise<UserPrivate | null> {
   const row = await db
     .select(userPrivateSelect)
     .from(users)
-    .where(eq(users.vpfId, vpfId))
+    .where(eq(users.userId, userId))
     .limit(1)
     .then((rows) => rows[0])
   return row ?? null
 }
 
-export async function findAthletePublic(vpfId: string): Promise<UserPublic | null> {
+export async function findAthletePublic(userId: string): Promise<UserPublic | null> {
   const row = await db
     .select(userPublicSelect)
     .from(users)
-    .where(eq(users.vpfId, vpfId))
+    .where(eq(users.userId, userId))
     .limit(1)
     .then((rows) => rows[0])
   return row ?? null
 }
 
 /** The few columns the admin edit path checks before writing. */
-export async function findAthleteAdminSummary(vpfId: string) {
+export async function findAthleteAdminSummary(userId: string) {
   return db
     .select({
+      userId: users.userId,
       vpfId: users.vpfId,
       email: users.email,
       role: users.role,
@@ -97,30 +107,30 @@ export async function findAthleteAdminSummary(vpfId: string) {
       fullName: users.fullName,
     })
     .from(users)
-    .where(eq(users.vpfId, vpfId))
+    .where(eq(users.userId, userId))
     .limit(1)
     .then((rows) => rows[0] ?? null)
 }
 
-export async function updateAthlete(vpfId: string, patch: Record<string, unknown>): Promise<void> {
-  await db.update(users).set(patch).where(eq(users.vpfId, vpfId))
+export async function updateAthlete(userId: string, patch: Record<string, unknown>): Promise<void> {
+  await db.update(users).set(patch).where(eq(users.userId, userId))
 }
 
-export async function isEmailTakenByOther(email: string, exceptVpfId: string): Promise<boolean> {
+export async function isEmailTakenByOther(email: string, exceptUserId: string): Promise<boolean> {
   const row = await db
-    .select({ vpfId: users.vpfId })
+    .select({ userId: users.userId })
     .from(users)
-    .where(and(eq(users.email, email), ne(users.vpfId, exceptVpfId)))
+    .where(and(eq(users.email, email), ne(users.userId, exceptUserId)))
     .limit(1)
     .then((rows) => rows[0])
   return Boolean(row)
 }
 
-export async function isSlugTakenByOther(slug: string, exceptVpfId: string): Promise<boolean> {
+export async function isSlugTakenByOther(slug: string, exceptUserId: string): Promise<boolean> {
   const row = await db
-    .select({ vpfId: users.vpfId })
+    .select({ userId: users.userId })
     .from(users)
-    .where(and(eq(users.slug, slug), ne(users.vpfId, exceptVpfId)))
+    .where(and(eq(users.slug, slug), ne(users.userId, exceptUserId)))
     .limit(1)
     .then((rows) => rows[0])
   return Boolean(row)
@@ -138,6 +148,15 @@ export type AthleteListFilters = {
 }
 
 /**
+ * Vietnamese letters with their diacritics stripped, position for position, so
+ * `translate()` can fold a name the way `foldForSearch` folds the query: staff
+ * typing "nguyen van" find "Nguyễn Văn" without an `unaccent` extension.
+ */
+const ACCENTED = "àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ"
+const UNACCENTED = "a".repeat(17) + "e".repeat(11) + "i".repeat(5) + "o".repeat(17) + "u".repeat(11) + "y".repeat(5) + "d"
+const foldedFullName = sql`translate(lower(normalize(${users.fullName}, NFC)), ${ACCENTED}, ${UNACCENTED})`
+
+/**
  * Filters arrive as plain values, not drizzle expressions, so the handler above
  * decides *what* to ask for and this module decides how to ask it.
  */
@@ -152,7 +171,7 @@ function buildAthleteWhere(filters: AthleteListFilters, isAdmin: boolean) {
     search
       ? or(
         ilike(users.vpfId, `%${search}%`),
-        ilike(users.fullName, `%${search}%`),
+        sql`${foldedFullName} LIKE ${`%${foldForSearch(search)}%`}`,
         ilike(users.email, `%${search}%`),
         ilike(users.nationalId, `%${search}%`),
       )
@@ -186,20 +205,21 @@ export async function listAthletes(
     .offset(page.offset)
 }
 
-export async function findVipExpiry(vpfId: string): Promise<string | null> {
+export async function findVipExpiry(userId: string): Promise<string | null> {
   return db
     .select({ vipMembershipExpiresAt: users.vipMembershipExpiresAt })
     .from(users)
-    .where(eq(users.vpfId, vpfId))
+    .where(eq(users.userId, userId))
     .limit(1)
     .then((rows) => rows[0]?.vipMembershipExpiresAt ?? null)
 }
 
-export async function findVipBenefits(vpfId: string): Promise<VipBenefits | null> {
+export async function findVipBenefits(userId: string): Promise<VipBenefits | null> {
   return db
-    .select()
+    .select({ ...getTableColumns(vipBenefits), vpfId: users.vpfId })
     .from(vipBenefits)
-    .where(eq(vipBenefits.vpfId, vpfId))
+    .innerJoin(users, eq(users.userId, vipBenefits.userId))
+    .where(eq(vipBenefits.userId, userId))
     .limit(1)
     .then((rows) => rows[0] ?? null)
 }
@@ -209,18 +229,18 @@ export async function findVipBenefits(vpfId: string): Promise<VipBenefits | null
  * anything, so saving has to cope with both cases.
  */
 export async function upsertVipBenefits(
-  vpfId: string,
-  patch: Partial<Omit<VipBenefits, "vpfId">>,
+  userId: string,
+  patch: Partial<Omit<VipBenefits, "userId" | "vpfId">>,
 ): Promise<VipBenefits | null> {
-  const existing = await findVipBenefits(vpfId)
+  const existing = await findVipBenefits(userId)
 
   if (existing) {
-    await db.update(vipBenefits).set({ ...patch, vpfId }).where(eq(vipBenefits.vpfId, vpfId))
+    await db.update(vipBenefits).set({ ...patch, userId }).where(eq(vipBenefits.userId, userId))
   } else {
-    await db.insert(vipBenefits).values({ vpfId, ...patch })
+    await db.insert(vipBenefits).values({ userId, ...patch })
   }
 
-  return findVipBenefits(vpfId)
+  return findVipBenefits(userId)
 }
 
 /**
@@ -230,13 +250,14 @@ export async function upsertVipBenefits(
  */
 export async function findVoucherRecipients(
   audience: "active_members" | undefined,
-  vpfIds: string[],
+  userIds: string[],
 ): Promise<string[]> {
+  if (audience !== "active_members" && userIds.length === 0) return []
   const rows = await db
-    .select({ vpfId: users.vpfId })
+    .select({ userId: users.userId })
     .from(users)
-    .where(audience === "active_members" ? membershipActive : inArray(users.vpfId, vpfIds))
-  return rows.map((row) => row.vpfId)
+    .where(audience === "active_members" ? membershipActive : inArray(users.userId, userIds))
+  return rows.map((row) => row.userId)
 }
 
 /**
@@ -252,11 +273,11 @@ export async function findVoucherRecipients(
 export async function listActiveVipDecorators() {
   return db
     .select({
-      vpfId: vipBenefits.vpfId,
+      vpfId: users.vpfId,
       decorator1: vipBenefits.decorator1,
       decorator2: vipBenefits.decorator2,
     })
     .from(vipBenefits)
-    .innerJoin(users, eq(vipBenefits.vpfId, users.vpfId))
+    .innerJoin(users, eq(vipBenefits.userId, users.userId))
     .where(gte(users.vipMembershipExpiresAt, sql`CURRENT_DATE`))
 }
