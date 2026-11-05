@@ -141,6 +141,8 @@ services:
       GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3002}
       GF_PLUGINS_PREINSTALL: victoriametrics-logs-datasource@0.33.1
       GF_USERS_ALLOW_SIGN_UP: "false"
+      # Open on the VPF dashboard rather than Grafana's welcome page.
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/vpf-overview.json
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
       GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
