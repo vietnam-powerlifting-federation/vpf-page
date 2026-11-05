@@ -71,6 +71,7 @@ vi.mock("~/server/utils/redis", async (importOriginal) => {
 
   return {
     getRedis: () => null,
+    pingRedis: async () => "disabled" as const,
     cacheKey,
     CACHE_TTL_SECONDS,
     redisGet,

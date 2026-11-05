@@ -1,0 +1,42 @@
+apiVersion: 1
+
+# Every alert goes to one Discord channel. The webhook URL comes from .env
+# through docker-compose.yml; Grafana expands ${VAR} in provisioning files.
+contactPoints:
+  - orgId: 1
+    name: discord
+    receivers:
+      - uid: vpf-discord
+        type: discord
+        settings:
+          url: ${GRAFANA_ALERT_DISCORD_WEBHOOK_URL}
+          use_discord_username: false
+          message: '{{ template "vpf.discord.message" . }}'
+
+policies:
+  - orgId: 1
+    receiver: discord
+    # One message per rule, listing every job it fired for.
+    group_by: [grafana_folder, alertname]
+    group_wait: 30s
+    group_interval: 5m
+    # Still firing after this long: say so again.
+    repeat_interval: 4h
+
+# Grafana's default message lists every label and two URLs per alert, and
+# Discord cuts messages at 2000 characters, so a few alerts at once got
+# truncated. One line per alert instead, then the rule's advice once (alerts
+# are grouped by rule). The embed title above it links to the alert list.
+templates:
+  - orgId: 1
+    name: vpf
+    template: |
+      {{ define "vpf.discord.message" -}}
+      {{ range .Alerts.Firing -}}
+      **FIRING** · {{ .Labels.severity }} · {{ .Annotations.summary }}
+      {{ end -}}
+      {{ range .Alerts.Resolved -}}
+      **RESOLVED** · {{ .Annotations.summary }}
+      {{ end -}}
+      {{ with index .Alerts 0 }}{{ .Annotations.description }}{{ end }}
+      {{- end }}

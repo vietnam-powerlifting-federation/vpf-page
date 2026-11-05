@@ -1,0 +1,257 @@
+apiVersion: 1
+
+# Alert rules, sent to Discord by contact-points.yaml.
+#
+# Grafana expands $VAR in provisioning files, so nothing below uses `$`:
+# annotations read .Labels / .Values rather than $labels / $values, and every
+# guard lives in the query itself, leaving each rule a plain threshold on A.
+#
+# Queries go to VictoriaMetrics (MetricsQL, a superset of PromQL).
+
+groups:
+  - orgId: 1
+    name: vpf
+    folder: VPF
+    interval: 1m
+    rules:
+      - uid: vpf-target-down
+        title: Scrape target down
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ .Labels.job }} has not answered a scrape for 2 minutes"
+          description: >-
+            VictoriaMetrics cannot reach the {{ .Labels.job }} target. If it is
+            the app, check /api/health and `docker compose ps`; a container stuck
+            restarting shows here too.
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: victoriametrics
+            model:
+              refId: A
+              expr: up
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: lt, params: [1] }
+
+      - uid: vpf-app-5xx
+        title: App 5xx ratio high
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ humanizePercentage .Values.A.Value }} of requests failed with a 5xx over 10 minutes"
+          description: >-
+            Each unhandled error is logged with an errorId. In Grafana Explore,
+            VictoriaLogs: `service:app level:error`.
+        data:
+          - refId: A
+            relativeTimeRange: { from: 600, to: 0 }
+            datasourceUid: victoriametrics
+            model:
+              refId: A
+              # Ratio over 5%, but only once there are at least 5 errors: on a
+              # quiet night one failure in three requests is not an incident.
+              expr: >-
+                (
+                  (sum(rate(http_request_duration_seconds_count{job="app",status=~"5.."}[10m])) or vector(0))
+                  / sum(rate(http_request_duration_seconds_count{job="app"}[10m]))
+                )
+                and on() sum(increase(http_request_duration_seconds_count{job="app",status=~"5.."}[10m])) >= 5
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [0.05] }
+
+      - uid: vpf-app-latency
+        title: App p95 latency high
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 latency is {{ humanizeDuration .Values.A.Value }} over 10 minutes"
+          description: >-
+            API routes and SSR pages, static files excluded. The dashboard's
+            "p95 latency by route" panel shows which route. An expired cache
+            entry costs ~2 s; scripts/warm-cache.sh from cron prevents that.
+        data:
+          - refId: A
+            relativeTimeRange: { from: 600, to: 0 }
+            datasourceUid: victoriametrics
+            model:
+              refId: A
+              # Needs 20 requests in the window, so one slow cold read on an
+              # idle site cannot carry the p95 on its own.
+              expr: >-
+                histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{job="app",route!="static"}[10m])))
+                and on() sum(increase(http_request_duration_seconds_count{job="app",route!="static"}[10m])) >= 20
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [2] }
+
+      - uid: vpf-memory-near-limit
+        title: Service memory near its limit
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ .Labels.job }} is at {{ humanizePercentage .Values.A.Value }} of its mem_limit"
+          description: >-
+            Past 100% the kernel OOM-kills the container and Docker restarts it.
+            Rebalance the limits in docker-compose.yml within the 1.2 GB budget.
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: victoriametrics
+            model:
+              refId: A
+              # Redis is aggregated before relabelling: two exporter series
+              # (e.g. during a scrape-job change) would otherwise collide.
+              # The divisors are the mem_limit values in docker-compose.yml:
+              # change them together. Each service is measured by what its
+              # container is charged for: plain RSS would count Grafana's
+              # memory-mapped binary and show it above 100% while it is fine.
+              expr: >-
+                process_resident_memory_bytes{job="app"} / (400 * 1024 * 1024)
+                or process_resident_memory_anon_bytes{job="victoriametrics"} / (160 * 1024 * 1024)
+                or process_resident_memory_anon_bytes{job="victorialogs"} / (96 * 1024 * 1024)
+                or go_memstats_sys_bytes{job="grafana"} / (256 * 1024 * 1024)
+                or label_set(max(redis_memory_used_rss_bytes) / (128 * 1024 * 1024), "job", "redis-server")
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [0.9] }
+
+      - uid: vpf-service-restarted
+        title: Service restarted
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ .Labels.job }} restarted in the last 15 minutes"
+          description: >-
+            Expected right after a deploy. Otherwise it crashed or was
+            OOM-killed: look for "OOMKilled": true in `docker inspect <container>`,
+            and read `docker compose logs <service>`.
+        data:
+          - refId: A
+            relativeTimeRange: { from: 900, to: 0 }
+            datasourceUid: victoriametrics
+            model:
+              refId: A
+              # A restart is a new process start time on the same series.
+              # changes_prometheus, not MetricsQL's changes(): that one counts a
+              # series' first sample as a change, so every fresh start would fire.
+              expr: >-
+                changes_prometheus(process_start_time_seconds{job=~"app|victoriametrics|victorialogs|grafana"}[15m])
+                or label_set(max(changes_prometheus(redis_start_time_seconds[15m])), "job", "redis-server")
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [0] }
+
+      - uid: vpf-disk-low
+        title: Disk space low
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ humanize1024 .Values.A.Value }}B free on the volume filesystem"
+          description: >-
+            VictoriaLogs is capped at 5 GiB and container logs rotate at 30 MB,
+            so check the app's own data and `docker system df` first.
+        data:
+          - refId: A
+            relativeTimeRange: { from: 600, to: 0 }
+            datasourceUid: victoriametrics
+            model:
+              refId: A
+              # VictoriaMetrics reports free space on the filesystem under its
+              # volume, which is where every Docker volume lives.
+              expr: min(vm_free_disk_space_bytes)
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: lt, params: [2147483648] }
+
+      - uid: vpf-redis-evictions
+        title: Redis evicting keys
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis is evicting cached datasets to stay under maxmemory"
+          description: >-
+            The cache no longer fits in maxmemory (48 MB), so visitors pay cold
+            reads. Raise --maxmemory and redis's mem_limit in docker-compose.yml.
+        data:
+          - refId: A
+            relativeTimeRange: { from: 600, to: 0 }
+            datasourceUid: victoriametrics
+            model:
+              refId: A
+              expr: sum(rate(redis_evicted_keys_total[10m]))
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [0] }

@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN npm install -g npm@11.6.2
 
 COPY package.json package-lock.json ./
-RUN npm i --ignore-scripts
+RUN npm ci --ignore-scripts
 
 COPY . .
 

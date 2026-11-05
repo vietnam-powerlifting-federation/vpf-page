@@ -19,6 +19,7 @@
     "@nuxtjs/google-fonts": "^3.2.0",
     "@nuxtjs/i18n": "^10.2.1",
     "@primeuix/themes": "^2.0.2",
+    "@prometheus-io/client": "^0.16.1",
     "@tailwindcss/vite": "^4.1.18",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/nodemailer": "^8.0.1",
