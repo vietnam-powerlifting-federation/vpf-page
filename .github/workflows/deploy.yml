@@ -1,0 +1,100 @@
+# Builds the app image on every push to main that touches the source, pushes it
+# to GHCR, then has the VPS pull it. The image is tagged with the short commit
+# SHA, which the server writes to APP_IMAGE in its .env.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - app.vue
+      - error.vue
+      - assets/**
+      - components/**
+      - composables/**
+      - i18n/**
+      - layouts/**
+      - lib/**
+      - middleware/**
+      - pages/**
+      - server/**
+      - theme/**
+      - types/**
+      - nuxt.config.ts
+      - tsconfig.json
+      - .nuxtrc
+      - package.json
+      - package-lock.json
+      - Dockerfile
+      - .dockerignore
+      - docker-compose.yml
+      - .github/workflows/deploy.yml
+  workflow_dispatch:
+
+# A newer push replaces a deploy that is still building.
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: tag
+        run: echo "tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519
+
+      # Pulls main for compose and monitoring changes, points APP_IMAGE at the
+      # new tag, and recreates whatever changed.
+      - name: Pull and restart on the VPS
+        env:
+          TAG: ${{ needs.build.outputs.tag }}
+        run: |
+          ssh -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -s <<EOF
+          set -euo pipefail
+          cd ${{ secrets.DEPLOY_PATH }}
+          git pull --ff-only origin main
+          sed -i "s|^APP_IMAGE=.*|APP_IMAGE=${IMAGE}:${TAG}|" .env
+          docker compose pull app
+          docker compose up -d --no-build
+          docker image prune -f
+          EOF
