@@ -75,6 +75,10 @@ export const config = {
   get emailVerificationSkip(): boolean {
     return emailVerificationSkip()
   },
+  /** Bearer token VictoriaMetrics presents to `/api/metrics`. Unset, the endpoint is off. */
+  get metricsToken(): string {
+    return process.env.METRICS_TOKEN || ""
+  },
 
   /** SMTP config for outbound email. When incomplete, the email service logs instead of sending. */
   get smtp() {

@@ -1,0 +1,67 @@
+# Ships container logs to VictoriaLogs and exposes host metrics for
+# VictoriaMetrics to scrape.
+
+sources:
+  # Only containers labelled `vpf.logs=true` in docker-compose.yml.
+  docker:
+    type: docker_logs
+    include_labels: ["vpf.logs=true"]
+
+  # Reads the host's /proc, mounted at /host/proc (PROCFS_ROOT).
+  host:
+    type: host_metrics
+    collectors: [cpu, memory, load]
+    scrape_interval_secs: 15
+
+  internal:
+    type: internal_metrics
+
+transforms:
+  logs:
+    type: remap
+    inputs: [docker]
+    source: |
+      .service = string(.label."com.docker.compose.service") ?? .container_name
+
+      # The app writes one JSON object per line (lib/logger/logger.ts). Its
+      # fields — level, message, timestamp, route, durationMs… — become
+      # top-level fields. Anything else (Redis, Nitro's startup line) stays as
+      # plain text in `message`.
+      parsed, err = parse_json(.message)
+      if err == null && is_object(parsed) {
+        . = merge(., object!(parsed))
+      }
+
+      del(.label)
+      del(.host)
+      del(.container_created_at)
+      del(.container_id)
+      del(.source_type)
+
+  # Vector tags metrics with its own container's hostname, which changes each
+  # time the container is recreated and would split every host series in two.
+  host_untagged:
+    type: remap
+    inputs: [host, internal]
+    source: |
+      del(.tags.host)
+
+sinks:
+  victorialogs:
+    type: elasticsearch
+    inputs: [logs]
+    endpoints: ["http://victorialogs:9428/insert/elasticsearch/"]
+    mode: bulk
+    api_version: v8
+    compression: gzip
+    healthcheck:
+      enabled: false
+    query:
+      _msg_field: message
+      _time_field: timestamp
+      _stream_fields: service
+
+  prometheus:
+    type: prometheus_exporter
+    inputs: [host_untagged]
+    address: 0.0.0.0:9598

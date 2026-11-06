@@ -1,5 +1,7 @@
+import { once } from "node:events"
 import Redis from "ioredis"
 import { logger } from "~/lib/logger/logger"
+import { cacheLookups } from "~/server/utils/metrics"
 
 /**
  * Shared Redis cache for the expensive public reads (meets, records, results).
@@ -165,9 +167,34 @@ export async function redisRemember<T>(
   ttlSeconds: number = CACHE_TTL_SECONDS,
 ): Promise<T> {
   const cached = await redisGet<T>(key)
+  // `vpf:<resource>:…` — the resource alone keeps the label set small. A cache
+  // outage reads as a run of misses, which is how it should show on a dashboard.
+  cacheLookups.inc({ resource: key.split(":")[1], result: cached === null ? "miss" : "hit" })
   if (cached !== null) return cached
 
   const value = await fetch()
   if (value !== null) await redisSet(key, value, ttlSeconds)
   return value
+}
+
+/**
+ * For the health check. A cache that is not configured is `disabled`, not a
+ * failure: the site is built to run without one.
+ */
+export async function pingRedis(): Promise<"ok" | "down" | "disabled"> {
+  const redis = getRedis()
+  if (!redis) return "disabled"
+
+  try {
+    // The client connects lazily and, with the offline queue off, rejects
+    // commands until it is ready, so the first check after a restart would
+    // report a healthy Redis as down. Give the connection a moment.
+    if (redis.status !== "ready") {
+      await once(redis, "ready", { signal: AbortSignal.timeout(1000) })
+    }
+    await redis.ping()
+    return "ok"
+  } catch {
+    return "down"
+  }
 }

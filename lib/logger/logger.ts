@@ -3,21 +3,23 @@ import path from "path"
 import fs from "fs"
 import { config } from "../config/config"
 
-// Create transports array
+// Readable output for a person at a terminal.
+const prettyFormat = winston.format.combine(
+  winston.format.colorize(),
+  winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+  winston.format.printf(
+    ({ timestamp, level, message, ...meta }) =>
+      `${timestamp} [${level}]: ${message} ${
+        Object.keys(meta).length ? JSON.stringify(meta, null, 2) : ""
+      }`
+  )
+)
+
+// In production the console is read by Vector (monitoring/vector/vector.yaml),
+// which needs one JSON object per line: no colour codes, no multi-line meta.
+// The logger's own format below already produces exactly that.
 const transports: winston.transport[] = [
-  // Console transport for all environments
-  new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize(),
-      winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-      winston.format.printf(
-        ({ timestamp, level, message, ...meta }) =>
-          `${timestamp} [${level}]: ${message} ${
-            Object.keys(meta).length ? JSON.stringify(meta, null, 2) : ""
-          }`
-      )
-    ),
-  }),
+  new winston.transports.Console(config.nodeEnv === "production" ? {} : { format: prettyFormat }),
 ]
 
 // Add file transport only in development

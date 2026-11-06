@@ -1,23 +1,168 @@
+# Memory limits add up to ~1.14 GB of the 1.2 GB budget. Postgres is on
+# Supabase and not counted. See monitoring/README.md for the stack.
+
+# Config bind mounts carry `z` so SELinux hosts (Fedora, RHEL) let containers
+# read them; Docker ignores it elsewhere.
+#
+# The Go services and Vector size buffers and worker pools by CPU count, which
+# costs memory per core. GOMAXPROCS / VECTOR_THREADS pin that to what a small
+# box has, so the limits below hold on a many-core host too.
+#
+# Docker's default json-file driver never rotates, so container logs would grow
+# until the disk is full. VictoriaLogs keeps the long-term copy.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   app:
     build:
       context: .
-    image: vpf-page
+    # Built locally by default. A server pulls a prebuilt one from GHCR instead:
+    # set APP_IMAGE in .env, then `docker compose pull app && docker compose up -d --no-build`.
+    image: ${APP_IMAGE:-vpf-page}
     env_file: .env
     environment:
       REDIS_URL: redis://redis:6379
+      # The same value VictoriaMetrics presents when it scrapes /api/metrics.
+      METRICS_TOKEN: ${METRICS_TOKEN:?Set METRICS_TOKEN in .env (any long random string)}
+      # Leaves room under mem_limit for code, buffers and native memory.
+      NODE_OPTIONS: --max-old-space-size=256
     ports:
       - "3001:3000"
     restart: unless-stopped
     depends_on:
       - redis
+    mem_limit: 400m
+    labels:
+      vpf.logs: "true"
+    logging: *logging
 
   redis:
     image: redis:8-alpine
-    command: ["redis-server", "--maxmemory-policy", "allkeys-lru", "--appendonly", "yes"]
+    # Without maxmemory the LRU policy never applies and Redis grows unbounded.
+    # Kept well under mem_limit because an AOF rewrite forks, and the copy needs
+    # room of its own.
+    command: ["redis-server", "--maxmemory", "48mb", "--maxmemory-policy", "allkeys-lru", "--appendonly", "yes"]
     volumes:
       - redis-data:/data
     restart: unless-stopped
+    mem_limit: 128m
+    labels:
+      vpf.logs: "true"
+    logging: *logging
+
+  # --- Monitoring ---
+
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.154.1
+    command:
+      - -storageDataPath=/storage
+      - -retentionPeriod=30d
+      # Caches fill to this share of mem_limit (default 60%). A few thousand
+      # series need far less, and the rest is headroom for heavy queries. The
+      # series-ID cache is a fixed 32 MB regardless, so ~110 MB is the floor.
+      - -memory.allowedPercent=40
+      - -promscrape.config=/etc/victoriametrics/scrape.yml
+    environment:
+      METRICS_TOKEN: ${METRICS_TOKEN:?Set METRICS_TOKEN in .env (any long random string)}
+      GOMAXPROCS: "2"
+    volumes:
+      - vm-data:/storage
+      - ./monitoring/victoriametrics/scrape.yml:/etc/victoriametrics/scrape.yml:ro,z
+    restart: unless-stopped
+    mem_limit: 160m
+    logging: *logging
+
+  victorialogs:
+    image: victoriametrics/victoria-logs:v1.53.0
+    command:
+      - -storageDataPath=/vlogs
+      - -retentionPeriod=14d
+      # Drops the oldest days early if logs outgrow this before 14 days are up.
+      - -retention.maxDiskSpaceUsageBytes=5GiB
+    environment:
+      GOMAXPROCS: "2"
+    volumes:
+      - vlogs-data:/vlogs
+    restart: unless-stopped
+    mem_limit: 96m
+    logging: *logging
+
+  vector:
+    image: timberio/vector:0.61.0-alpine
+    # The Docker socket and the host's /proc cannot be relabelled for SELinux,
+    # so Vector runs without a label instead. A no-op on hosts without SELinux.
+    security_opt:
+      - label=disable
+    environment:
+      VECTOR_THREADS: "2"
+      PROCFS_ROOT: /host/proc
+      SYSFS_ROOT: /host/sys
+    volumes:
+      - ./monitoring/vector/vector.yaml:/etc/vector/vector.yaml:ro
+      # Read access to the Docker API, to follow container logs. This is
+      # root-equivalent on the host; Vector is the only service given it.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    restart: unless-stopped
+    depends_on:
+      - victorialogs
+    mem_limit: 64m
+    logging: *logging
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.95.0-alpine
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      GOMAXPROCS: "1"
+    restart: unless-stopped
+    depends_on:
+      - redis
+    mem_limit: 32m
+    logging: *logging
+
+  grafana:
+    # 12.4 rather than 13: on the same dashboard 13 idles ~70 MB higher, which
+    # this budget cannot spare. 12.4 is still a maintained branch.
+    image: grafana/grafana:12.4.14
+    environment:
+      GOMAXPROCS: "2"
+      # Collect garbage harder near the limit instead of letting the heap double
+      # between collections, so a dashboard load does not push it into an OOM kill.
+      GOMEMLIMIT: 200MiB
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in .env}
+      # Read by monitoring/grafana/provisioning/alerting/contact-points.yaml.
+      GRAFANA_ALERT_DISCORD_WEBHOOK_URL: ${GRAFANA_ALERT_DISCORD_WEBHOOK_URL:?Set GRAFANA_ALERT_DISCORD_WEBHOOK_URL in .env}
+      # Links in alert messages point here: the SSH tunnel's end (see monitoring/README.md).
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3002}
+      GF_PLUGINS_PREINSTALL: victoriametrics-logs-datasource@0.33.1
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      # Open on the VPF dashboard rather than Grafana's welcome page.
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/vpf-overview.json
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+    # Loopback only: reach it over an SSH tunnel or put it behind the reverse proxy.
+    ports:
+      - "127.0.0.1:3002:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro,z
+      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards:ro,z
+    restart: unless-stopped
+    depends_on:
+      - victoriametrics
+      - victorialogs
+    mem_limit: 256m
+    logging: *logging
 
 volumes:
   redis-data:
+  vm-data:
+  vlogs-data:
+  grafana-data:
