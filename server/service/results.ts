@@ -9,7 +9,8 @@ import type { UserPublicWithDecorators } from "~/types/users"
 export type ResultsFilters = {
   sort: SortKey
   distinct: boolean
-  meetType?: MeetType
+  /** Narrow to these tiers; absent or empty keeps every meet. */
+  meetTypes?: MeetType[]
   division?: Division
   weightClass?: number
   sex?: Sex
@@ -35,10 +36,10 @@ export type RankedResults = {
  * computed over the full dataset or the narrowed one.
  */
 export async function getRankedResults(filters: ResultsFilters): Promise<RankedResults> {
-  const { sort, distinct, meetType, division, weightClass, sex } = filters
+  const { sort, distinct, meetTypes, division, weightClass, sex } = filters
   const dataset = await getAllResultsDataset()
 
-  const meets = meetType ? dataset.meets.filter((meet) => meet.type === meetType) : dataset.meets
+  const meets = meetTypes?.length ? dataset.meets.filter((meet) => meet.type && meetTypes.includes(meet.type)) : dataset.meets
   const meetIds = new Set(meets.map((meet) => meet.meetId))
 
   const matching = dataset.results.filter((result) =>

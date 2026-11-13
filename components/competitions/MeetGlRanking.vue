@@ -54,11 +54,11 @@ const pageRows = computed(() => ranked.value.slice((page.value - 1) * pageSize.v
 const columns = computed<TableColumn[]>(() => [
   { key: "rank", label: "#", srLabel: t("tables.rank"), pin: "rank" },
   { key: "athlete", label: t("ranking.athlete"), pin: "name", rowHeader: true },
-  { key: "gl", label: t("ranking.glPoints"), numeric: true, sortable: true },
-  ...(["total", "squat", "bench", "deadlift"] as const).map((key) => ({
+  ...(["squat", "bench", "deadlift", "total"] as const).map((key) => ({
     key,
     label: t("ranking.withUnit", { label: t(`general.${key}`) }),
     numeric: true,
   })),
+  { key: "gl", label: t("ranking.glPoints"), numeric: true, sortable: true },
 ])
 </script>

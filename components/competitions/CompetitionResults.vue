@@ -19,6 +19,9 @@
     <template #gl-ranking>
       <MeetGlRanking :rows="rows" />
     </template>
+    <template #best-lifters>
+      <MeetBestLifters :rows="rows" :season="season" />
+    </template>
   </AppTabs>
 </template>
 
@@ -26,12 +29,14 @@
 import type { MeetSection } from "~/lib/domain/meet-rows"
 import type { MeetRow } from "~/types/meets"
 
-/** A competition's results area: loading, not-found and empty states, or the three result views as tabs. */
+/** A competition's results area: loading, not-found and empty states, or the four result views as tabs. */
 defineProps<{
   state: "loading" | "missing" | "empty" | "ready"
   tab: string
   sections: MeetSection[]
   rows: MeetRow[]
+  /** The meet's season (`systemYear`); it decides the best-lifter rule. */
+  season: number
 }>()
 const emit = defineEmits<{ "update:tab": [tab: string] }>()
 
@@ -41,5 +46,6 @@ const tabs = computed(() => [
   { value: "scoresheet", label: t("meets.scoresheet") },
   { value: "detailed", label: t("meets.detailedScoresheet") },
   { value: "gl-ranking", label: t("meets.athleteRankedByGlPoint") },
+  { value: "best-lifters", label: t("meets.bestLifters") },
 ])
 </script>

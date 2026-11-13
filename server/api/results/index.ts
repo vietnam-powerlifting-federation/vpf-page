@@ -22,7 +22,7 @@ export default defineApiHandler(async (event): Promise<ApiResponse<RankedResults
   const results = await getRankedResults({
     sort,
     distinct: query.distinct === "true" || query.distinct === true,
-    meetType: query.meetType as MeetType | undefined,
+    meetTypes: query.meetType ? (String(query.meetType).split(",") as MeetType[]) : undefined,
     division: query.division as Division | undefined,
     weightClass: query.weightClass ? parseInt(query.weightClass as string, 10) : undefined,
     sex: query.sex as Sex | undefined,

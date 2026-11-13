@@ -41,6 +41,15 @@ describe("API: results", () => {
       }
     })
 
+    it("accepts several tiers as a comma-separated meetType", async () => {
+      const handler = (await import("~/server/api/results/index")).default
+      const res = await handler(createMockH3Event({ query: { meetType: "national,amateur" } }))
+      expect(res.success).toBe(true)
+      const types = res.data!.meets.map((m) => m.type)
+      expect(types.length).toBeGreaterThan(0)
+      expect(types.every((type) => type === "national" || type === "amateur")).toBe(true)
+    })
+
     it("accepts distinct=true", async () => {
       const handler = (await import("~/server/api/results/index")).default
       const event = createMockH3Event({ query: { distinct: "true" } })

@@ -1,9 +1,7 @@
 <template>
   <div class="min-w-0">
     <div class="flex flex-wrap items-center gap-x-3 gap-y-2 pb-3 text-sm">
-      <span role="status" aria-live="polite" class="mr-1 font-display text-lg font-bold tracking-[0.04em] uppercase">
-        {{ loaded ? $t("ranking.count", total) : $t("tables.loading") }}
-      </span>
+      <span v-if="!loaded" role="status" aria-live="polite" class="mr-1 text-muted-color">{{ $t("tables.loading") }}</span>
       <FilterChips :chips="chips" @remove="emit('removeChip', $event)" @reset="emit('reset')" />
     </div>
 
@@ -101,10 +99,9 @@ function goToPage(next: number) {
 const columns = computed<TableColumn[]>(() => [
   { key: "rank", label: "#", srLabel: t("tables.rank"), pin: "rank" },
   { key: "athlete", label: t("ranking.athlete"), pin: "name", rowHeader: true },
-  { key: "gl", label: t(SORT_LABEL_KEYS.gl), numeric: true, sortable: true },
-  ...(["total", "squat", "bench", "deadlift"] as const).map((key) => ({
+  ...(["squat", "bench", "deadlift", "total", "gl"] as const).map((key) => ({
     key,
-    label: t("ranking.withUnit", { label: t(SORT_LABEL_KEYS[key]) }),
+    label: key === "gl" ? t(SORT_LABEL_KEYS.gl) : t("ranking.withUnit", { label: t(SORT_LABEL_KEYS[key]) }),
     numeric: true,
     sortable: true,
   })),

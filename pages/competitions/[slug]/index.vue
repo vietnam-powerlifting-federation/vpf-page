@@ -8,6 +8,7 @@
         :tab="competition.tab"
         :sections="competition.sections"
         :rows="competition.rows"
+        :season="competition.meet?.systemYear ?? 0"
         @update:tab="competition.setTab"
       />
     </PageSection>

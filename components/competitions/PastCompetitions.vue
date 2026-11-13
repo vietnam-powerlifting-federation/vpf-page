@@ -7,10 +7,10 @@
     <div v-for="group in byYear" :key="group.year" class="overflow-clip rounded-md border border-surface-200 bg-surface-0">
       <h3 class="bg-board px-4 py-2 font-display text-lg font-bold tracking-[0.08em] text-board-ink">{{ group.year }}</h3>
       <ul>
-        <li v-for="meet in group.meets" :key="meet.meetId" class="border-b border-surface-200 last:border-b-0">
+        <li v-for="meet in group.meets" :key="meet.meetId" class="flex items-center border-b border-surface-200 last:border-b-0 hover:bg-surface-100">
           <NuxtLinkLocale
             :to="`/competitions/${meet.meetSlug}`"
-            class="group grid min-h-14 grid-cols-[5.5rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 no-underline hover:bg-surface-100 sm:grid-cols-[7rem_minmax(0,1fr)_auto]"
+            class="group grid min-h-14 min-w-0 flex-1 grid-cols-[5.5rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 no-underline sm:grid-cols-[7rem_minmax(0,1fr)_auto]"
           >
             <span class="font-display text-base font-semibold text-muted-color tabular-nums">{{ formatDate(meet.hostDate, locale) }}</span>
             <span class="min-w-0">
@@ -21,6 +21,16 @@
             </span>
             <AppIcon name="lucide:chevron-right" class="size-5 text-muted-color" />
           </NuxtLinkLocale>
+          <a
+            v-if="meet.mediaLink"
+            :href="meet.mediaLink"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="mr-4 inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded px-2 text-sm font-medium text-accent no-underline hover:bg-accent-soft"
+          >
+            <AppIcon name="lucide:image" class="size-4" />
+            <span class="max-sm:sr-only">{{ $t("meets.media") }}</span>
+          </a>
         </li>
       </ul>
     </div>

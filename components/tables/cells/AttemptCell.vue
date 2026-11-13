@@ -3,15 +3,11 @@
     <span aria-hidden="true">–</span>
     <span class="sr-only">{{ $t("tables.notAttempted") }}</span>
   </span>
-  <span v-else-if="value < 0" class="inline-flex items-center justify-end gap-1 text-danger">
-    <AppIcon name="lucide:x" class="size-3.5" />
-    <s>{{ formatKg(-value, locale) }}</s>
+  <s v-else-if="value < 0" class="text-danger">
+    {{ formatKg(-value, locale) }}
     <span class="sr-only">{{ $t("tables.noLift") }}</span>
-  </span>
-  <span v-else class="inline-flex items-center justify-end gap-1" :class="best && 'text-accent'">
-    <AppIcon name="lucide:check" class="size-3.5 text-success" />
-    {{ formatKg(value, locale) }}
-  </span>
+  </s>
+  <span v-else>{{ formatKg(value, locale) }}</span>
 </template>
 
 <script setup lang="ts">
@@ -19,9 +15,9 @@ import { formatKg } from "~/lib/domain/format"
 
 /**
  * One attempt. Results store a missed attempt as a negative weight and an
- * attempt not taken as 0 or null. Good and no lift differ by icon and
- * strike-through, not by colour alone.
+ * attempt not taken as 0 or null. A good lift is plain; a missed one is red
+ * and struck through, so colour is not the only signal.
  */
-defineProps<{ value: number | null | undefined; best?: boolean }>()
+defineProps<{ value: number | null | undefined }>()
 const { locale } = useI18n()
 </script>
