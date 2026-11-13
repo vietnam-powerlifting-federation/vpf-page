@@ -24,7 +24,7 @@
               scope="col"
               :aria-sort="col.sortable && sortKey === col.key ? 'descending' : undefined"
               class="bg-board p-3 align-middle font-display text-sm font-bold tracking-[0.08em] whitespace-nowrap text-board-ink-2 uppercase"
-              :class="[pinClass(col), col.numeric ? 'text-right' : 'text-left']"
+              :class="[pinClass(col), col.numeric || col.end ? 'text-right' : 'text-left']"
             >
               <button
                 v-if="col.sortable"
@@ -67,7 +67,7 @@
               class="border-b border-surface-200 p-3 align-middle text-[0.9375rem] whitespace-nowrap group-last:border-b-0"
               :class="[
                 pinClass(col),
-                col.numeric ? 'text-right font-display text-lg font-semibold' : 'text-left font-normal',
+                col.numeric ? 'text-right font-display text-lg font-semibold' : col.end ? 'text-right font-normal' : 'text-left font-normal',
                 col.sortable && sortKey === col.key
                   ? 'bg-sorted !font-bold group-hover:bg-accent-soft'
                   : 'bg-surface-0 group-hover:bg-surface-100',

@@ -74,7 +74,7 @@ const rows = computed(() => {
   return props.records.map((record) => {
     const result = resultsById.get(record.resultId)
     return { record, result, meet: result ? meetsById.get(result.meetId) : undefined }
-  })
+  }).sort((a, b) => (b.meet?.hostDate ?? "").localeCompare(a.meet?.hostDate ?? ""))
 })
 
 const columns = computed<TableColumn[]>(() => [
@@ -82,7 +82,7 @@ const columns = computed<TableColumn[]>(() => [
   { key: "weight", label: t("ranking.withUnit", { label: t("athlete.record") }), numeric: true },
   { key: "competition", label: t("athlete.competition") },
   { key: "status", label: t("athlete.state") },
-  { key: "certificate", label: t("athlete.recordCertificate") },
+  { key: "certificate", label: t("athlete.recordCertificate"), end: true },
 ])
 
 const dialogVisible = ref(false)

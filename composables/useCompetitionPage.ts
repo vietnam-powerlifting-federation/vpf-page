@@ -1,10 +1,10 @@
 import { meetSections } from "~/lib/domain/meet-rows"
 
-const TABS = ["scoresheet", "detailed", "gl-ranking"] as const
+const TABS = ["scoresheet", "detailed", "gl-ranking", "best-lifters"] as const
 export type CompetitionTab = typeof TABS[number]
 
 /**
- * A competition's page: the meet and its results, which of the three views is open
+ * A competition's page: the meet and its results, which of the four views is open
  * (kept in `?tab=` so a view can be shared), and the state the results area is in.
  * Returned as one reactive object.
  */

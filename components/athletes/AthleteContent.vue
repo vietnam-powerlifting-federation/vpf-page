@@ -1,8 +1,7 @@
 <template>
   <PageSection class="grid grid-cols-1 gap-10">
     <AthletePbs :personal-best="profile.personalBest" :comp-history="profile.compHistory" />
-    <!-- A VIP profile keeps its original order: history before records. -->
-    <AthleteHistory v-if="vip" :comp-history="profile.compHistory" :meets="profile.meets" :name="profile.athlete.fullName" />
+    <AthleteHistory :comp-history="profile.compHistory" :meets="profile.meets" :name="profile.athlete.fullName" />
     <AthleteRecords
       v-if="profile.records.length"
       :records="profile.records"
@@ -11,14 +10,13 @@
       :athlete="profile.athlete"
       :can-attach="isOwner && !!vip"
     />
-    <AthleteHistory v-if="!vip" :comp-history="profile.compHistory" :meets="profile.meets" :name="profile.athlete.fullName" />
   </PageSection>
 </template>
 
 <script setup lang="ts">
 import type { AthleteProfileData } from "~/types/users"
 
-/** The body of an athlete's page: personal bests, records and competition history. */
+/** The body of an athlete's page: personal bests, competition history and records. */
 const props = defineProps<{
   profile: AthleteProfileData
   isOwner: boolean

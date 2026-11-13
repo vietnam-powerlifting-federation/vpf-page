@@ -67,6 +67,11 @@ export const SEX_LABEL_KEY: Record<Sex, string> = {
   female: "general.women",
 }
 
+export const SEX_SHORT_LABEL_KEY: Record<Sex, string> = {
+  male: "general.sexShortMale",
+  female: "general.sexShortFemale",
+}
+
 export const DIVISION_LABEL_KEY: Record<Division, string> = {
   subjr: "general.divisionSubJunior",
   jr: "general.divisionJunior",

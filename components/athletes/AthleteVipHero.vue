@@ -41,7 +41,6 @@
             {{ fullName }}
           </component>
           <p v-if="vip.displayAlias && vip.alias" class="mt-1 text-muted-color" :class="size.alias">“{{ vip.alias }}”</p>
-          <p v-if="metaLine" class="mt-1 text-muted-color tabular-nums">{{ metaLine }}</p>
         </div>
         <SocialLinks :vip-settings="vip" :label="$t('athlete.social.label', { name: fullName })" class="shrink-0" />
       </div>
@@ -73,10 +72,9 @@ const props = withDefaults(defineProps<{
   /** Saved R2 url, or a blob: url while a new file is being edited. */
   avatar: string | null
   banners: string[]
-  metaLine?: string
   scale?: "page" | "full" | "compact"
   titleTag?: "h1" | "h2"
-}>(), { metaLine: "", scale: "page", titleTag: "h1" })
+}>(), { scale: "page", titleTag: "h1" })
 
 const titleId = useId()
 

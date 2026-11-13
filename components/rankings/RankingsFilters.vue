@@ -32,7 +32,7 @@
 
     <div
       :id="filterGridId"
-      class="gap-4 sm:grid-cols-2 md:grid lg:grid-cols-[1.2fr_repeat(4,minmax(0,1fr))]"
+      class="gap-4 sm:grid-cols-2 md:flex md:items-start md:overflow-x-auto md:pb-2 md:*:min-w-44 md:*:flex-1 md:*:shrink-0"
       :class="filtersOpen ? 'grid' : 'hidden'"
     >
       <SegmentedControl
@@ -57,11 +57,12 @@
         :placeholder="$t('general.all')"
         @update:model-value="emit('change', { div: $event })"
       />
-      <FilterSelect
-        :model-value="values.meet"
-        :label="$t('ranking.competitionType')"
-        :options="meetOptions"
-        @update:model-value="emit('change', { meet: $event })"
+      <FilterMultiSelect
+        :model-value="selectedTiers(values.meet)"
+        :label="$t('ranking.tier')"
+        :placeholder="$t('ranking.allMeetTypes')"
+        :options="tierOptions"
+        @update:model-value="emit('change', { meet: tiersToQuery($event) })"
       />
       <FilterSelect
         :model-value="values.sort"
@@ -76,10 +77,10 @@
 <script setup lang="ts">
 import { RANKED_DIVISION, WEIGHT_CLASS_FEMALE, WEIGHT_CLASS_MALE } from "~/lib/constants/constants"
 import { DIVISION_LABEL_KEY, MEET_TYPE_LABEL_KEY, formatWeightClass } from "~/lib/domain/format"
-import { RANKING_MEET_TYPES, SORTS, SORT_LABEL_KEYS, type RankingQuery, type SortName } from "~/lib/domain/rankings"
+import { RANKING_MEET_TYPES, SORTS, SORT_LABEL_KEYS, selectedTiers, tiersToQuery, type RankingQuery, type SortName } from "~/lib/domain/rankings"
 import type { Division, Sex } from "~/types/union-types"
 
-/** The rankings filters: search, category, weight class, division, competition type and sort. */
+/** The rankings filters: search, category, weight class, division, tier and sort. */
 const props = defineProps<{ values: RankingQuery; activeCount: number }>()
 const emit = defineEmits<{
   change: [patch: Partial<RankingQuery>, replace?: boolean]
@@ -122,8 +123,7 @@ const divisionOptions = computed(() => [
   ...RANKED_DIVISION.map((d) => ({ value: d, label: t(DIVISION_LABEL_KEY[d as Division]) })),
 ])
 
-const meetOptions = computed(() => [
-  { value: "all", label: t("ranking.allMeetTypes") },
+const tierOptions = computed(() => [
   ...RANKING_MEET_TYPES.map((m) => ({ value: m, label: t(MEET_TYPE_LABEL_KEY[m]) })),
 ])
 

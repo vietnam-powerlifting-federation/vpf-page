@@ -51,6 +51,31 @@ export function glRanking(rows: MeetRow[]) {
     .map((r, i) => ({ ...r, rank: i + 1 }))
 }
 
+/** Smallest weight-class group (same category, division and class) whose lifters can win best lifter. */
+const BEST_LIFTER_MIN_GROUP = 3
+/** From this season on, any weight class can produce a best lifter. */
+const BEST_LIFTER_NO_MINIMUM_FROM = 2026
+
+/**
+ * The best lifters (toàn năng) of each category: the three highest GL scores among
+ * lifters with a total. Before the 2026 season only weight classes with at least three
+ * lifters count; from 2026 on every class does.
+ */
+export function bestLifters(rows: MeetRow[], season: number) {
+  const minGroup = season >= BEST_LIFTER_NO_MINIMUM_FROM ? 0 : BEST_LIFTER_MIN_GROUP
+  const groupKey = (r: MeetRow) => `${r.sex}|${r.division}|${r.weightClass}`
+  const groupSize = new Map<string, number>()
+  for (const r of rows) groupSize.set(groupKey(r), (groupSize.get(groupKey(r)) ?? 0) + 1)
+
+  const top = (sex: MeetRow["sex"]) => rows
+    .filter((r) => r.sex === sex && (r.total ?? 0) > 0 && (groupSize.get(groupKey(r)) ?? 0) >= minGroup)
+    .sort((a, b) => (b.gl ?? 0) - (a.gl ?? 0))
+    .slice(0, 3)
+    .map((r, i) => ({ ...r, rank: i + 1 }))
+
+  return { male: top("male"), female: top("female") }
+}
+
 /** Props for `RankCell`: a disqualified result shows "DSQ" instead of a place. */
 export function placeProps(placement: number, t: Translate) {
   return placement === DISQUALIFIED

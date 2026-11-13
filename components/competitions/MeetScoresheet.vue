@@ -4,10 +4,10 @@
       v-for="group in sections"
       :key="group.key"
       :aria-labelledby="`sheet-${group.key}`"
-      class="grid gap-3 [contain-intrinsic-size:auto_800px] [content-visibility:auto]"
+      class="flex min-w-0 flex-col gap-3 [contain-intrinsic-size:auto_800px] [content-visibility:auto]"
     >
-      <h2 :id="`sheet-${group.key}`" class="font-display text-2xl font-bold uppercase">{{ group.label }}</h2>
-      <div class="overflow-clip rounded-md border border-surface-200 bg-surface-0">
+      <h2 :id="`sheet-${group.key}`" data-sticky-title class="sticky top-[var(--header-h)] z-[5] flex h-12 items-center bg-paper font-display text-2xl font-bold uppercase">{{ group.label }}</h2>
+      <div class="min-w-0 overflow-clip rounded-md border border-surface-200 bg-surface-0">
         <ResultsTable
           :columns="columns"
           :groups="group.weightClasses"

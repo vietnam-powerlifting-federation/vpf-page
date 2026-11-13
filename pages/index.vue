@@ -3,8 +3,8 @@
     <PageHeader
       :kicker="$t('ranking.kicker')"
       :title="$t('ranking.title')"
-      :lede="$t('ranking.lede')"
       :help-label="$t('ranking.glQuestion')"
+      collapsible
     >
       <template #help>
         <p>{{ $t("ranking.glAnswer1") }}</p>

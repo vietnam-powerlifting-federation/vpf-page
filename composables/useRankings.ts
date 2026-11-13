@@ -16,7 +16,8 @@ export type RankingFilters = {
   sex?: Sex
   division?: Division
   weightClass?: number
-  meetType?: MeetType
+  /** One or more tiers; sent as a comma-separated list. */
+  meetTypes?: MeetType[]
 }
 
 /**
@@ -35,7 +36,7 @@ export function useRankings(filters: MaybeRefOrGetter<RankingFilters>) {
       sex: f.sex,
       division: f.division,
       weightClass: f.weightClass,
-      meetType: f.meetType,
+      meetType: f.meetTypes?.length ? f.meetTypes.join(",") : undefined,
     }
   })
 

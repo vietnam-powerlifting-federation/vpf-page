@@ -7,6 +7,8 @@ export type TableColumn = {
   srLabel?: string
   /** Right-aligned, condensed tabular figures. */
   numeric?: boolean
+  /** Right-aligned like `numeric`, without the figure styling (buttons, actions). */
+  end?: boolean
   /** Header becomes a sort button; the table emits `sort` with this key. */
   sortable?: boolean
   /**

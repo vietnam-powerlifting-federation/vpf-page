@@ -38,6 +38,17 @@ export function sortNameOf(sort: string): SortName {
   return sort in SORTS ? (sort as SortName) : "gl"
 }
 
+/** The tiers a `meet` URL value selects: "national,amateur" is two, "all" is none (no narrowing). */
+export function selectedTiers(meet: string): MeetType[] {
+  if (meet === "all") return []
+  return meet.split(",").filter((m): m is MeetType => (RANKING_MEET_TYPES as readonly string[]).includes(m))
+}
+
+/** The `meet` URL value for a set of tiers; none means all. */
+export function tiersToQuery(tiers: string[]): string {
+  return tiers.length ? RANKING_MEET_TYPES.filter((m) => tiers.includes(m)).join(",") : "all"
+}
+
 /** The API's filters for what the URL holds. A weight class implies its category. */
 export function rankingApiFilters(state: RankingQuery) {
   const [clsSex, clsWeight] = state.cls.split("-")
@@ -46,7 +57,7 @@ export function rankingApiFilters(state: RankingQuery) {
     sex: (state.sex || clsSex || undefined) as Sex | undefined,
     division: (state.div || undefined) as Division | undefined,
     weightClass: clsWeight ? Number(clsWeight) : undefined,
-    meetType: (state.meet === "all" ? undefined : state.meet) as MeetType | undefined,
+    meetTypes: selectedTiers(state.meet),
   }
 }
 

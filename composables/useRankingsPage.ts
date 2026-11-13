@@ -1,16 +1,16 @@
 import { MEET_TYPE_LABEL_KEY, DIVISION_LABEL_KEY, SEX_LABEL_KEY, formatWeightClass } from "~/lib/domain/format"
 import {
   RANKING_DEFAULTS,
-  RANKING_MEET_TYPES,
   SORTS,
   clampPage,
   rankingApiFilters,
   searchRankings,
+  selectedTiers,
   slicePage,
   sortNameOf,
   type RankingQuery,
 } from "~/lib/domain/rankings"
-import type { Division, MeetType, Sex } from "~/types/union-types"
+import type { Division, Sex } from "~/types/union-types"
 
 /**
  * Everything the Rankings page shows and changes: the URL-backed filters, the
@@ -74,8 +74,8 @@ export function useRankingsPage() {
     }
     if (s.div) out.push({ key: "div", label: t(DIVISION_LABEL_KEY[s.div as Division]) })
     if (s.meet !== query.defaults.meet) {
-      const known = (RANKING_MEET_TYPES as readonly string[]).includes(s.meet)
-      out.push({ key: "meet", label: s.meet === "all" ? t("ranking.allMeetTypes") : known ? t(MEET_TYPE_LABEL_KEY[s.meet as MeetType]) : s.meet })
+      const tiers = selectedTiers(s.meet)
+      out.push({ key: "meet", label: tiers.length ? tiers.map((m) => t(MEET_TYPE_LABEL_KEY[m])).join(", ") : t("ranking.allMeetTypes") })
     }
     return out
   })
